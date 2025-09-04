@@ -142,19 +142,22 @@ if st.session_state.data:
     latest_data = webhook_data.get('latest_period', {})
     all_periods = webhook_data.get('data', [])
     
-    # Calculate week-over-week KPIs for the Key Performance section
+    # Calculate KPIs from aggregated data (for all other sections)
+    kpis = processor.calculate_kpis(aggregated_data)
+    
+    # Calculate week-over-week KPIs ONLY for the Key Performance section
     if is_time_series and len(all_periods) >= 2:
         wow_kpis = processor.calculate_week_over_week_kpis(all_periods)
-        kpis = wow_kpis['current']
-        deltas = wow_kpis['deltas']
+        key_performance_kpis = wow_kpis['current']
+        key_performance_deltas = wow_kpis['deltas']
         
         # Get the current and previous week time periods for display
         current_week_time = all_periods[-1].get('time', 'Current Week')
         previous_week_time = all_periods[-2].get('time', 'Previous Week')
     else:
-        # Fallback to aggregated data if not enough periods
-        kpis = processor.calculate_kpis(aggregated_data)
-        deltas = {}
+        # Fallback for Key Performance section if not enough periods
+        key_performance_kpis = kpis
+        key_performance_deltas = {}
     
     # KPI Section
     if is_time_series and len(all_periods) >= 2:
@@ -166,43 +169,43 @@ if st.session_state.data:
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        delta_val = f"{deltas.get('total_new_users', 0):+.1%}" if deltas.get('total_new_users') else None
+        delta_val = f"{key_performance_deltas.get('total_new_users', 0):+.1%}" if key_performance_deltas.get('total_new_users') else None
         st.metric(
             label="👥 Total New Users",
-            value=f"{kpis['total_new_users']:,}",
+            value=f"{key_performance_kpis['total_new_users']:,}",
             delta=delta_val
         )
     
     with col2:
-        delta_val = f"{deltas.get('retention_rate', 0):+.1%}" if deltas.get('retention_rate') else None
+        delta_val = f"{key_performance_deltas.get('retention_rate', 0):+.1%}" if key_performance_deltas.get('retention_rate') else None
         st.metric(
             label="🔄 User Retention Rate",
-            value=f"{kpis['retention_rate']:.1%}",
+            value=f"{key_performance_kpis['retention_rate']:.1%}",
             delta=delta_val
         )
     
     with col3:
-        delta_val = f"{deltas.get('churn_rate', 0):+.1%}" if deltas.get('churn_rate') else None
+        delta_val = f"{key_performance_deltas.get('churn_rate', 0):+.1%}" if key_performance_deltas.get('churn_rate') else None
         st.metric(
             label="📉 Churn Rate",
-            value=f"{kpis['churn_rate']:.1%}",
+            value=f"{key_performance_kpis['churn_rate']:.1%}",
             delta=delta_val,
             delta_color="inverse"
         )
     
     with col4:
-        delta_val = f"{deltas.get('active_sessions', 0):+.1%}" if deltas.get('active_sessions') else None
+        delta_val = f"{key_performance_deltas.get('active_sessions', 0):+.1%}" if key_performance_deltas.get('active_sessions') else None
         st.metric(
             label="🎯 Active Sessions",
-            value=f"{kpis['active_sessions']:,}",
+            value=f"{key_performance_kpis['active_sessions']:,}",
             delta=delta_val
         )
     
     with col5:
-        delta_val = f"{deltas.get('engagement_rate', 0):+.1%}" if deltas.get('engagement_rate') else None
+        delta_val = f"{key_performance_deltas.get('engagement_rate', 0):+.1%}" if key_performance_deltas.get('engagement_rate') else None
         st.metric(
             label="💪 Engagement Rate",
-            value=f"{kpis['engagement_rate']:.1%}",
+            value=f"{key_performance_kpis['engagement_rate']:.1%}",
             delta=delta_val
         )
     
