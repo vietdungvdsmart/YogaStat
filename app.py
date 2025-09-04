@@ -138,47 +138,74 @@ if st.session_state.data:
     time_periods = webhook_data.get('time_periods', 1)
     all_periods = webhook_data.get('data', [])
     
-    # Add time range filter for time series data
+    # Add date range filter for time series data
     if is_time_series and len(all_periods) > 1:
-        st.subheader("📅 Time Range Filter")
-        col1, col2, col3 = st.columns([2, 2, 1])
+        st.subheader("📅 Date Range Filter")
+        col1, col2 = st.columns([3, 2])
         
         with col1:
-            # Create options for time range selection
-            time_options = []
-            for i in range(len(all_periods)):
-                for j in range(i + 1, len(all_periods) + 1):
-                    start_week = all_periods[i].get('time', f'Week {i+1}')
-                    end_week = all_periods[j-1].get('time', f'Week {j}')
-                    if i == j - 1:
-                        # Single week
-                        time_options.append((f"Week: {start_week}", i, j))
-                    else:
-                        # Range of weeks
-                        time_options.append((f"Weeks: {start_week} to {end_week}", i, j))
+            # Parse dates from the time periods to get min/max dates
+            def parse_date_range(time_str):
+                """Parse date range from time string like '1/7/2025 - 7/7/2025'"""
+                try:
+                    if ' - ' in time_str:
+                        start_str, end_str = time_str.split(' - ')
+                        from datetime import datetime
+                        start_date = datetime.strptime(start_str.strip(), '%d/%m/%Y').date()
+                        end_date = datetime.strptime(end_str.strip(), '%d/%m/%Y').date()
+                        return start_date, end_date
+                    return None, None
+                except:
+                    return None, None
             
-            # Add "All Weeks" option
-            if len(all_periods) > 1:
-                all_start = all_periods[0].get('time', 'First Week')
-                all_end = all_periods[-1].get('time', 'Last Week')
-                time_options.insert(0, (f"All Weeks: {all_start} to {all_end}", 0, len(all_periods)))
+            # Get all dates from periods
+            all_dates = []
+            for period in all_periods:
+                start_date, end_date = parse_date_range(period.get('time', ''))
+                if start_date and end_date:
+                    all_dates.extend([start_date, end_date])
             
-            selected_range = st.selectbox(
-                "Select time range to analyze:",
-                options=time_options,
-                format_func=lambda x: x[0],
-                index=0  # Default to "All Weeks"
-            )
+            if all_dates:
+                min_date = min(all_dates)
+                max_date = max(all_dates)
+                
+                # Date range selector
+                selected_start = st.date_input(
+                    "Start Date:",
+                    value=min_date,
+                    min_value=min_date,
+                    max_value=max_date
+                )
+                
+                selected_end = st.date_input(
+                    "End Date:",
+                    value=max_date,
+                    min_value=min_date,
+                    max_value=max_date
+                )
+                
+                # Filter periods based on date intersection
+                def date_ranges_intersect(start1, end1, start2, end2):
+                    """Check if two date ranges intersect"""
+                    return start1 <= end2 and start2 <= end1
+                
+                filtered_periods = []
+                for period in all_periods:
+                    period_start, period_end = parse_date_range(period.get('time', ''))
+                    if period_start and period_end:
+                        if date_ranges_intersect(selected_start, selected_end, period_start, period_end):
+                            filtered_periods.append(period)
+            else:
+                filtered_periods = all_periods
+                st.warning("⚠️ Could not parse dates from time periods")
         
         with col2:
-            st.info(f"📊 Selected: {len(all_periods[selected_range[1]:selected_range[2]])} week(s) of data")
+            st.info(f"📊 Filtered: {len(filtered_periods)} week(s) of data")
+            if len(filtered_periods) > 0:
+                st.success("✅ Date filter applied")
+            else:
+                st.error("❌ No data matches selected range")
         
-        with col3:
-            if st.button("🔄 Apply Filter"):
-                st.rerun()
-        
-        # Filter data based on selection
-        filtered_periods = all_periods[selected_range[1]:selected_range[2]]
         st.divider()
     else:
         filtered_periods = all_periods
