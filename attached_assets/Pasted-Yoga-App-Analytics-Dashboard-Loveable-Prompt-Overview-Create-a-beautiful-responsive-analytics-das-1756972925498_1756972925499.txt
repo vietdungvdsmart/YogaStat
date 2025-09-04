@@ -1,0 +1,149 @@
+Yoga App Analytics Dashboard - Loveable Prompt
+Overview
+Create a beautiful, responsive analytics dashboard for a yoga exercise app that visualizes user engagement metrics over time. The dashboard should provide actionable insights for app optimization and user retention strategies.
+Data Source & Integration
+
+Webhook Integration: Include a prominent input field at the top of the dashboard where users can enter their n8n webhook URL
+Data Format: The webhook returns JSON data with the following structure:
+
+json{
+  "time": "1/7/2025 - 7/7/2025",
+  "first_open": 3,
+  "app_remove": 5,
+  "session_start": 9,
+  "app_open": 6,
+  "login": 9,
+  "view_exercise": 9,
+  "health_survey": 9,
+  "view_roadmap": 1,
+  "practice_with_video": 3,
+  "practice_with_ai": 3,
+  "chat_ai": 2,
+  "show_popup": 9,
+  "view_detail_popup": 9,
+  "close_popup": 9
+}
+Metrics Definitions
+
+time: Data collection period
+first_open: New users opening app for the first time
+app_remove: Users uninstalling the app
+session_start: New sessions created when users interact
+app_open: Returning users opening the app
+login: User login events
+view_exercise: Exercise content views
+health_survey: Health survey form completions
+view_roadmap: Exercise roadmap views
+practice_with_video: Video practice sessions
+practice_with_ai: AI-assisted practice sessions
+chat_ai: AI chat interactions
+show_popup: Total popups displayed
+view_detail_popup: Popup detail views
+close_popup: Popups closed without viewing details
+
+Dashboard Requirements
+1. Visual Design
+
+Theme: Modern, calming yoga-inspired design with soft colors (greens, blues, purples)
+Layout: Clean, responsive grid layout that works on desktop and mobile
+Typography: Clear, readable fonts with proper hierarchy
+Animations: Subtle transitions and hover effects
+
+2. Key Performance Indicators (KPIs) Section
+Create prominent KPI cards showing:
+
+Total New Users (first_open)
+User Retention Rate (calculated from app_open vs first_open)
+Churn Rate (app_remove percentage)
+Active Sessions (session_start)
+Engagement Rate (practice sessions vs total opens)
+
+3. Time Series Charts
+
+Primary Chart: Multi-line chart showing user acquisition (first_open) vs churn (app_remove) over time
+Engagement Chart: Line chart tracking practice_with_video and practice_with_ai trends
+Content Interaction: Chart showing view_exercise, view_roadmap, and health_survey over time
+
+4. Feature Usage Analysis
+
+Practice Preferences: Pie chart or donut chart comparing practice_with_video vs practice_with_ai
+AI Engagement: Bar chart showing chat_ai usage trends
+Content Discovery: Stacked bar chart for view_exercise and view_roadmap
+
+5. Popup Performance Dashboard
+
+Popup Effectiveness: Calculate and display popup conversion rate (view_detail_popup / show_popup)
+Popup Metrics: Show popup performance with close rate analysis
+
+6. Insights & Recommendations Panel
+Create an insights section that automatically calculates and displays:
+
+User Journey Health: First-time to returning user conversion
+Feature Adoption: Most and least used features
+Retention Indicators: Session frequency and engagement patterns
+Optimization Opportunities: Areas for improvement based on the data
+
+7. Interactive Features
+
+Date Range Selector: Allow filtering data by time periods
+Metric Toggles: Enable/disable specific metrics on charts
+Export Functionality: Download charts as images or data as CSV
+Real-time Updates: Refresh button to fetch latest data from webhook
+
+8. Comparison Views
+
+Week-over-Week: Compare current period vs previous period
+Feature Comparison: Side-by-side analysis of different app features
+User Behavior Flow: Visualize typical user journey through the app
+
+Technical Requirements
+
+Framework: Use React with modern hooks
+
+Chart Type Specifications
+
+Time Series: Use line charts with smooth curves and gradient fills
+Comparisons: Horizontal and vertical bar charts with animations
+Proportions: Donut charts, pie charts, and treemaps with hover effects
+Flows: Sankey diagrams and funnel charts for user journey visualization
+Performance: Gauge charts, progress bars, and speedometer-style indicators
+Correlations: Scatter plots and bubble charts for relationship analysis
+Distributions: Heat maps and calendar views for temporal patterns
+Hierarchical: Radar charts and multi-level donut charts for complex data
+Responsive: Mobile-first design approach
+State Management: Handle loading states, error handling for webhook calls
+Data Processing: Clean and transform webhook data for visualization
+Performance: Optimize for fast loading and smooth interactions
+
+Color Scheme Suggestions
+
+Primary: Soft teal (#4FD1C7)
+Secondary: Lavender (#B19CD9)
+Accent: Sage green (#87A96B)
+Background: Off-white (#FAFAFA)
+Text: Dark gray (#2D3748)
+Success: Green (#48BB78)
+Warning: Orange (#ED8936)
+Error: Red (#F56565)
+
+Additional Features
+
+Data Validation: Ensure webhook data integrity
+Loading Animations: Beautiful loading states while fetching data
+Error Handling: Graceful error messages for webhook failures
+Help Tooltips: Explain metrics and calculations
+Data Refresh: Automatic or manual data refresh options
+
+Success Metrics for Dashboard
+The dashboard should help identify:
+
+Critical User Journey Bottlenecks: Exact points where users drop off most
+Funnel Optimization Opportunities: Specific stages that need improvement
+User acquisition and retention trends
+Most engaging features and content
+Optimal popup timing and content
+AI feature adoption rates
+Churn Prevention Strategies: Early indicators and intervention points
+User Lifecycle Optimization: How to move users through each stage more effectively
+
+This dashboard will be the central hub for making data-driven decisions about the yoga app's user experience and feature development.
