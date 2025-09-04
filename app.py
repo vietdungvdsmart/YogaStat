@@ -136,31 +136,76 @@ if st.session_state.data:
     # Check if we have time series data or single data point
     is_time_series = webhook_data.get('is_time_series', False)
     time_periods = webhook_data.get('time_periods', 1)
-    
-    # Use aggregated data for KPIs and current period data for some charts
-    aggregated_data = webhook_data.get('aggregated', {})
-    latest_data = webhook_data.get('latest_period', {})
     all_periods = webhook_data.get('data', [])
+    
+    # Add time range filter for time series data
+    if is_time_series and len(all_periods) > 1:
+        st.subheader("📅 Time Range Filter")
+        col1, col2, col3 = st.columns([2, 2, 1])
+        
+        with col1:
+            # Create options for time range selection
+            time_options = []
+            for i in range(len(all_periods)):
+                for j in range(i + 1, len(all_periods) + 1):
+                    start_week = all_periods[i].get('time', f'Week {i+1}')
+                    end_week = all_periods[j-1].get('time', f'Week {j}')
+                    if i == j - 1:
+                        # Single week
+                        time_options.append((f"Week: {start_week}", i, j))
+                    else:
+                        # Range of weeks
+                        time_options.append((f"Weeks: {start_week} to {end_week}", i, j))
+            
+            # Add "All Weeks" option
+            if len(all_periods) > 1:
+                all_start = all_periods[0].get('time', 'First Week')
+                all_end = all_periods[-1].get('time', 'Last Week')
+                time_options.insert(0, (f"All Weeks: {all_start} to {all_end}", 0, len(all_periods)))
+            
+            selected_range = st.selectbox(
+                "Select time range to analyze:",
+                options=time_options,
+                format_func=lambda x: x[0],
+                index=0  # Default to "All Weeks"
+            )
+        
+        with col2:
+            st.info(f"📊 Selected: {len(all_periods[selected_range[1]:selected_range[2]])} week(s) of data")
+        
+        with col3:
+            if st.button("🔄 Apply Filter"):
+                st.rerun()
+        
+        # Filter data based on selection
+        filtered_periods = all_periods[selected_range[1]:selected_range[2]]
+        st.divider()
+    else:
+        filtered_periods = all_periods
+    
+    # Use filtered data for calculations
+    aggregated_data = webhook_data.get('aggregated', {}) if not is_time_series else processor._aggregate_time_series_data(filtered_periods)
+    latest_data = filtered_periods[-1] if filtered_periods else webhook_data.get('latest_period', {})
     
     # Calculate KPIs from aggregated data (for all other sections)
     kpis = processor.calculate_kpis(aggregated_data)
     
     # Calculate week-over-week KPIs ONLY for the Key Performance section
-    if is_time_series and len(all_periods) >= 2:
-        wow_kpis = processor.calculate_week_over_week_kpis(all_periods)
+    if is_time_series and len(filtered_periods) >= 2:
+        wow_kpis = processor.calculate_week_over_week_kpis(filtered_periods)
         key_performance_kpis = wow_kpis['current']
         key_performance_deltas = wow_kpis['deltas']
         
         # Get the current and previous week time periods for display
-        current_week_time = all_periods[-1].get('time', 'Current Week')
-        previous_week_time = all_periods[-2].get('time', 'Previous Week')
+        current_week_time = filtered_periods[-1].get('time', 'Current Week')
+        previous_week_time = filtered_periods[-2].get('time', 'Previous Week')
     else:
         # Fallback for Key Performance section if not enough periods
         key_performance_kpis = kpis
         key_performance_deltas = {}
     
     # KPI Section
-    if is_time_series and len(all_periods) >= 2:
+    if is_time_series and len(filtered_periods) >= 2:
         st.header("📊 Key Performance")
         st.info(f"📅 Latest Week: {current_week_time} (vs Previous Week: {previous_week_time})")
     else:
@@ -218,8 +263,8 @@ if st.session_state.data:
         # Time Series Charts for weekly data
         st.subheader("📊 Time Series Analysis")
         
-        # Create time series chart
-        time_series_chart = chart_gen.create_time_series_chart(all_periods)
+        # Create time series chart using filtered data
+        time_series_chart = chart_gen.create_time_series_chart(filtered_periods)
         st.plotly_chart(time_series_chart, use_container_width=True)
         
         # User Acquisition vs Churn over time
@@ -227,37 +272,38 @@ if st.session_state.data:
         
         with col1:
             st.subheader("👥 User Flow Trends")
-            flow_chart = chart_gen.create_user_flow_trends_chart(all_periods)
+            flow_chart = chart_gen.create_user_flow_trends_chart(filtered_periods)
             st.plotly_chart(flow_chart, use_container_width=True)
         
         with col2:
             st.subheader("🏃‍♀️ Practice Trends")
-            practice_trends_chart = chart_gen.create_practice_trends_chart(all_periods)
+            practice_trends_chart = chart_gen.create_practice_trends_chart(filtered_periods)
             st.plotly_chart(practice_trends_chart, use_container_width=True)
         
         st.divider()
         
-        # Weekly breakdown
-        st.subheader("📅 Weekly Breakdown")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("**📈 Best Week (New Users):**")
-            best_week = max(all_periods, key=lambda x: x.get('first_open', 0))
-            st.write(f"Week: {best_week.get('time', 'N/A')}")
-            st.write(f"New Users: {best_week.get('first_open', 0)}")
-        
-        with col2:
-            st.markdown("**💪 Most Engaged Week:**")
-            most_engaged = max(all_periods, key=lambda x: x.get('practice_with_video', 0) + x.get('practice_with_ai', 0))
-            st.write(f"Week: {most_engaged.get('time', 'N/A')}")
-            st.write(f"Practice Sessions: {most_engaged.get('practice_with_video', 0) + most_engaged.get('practice_with_ai', 0)}")
-        
-        with col3:
-            st.markdown("**🤖 Top AI Week:**")
-            top_ai = max(all_periods, key=lambda x: x.get('chat_ai', 0))
-            st.write(f"Week: {top_ai.get('time', 'N/A')}")
-            st.write(f"AI Interactions: {top_ai.get('chat_ai', 0)}")
+        # Weekly breakdown using filtered data
+        if len(filtered_periods) > 1:
+            st.subheader("📅 Weekly Breakdown")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown("**📈 Best Week (New Users):**")
+                best_week = max(filtered_periods, key=lambda x: x.get('first_open', 0))
+                st.write(f"Week: {best_week.get('time', 'N/A')}")
+                st.write(f"New Users: {best_week.get('first_open', 0)}")
+            
+            with col2:
+                st.markdown("**💪 Most Engaged Week:**")
+                most_engaged = max(filtered_periods, key=lambda x: x.get('practice_with_video', 0) + x.get('practice_with_ai', 0))
+                st.write(f"Week: {most_engaged.get('time', 'N/A')}")
+                st.write(f"Practice Sessions: {most_engaged.get('practice_with_video', 0) + most_engaged.get('practice_with_ai', 0)}")
+            
+            with col3:
+                st.markdown("**🤖 Top AI Week:**")
+                top_ai = max(filtered_periods, key=lambda x: x.get('chat_ai', 0))
+                st.write(f"Week: {top_ai.get('time', 'N/A')}")
+                st.write(f"AI Interactions: {top_ai.get('chat_ai', 0)}")
     
     # Current period or aggregated charts
     col1, col2 = st.columns(2)
