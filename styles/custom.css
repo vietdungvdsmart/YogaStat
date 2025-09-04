@@ -1,0 +1,201 @@
+/* Yoga App Analytics Dashboard Custom Styles */
+
+/* Main app styling */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Header styling */
+h1 {
+    color: #2D3748;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+h2, h3 {
+    color: #4A5568;
+    font-weight: 500;
+}
+
+/* KPI metric cards styling */
+div[data-testid="metric-container"] {
+    background: linear-gradient(135deg, rgba(79, 209, 199, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border: 1px solid rgba(79, 209, 199, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+div[data-testid="metric-container"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(79, 209, 199, 0.2);
+}
+
+/* Button styling */
+.stButton > button {
+    background: linear-gradient(135deg, #4FD1C7 0%, #87A96B 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(79, 209, 199, 0.3);
+}
+
+/* Input field styling */
+.stTextInput > div > div > input {
+    border-radius: 8px;
+    border: 2px solid rgba(79, 209, 199, 0.3);
+    transition: border-color 0.3s ease;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #4FD1C7;
+    box-shadow: 0 0 0 3px rgba(79, 209, 199, 0.1);
+}
+
+/* Sidebar styling */
+.css-1d391kg {
+    background: linear-gradient(180deg, rgba(79, 209, 199, 0.05) 0%, rgba(135, 169, 107, 0.05) 100%);
+}
+
+/* Info/success/warning message styling */
+.stInfo {
+    background-color: rgba(79, 209, 199, 0.1);
+    border-left: 4px solid #4FD1C7;
+    border-radius: 4px;
+}
+
+.stSuccess {
+    background-color: rgba(72, 187, 120, 0.1);
+    border-left: 4px solid #48BB78;
+    border-radius: 4px;
+}
+
+.stWarning {
+    background-color: rgba(237, 137, 54, 0.1);
+    border-left: 4px solid #ED8936;
+    border-radius: 4px;
+}
+
+.stError {
+    background-color: rgba(245, 101, 101, 0.1);
+    border-left: 4px solid #F56565;
+    border-radius: 4px;
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+    background: linear-gradient(90deg, rgba(79, 209, 199, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+.streamlit-expanderHeader:hover {
+    background: linear-gradient(90deg, rgba(79, 209, 199, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%);
+}
+
+/* Chart container styling */
+.js-plotly-plot {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Divider styling */
+hr {
+    margin: 2rem 0;
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(79, 209, 199, 0.3) 50%, transparent 100%);
+}
+
+/* Loading spinner customization */
+.stSpinner > div {
+    border-top-color: #4FD1C7 !important;
+}
+
+/* Tooltip styling */
+div[data-baseweb="tooltip"] {
+    background-color: rgba(45, 55, 72, 0.95);
+    color: white;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+/* Progress bar styling */
+.stProgress .st-bo {
+    background-color: #4FD1C7;
+}
+
+/* Tab styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: rgba(79, 209, 199, 0.1);
+    border-radius: 8px;
+    color: #2D3748;
+    font-weight: 500;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #4FD1C7;
+    color: white;
+}
+
+/* Download button styling */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #B19CD9 0%, #4FD1C7 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.stDownloadButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(177, 156, 217, 0.3);
+}
+
+/* Custom animation for loading states */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    div[data-testid="metric-container"] {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Subtle gradient background for the entire app */
+.stApp {
+    background: linear-gradient(135deg, #FAFAFA 0%, rgba(79, 209, 199, 0.02) 100%);
+}
+
+/* Chart hover effects */
+.js-plotly-plot:hover {
+    box-shadow: 0 4px 16px rgba(79, 209, 199, 0.15);
+    transition: box-shadow 0.3s ease;
+}
