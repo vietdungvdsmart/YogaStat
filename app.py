@@ -31,6 +31,8 @@ if 'data' not in st.session_state:
     st.session_state.data = None
 if 'webhook_url' not in st.session_state:
     st.session_state.webhook_url = ""
+if 'filtered_data' not in st.session_state:
+    st.session_state.filtered_data = None
 
 # Header
 st.title("🧘‍♀️ Yoga App Analytics Dashboard")
@@ -141,70 +143,114 @@ if st.session_state.data:
     # Add date range filter for time series data
     if is_time_series and len(all_periods) > 1:
         st.subheader("📅 Date Range Filter")
-        col1, col2 = st.columns([3, 2])
+        col1, col2, col3 = st.columns([2, 2, 1])
         
-        with col1:
-            # Parse dates from the time periods to get min/max dates
-            def parse_date_range(time_str):
-                """Parse date range from time string like '1/7/2025 - 7/7/2025'"""
-                try:
-                    if ' - ' in time_str:
-                        start_str, end_str = time_str.split(' - ')
-                        from datetime import datetime
-                        start_date = datetime.strptime(start_str.strip(), '%d/%m/%Y').date()
-                        end_date = datetime.strptime(end_str.strip(), '%d/%m/%Y').date()
-                        return start_date, end_date
-                    return None, None
-                except:
-                    return None, None
+        # Parse dates from the time periods to get min/max dates
+        def parse_date_range(time_str):
+            """Parse date range from time string like '1/7/2025 - 7/7/2025'"""
+            try:
+                if ' - ' in time_str:
+                    start_str, end_str = time_str.split(' - ')
+                    from datetime import datetime
+                    start_date = datetime.strptime(start_str.strip(), '%d/%m/%Y').date()
+                    end_date = datetime.strptime(end_str.strip(), '%d/%m/%Y').date()
+                    return start_date, end_date
+                return None, None
+            except:
+                return None, None
+        
+        # Get all dates from periods
+        all_dates = []
+        for period in all_periods:
+            start_date, end_date = parse_date_range(period.get('time', ''))
+            if start_date and end_date:
+                all_dates.extend([start_date, end_date])
+        
+        if all_dates:
+            min_date = min(all_dates)
+            max_date = max(all_dates)
             
-            # Get all dates from periods
-            all_dates = []
-            for period in all_periods:
-                start_date, end_date = parse_date_range(period.get('time', ''))
-                if start_date and end_date:
-                    all_dates.extend([start_date, end_date])
-            
-            if all_dates:
-                min_date = min(all_dates)
-                max_date = max(all_dates)
-                
+            with col1:
                 # Date range selector
                 selected_start = st.date_input(
                     "Start Date:",
                     value=min_date,
                     min_value=min_date,
-                    max_value=max_date
+                    max_value=max_date,
+                    key="filter_start_date"
                 )
                 
                 selected_end = st.date_input(
                     "End Date:",
                     value=max_date,
                     min_value=min_date,
-                    max_value=max_date
+                    max_value=max_date,
+                    key="filter_end_date"
                 )
-                
-                # Filter periods based on date intersection
+            
+            with col2:
+                # Preview filtered data count
                 def date_ranges_intersect(start1, end1, start2, end2):
                     """Check if two date ranges intersect"""
                     return start1 <= end2 and start2 <= end1
                 
-                filtered_periods = []
+                # Calculate preview of filtered periods
+                preview_filtered = []
                 for period in all_periods:
                     period_start, period_end = parse_date_range(period.get('time', ''))
                     if period_start and period_end:
                         if date_ranges_intersect(selected_start, selected_end, period_start, period_end):
-                            filtered_periods.append(period)
+                            preview_filtered.append(period)
+                
+                st.info(f"📊 Preview: {len(preview_filtered)} week(s) will be included")
+                if len(preview_filtered) == 0:
+                    st.warning("⚠️ No weeks match this date range")
+            
+            with col3:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🔄 Apply Filter", type="primary"):
+                    # Apply the filter and store in session state
+                    filtered_periods = []
+                    for period in all_periods:
+                        period_start, period_end = parse_date_range(period.get('time', ''))
+                        if period_start and period_end:
+                            if date_ranges_intersect(selected_start, selected_end, period_start, period_end):
+                                filtered_periods.append(period)
+                    
+                    # Store filtered data in session state
+                    if filtered_periods:
+                        st.session_state.filtered_data = {
+                            'is_time_series': True,
+                            'time_periods': len(filtered_periods),
+                            'data': filtered_periods,
+                            'latest_period': filtered_periods[-1],
+                            'aggregated': processor._aggregate_time_series_data(filtered_periods)
+                        }
+                        st.success(f"✅ Filter applied! Showing {len(filtered_periods)} week(s) of data.")
+                        st.rerun()
+                    else:
+                        st.error("❌ No data matches selected range")
+            
+            # Use filtered data if available, otherwise use all data
+            if st.session_state.filtered_data is not None:
+                # Use the stored filtered data
+                webhook_data = st.session_state.filtered_data
+                filtered_periods = webhook_data.get('data', [])
+                st.info(f"🎯 Currently showing filtered data: {len(filtered_periods)} week(s)")
             else:
+                # No filter applied yet, use all data
                 filtered_periods = all_periods
-                st.warning("⚠️ Could not parse dates from time periods")
+                st.info("📊 Showing all available data (no filter applied)")
+        else:
+            filtered_periods = all_periods
+            st.warning("⚠️ Could not parse dates from time periods")
         
-        with col2:
-            st.info(f"📊 Filtered: {len(filtered_periods)} week(s) of data")
-            if len(filtered_periods) > 0:
-                st.success("✅ Date filter applied")
-            else:
-                st.error("❌ No data matches selected range")
+        # Add reset filter option
+        if st.session_state.filtered_data is not None:
+            if st.button("🗑️ Clear Filter"):
+                st.session_state.filtered_data = None
+                st.success("✅ Filter cleared! Showing all data.")
+                st.rerun()
         
         st.divider()
     else:
