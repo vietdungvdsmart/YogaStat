@@ -230,6 +230,11 @@ if st.session_state.data:
                         st.rerun()
                     else:
                         st.error("❌ No data matches selected range")
+                
+                if st.button("📊 Show All Data", type="secondary"):
+                    st.session_state.filtered_data = None
+                    st.success("✅ Showing all available data.")
+                    st.rerun()
             
             # Use filtered data if available, otherwise use all data
             if st.session_state.filtered_data is not None:
@@ -245,12 +250,6 @@ if st.session_state.data:
             filtered_periods = all_periods
             st.warning("⚠️ Could not parse dates from time periods")
         
-        # Add reset filter option
-        if st.session_state.filtered_data is not None:
-            if st.button("🗑️ Clear Filter"):
-                st.session_state.filtered_data = None
-                st.success("✅ Filter cleared! Showing all data.")
-                st.rerun()
         
         st.divider()
     else:
