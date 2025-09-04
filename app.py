@@ -64,6 +64,7 @@ with col2:
                     # Try both GET and POST methods
                     st.info(f"🔗 Attempting to connect to: {webhook_url}")
                     
+                    response = None
                     try:
                         # First try GET
                         response = requests.get(webhook_url, headers=headers, timeout=15)
@@ -85,10 +86,12 @@ with col2:
                             with st.expander("🔍 Debug: Raw Response Data"):
                                 st.json(data)
                             
-                            # Validate data structure
+                            # Validate and process data structure (handle both single object and array formats)
                             processor = DataProcessor()
-                            if processor.validate_data(data):
-                                st.session_state.data = data
+                            processed_data = processor.process_webhook_data(data)
+                            
+                            if processed_data:
+                                st.session_state.data = processed_data
                                 st.session_state.webhook_url = webhook_url
                                 st.success("✅ Data fetched successfully!")
                                 st.rerun()
@@ -97,15 +100,15 @@ with col2:
                                 st.info("💡 Expected data format is shown below in the 'Expected Data Format' section.")
                                 
                     except requests.exceptions.HTTPError as e:
-                        if response.status_code == 404:
+                        if response and response.status_code == 404:
                             st.error("❌ Webhook not found (404). Please check:")
                             st.write("• Is your n8n workflow active and saved?")
                             st.write("• Does the webhook URL match exactly?")
                             st.write("• Try copying the webhook URL directly from n8n")
-                        elif response.status_code == 500:
+                        elif response and response.status_code == 500:
                             st.error("❌ Server error (500). Your n8n workflow might have an error.")
                         else:
-                            st.error(f"❌ HTTP Error {response.status_code}: {str(e)}")
+                            st.error(f"❌ HTTP Error: {str(e)}")
                             
             except requests.exceptions.ConnectionError:
                 st.error("❌ Connection failed. Please check:")
@@ -116,7 +119,8 @@ with col2:
                 st.error("❌ Request timed out. The webhook might be taking too long to respond.")
             except json.JSONDecodeError as e:
                 st.error("❌ Invalid JSON response from webhook")
-                st.write(f"Response content: {response.text[:500]}...")
+                if response is not None:
+                    st.write(f"Response content: {response.text[:500]}...")
             except Exception as e:
                 st.error(f"❌ Unexpected error: {str(e)}")
         else:
@@ -124,17 +128,29 @@ with col2:
 
 # Main dashboard
 if st.session_state.data:
-    data = st.session_state.data
+    webhook_data = st.session_state.data
     processor = DataProcessor()
     chart_gen = ChartGenerator()
     insights_gen = InsightsGenerator()
     
-    # Process data
-    processed_data = processor.process_data(data)
-    kpis = processor.calculate_kpis(data)
+    # Check if we have time series data or single data point
+    is_time_series = webhook_data.get('is_time_series', False)
+    time_periods = webhook_data.get('time_periods', 1)
+    
+    # Use aggregated data for KPIs and current period data for some charts
+    aggregated_data = webhook_data.get('aggregated', {})
+    latest_data = webhook_data.get('latest_period', {})
+    all_periods = webhook_data.get('data', [])
+    
+    # Calculate KPIs from aggregated data
+    kpis = processor.calculate_kpis(aggregated_data)
     
     # KPI Section
-    st.header("📊 Key Performance Indicators")
+    if is_time_series:
+        st.header(f"📊 Key Performance Indicators ({time_periods} Week Analysis)")
+        st.info(f"📅 Data Range: {aggregated_data.get('time', 'Multiple periods')}")
+    else:
+        st.header("📊 Key Performance Indicators")
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
@@ -179,37 +195,84 @@ if st.session_state.data:
     # Charts Section
     st.header("📈 Analytics Overview")
     
-    # User Acquisition vs Churn
+    if is_time_series:
+        # Time Series Charts for weekly data
+        st.subheader("📊 Time Series Analysis")
+        
+        # Create time series chart
+        time_series_chart = chart_gen.create_time_series_chart(all_periods)
+        st.plotly_chart(time_series_chart, use_container_width=True)
+        
+        # User Acquisition vs Churn over time
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("👥 User Flow Trends")
+            flow_chart = chart_gen.create_user_flow_trends_chart(all_periods)
+            st.plotly_chart(flow_chart, use_container_width=True)
+        
+        with col2:
+            st.subheader("🏃‍♀️ Practice Trends")
+            practice_trends_chart = chart_gen.create_practice_trends_chart(all_periods)
+            st.plotly_chart(practice_trends_chart, use_container_width=True)
+        
+        st.divider()
+        
+        # Weekly breakdown
+        st.subheader("📅 Weekly Breakdown")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("**📈 Best Week (New Users):**")
+            best_week = max(all_periods, key=lambda x: x.get('first_open', 0))
+            st.write(f"Week: {best_week.get('time', 'N/A')}")
+            st.write(f"New Users: {best_week.get('first_open', 0)}")
+        
+        with col2:
+            st.markdown("**💪 Most Engaged Week:**")
+            most_engaged = max(all_periods, key=lambda x: x.get('practice_with_video', 0) + x.get('practice_with_ai', 0))
+            st.write(f"Week: {most_engaged.get('time', 'N/A')}")
+            st.write(f"Practice Sessions: {most_engaged.get('practice_with_video', 0) + most_engaged.get('practice_with_ai', 0)}")
+        
+        with col3:
+            st.markdown("**🤖 Top AI Week:**")
+            top_ai = max(all_periods, key=lambda x: x.get('chat_ai', 0))
+            st.write(f"Week: {top_ai.get('time', 'N/A')}")
+            st.write(f"AI Interactions: {top_ai.get('chat_ai', 0)}")
+    
+    # Current period or aggregated charts
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("👥 User Acquisition vs Churn")
-        acquisition_chart = chart_gen.create_acquisition_churn_chart(data)
+        chart_title = "👥 User Acquisition vs Churn" if not is_time_series else "👥 Overall User Metrics"
+        st.subheader(chart_title)
+        acquisition_chart = chart_gen.create_acquisition_churn_chart(aggregated_data)
         st.plotly_chart(acquisition_chart, use_container_width=True)
     
     with col2:
-        st.subheader("🏃‍♀️ Practice Preferences")
-        practice_chart = chart_gen.create_practice_preferences_chart(data)
+        chart_title = "🏃‍♀️ Practice Preferences" if not is_time_series else "🏃‍♀️ Total Practice Distribution"
+        st.subheader(chart_title)
+        practice_chart = chart_gen.create_practice_preferences_chart(aggregated_data)
         st.plotly_chart(practice_chart, use_container_width=True)
     
-    # Engagement Analysis
+    # Feature Analysis
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("📱 Feature Usage Analysis")
-        feature_chart = chart_gen.create_feature_usage_chart(data)
+        feature_chart = chart_gen.create_feature_usage_chart(aggregated_data)
         st.plotly_chart(feature_chart, use_container_width=True)
     
     with col2:
         st.subheader("🤖 AI Engagement Metrics")
-        ai_chart = chart_gen.create_ai_engagement_chart(data)
+        ai_chart = chart_gen.create_ai_engagement_chart(aggregated_data)
         st.plotly_chart(ai_chart, use_container_width=True)
     
     # Popup Performance
     st.subheader("💬 Popup Performance Dashboard")
     col1, col2, col3 = st.columns(3)
     
-    popup_metrics = processor.calculate_popup_metrics(data)
+    popup_metrics = processor.calculate_popup_metrics(aggregated_data)
     
     with col1:
         st.metric(
@@ -229,14 +292,14 @@ if st.session_state.data:
             value=f"{popup_metrics['conversion_rate']:.1%}"
         )
     
-    popup_chart = chart_gen.create_popup_performance_chart(data)
+    popup_chart = chart_gen.create_popup_performance_chart(aggregated_data)
     st.plotly_chart(popup_chart, use_container_width=True)
     
     st.divider()
     
     # Insights Panel
     st.header("🧠 Insights & Recommendations")
-    insights = insights_gen.generate_insights(data, kpis)
+    insights = insights_gen.generate_insights(aggregated_data, kpis)
     
     col1, col2 = st.columns(2)
     
@@ -252,7 +315,7 @@ if st.session_state.data:
     
     # Feature Adoption Analysis
     st.subheader("📊 Feature Adoption Analysis")
-    adoption_data = processor.calculate_feature_adoption(data)
+    adoption_data = processor.calculate_feature_adoption(aggregated_data)
     
     col1, col2, col3 = st.columns(3)
     
@@ -279,7 +342,7 @@ if st.session_state.data:
     
     with col1:
         if st.button("📊 Export Raw Data (CSV)"):
-            csv_data = processor.export_to_csv(data)
+            csv_data = processor.export_to_csv(aggregated_data)
             st.download_button(
                 label="Download CSV",
                 data=csv_data,
@@ -369,25 +432,20 @@ else:
     
     with col1:
         if st.button("🧪 Load Sample Data (for testing)"):
-            sample_data = {
-                "time": "1/1/2025 - 7/1/2025",
-                "first_open": 150,
-                "app_remove": 25,
-                "session_start": 420,
-                "app_open": 280,
-                "login": 320,
-                "view_exercise": 380,
-                "health_survey": 190,
-                "view_roadmap": 45,
-                "practice_with_video": 160,
-                "practice_with_ai": 85,
-                "chat_ai": 65,
-                "show_popup": 200,
-                "view_detail_popup": 85,
-                "close_popup": 140
-            }
-            st.session_state.data = sample_data
-            st.success("✅ Sample data loaded! You can now explore the dashboard features.")
+            # Create sample time series data matching your webhook format
+            sample_time_series = [
+                {"time": "1/7/2025 - 7/7/2025", "first_open": 25, "app_remove": 8, "session_start": 45, "app_open": 32, "login": 40, "view_exercise": 42, "health_survey": 38, "view_roadmap": 12, "practice_with_video": 22, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 35, "view_detail_popup": 20, "close_popup": 28},
+                {"time": "8/7/2025 - 14/7/2025", "first_open": 30, "app_remove": 5, "session_start": 52, "app_open": 28, "login": 35, "view_exercise": 38, "health_survey": 32, "view_roadmap": 8, "practice_with_video": 25, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 40, "view_detail_popup": 25, "close_popup": 30},
+                {"time": "15/7/2025 - 21/7/2025", "first_open": 20, "app_remove": 12, "session_start": 38, "app_open": 35, "login": 42, "view_exercise": 45, "health_survey": 35, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 38, "view_detail_popup": 22, "close_popup": 32},
+                {"time": "22/7/2025 - 28/7/2025", "first_open": 35, "app_remove": 6, "session_start": 48, "app_open": 40, "login": 38, "view_exercise": 40, "health_survey": 30, "view_roadmap": 18, "practice_with_video": 30, "practice_with_ai": 25, "chat_ai": 20, "show_popup": 42, "view_detail_popup": 28, "close_popup": 35}
+            ]
+            
+            # Process the sample data using the new format
+            processor = DataProcessor()
+            processed_sample = processor.process_webhook_data(sample_time_series)
+            
+            st.session_state.data = processed_sample
+            st.success("✅ Sample time series data loaded! You can now explore the dashboard with weekly data trends.")
             st.rerun()
     
     with col2:

@@ -33,6 +33,69 @@ class DataProcessor:
         
         return True
     
+    def process_webhook_data(self, raw_data):
+        """Process webhook data that can be either single object or array format."""
+        try:
+            # Check if data is an array (your new format)
+            if isinstance(raw_data, list):
+                if len(raw_data) == 0:
+                    return None
+                
+                # Validate each item in the array
+                valid_data = []
+                for item in raw_data:
+                    if self.validate_data(item):
+                        valid_data.append(item)
+                
+                if not valid_data:
+                    return None
+                
+                # Return the processed array data with time series info
+                return {
+                    'is_time_series': True,
+                    'time_periods': len(valid_data),
+                    'data': valid_data,
+                    'latest_period': valid_data[-1],  # Most recent data for current metrics
+                    'aggregated': self._aggregate_time_series_data(valid_data)
+                }
+            
+            # Check if data is a single object (original format)
+            elif isinstance(raw_data, dict):
+                if self.validate_data(raw_data):
+                    return {
+                        'is_time_series': False,
+                        'time_periods': 1,
+                        'data': [raw_data],
+                        'latest_period': raw_data,
+                        'aggregated': raw_data
+                    }
+            
+            return None
+            
+        except Exception:
+            return None
+    
+    def _aggregate_time_series_data(self, data_list):
+        """Aggregate time series data for overall metrics."""
+        if not data_list:
+            return {}
+        
+        aggregated = {}
+        
+        # Sum all numeric fields across time periods
+        for field in self.required_fields:
+            if field == 'time':
+                # Combine time periods
+                first_time = data_list[0].get('time', '')
+                last_time = data_list[-1].get('time', '')
+                aggregated['time'] = f"Total: {first_time.split(' - ')[0]} - {last_time.split(' - ')[-1]}"
+            else:
+                # Sum numeric values
+                total = sum(item.get(field, 0) for item in data_list)
+                aggregated[field] = total
+        
+        return aggregated
+    
     def process_data(self, data):
         """Process raw webhook data into structured format."""
         processed = {}

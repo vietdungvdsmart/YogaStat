@@ -280,3 +280,134 @@ class ChartGenerator:
             x=0.5, y=0.5, xanchor='center', yanchor='middle',
             showarrow=False, font=dict(size=16)
         )
+    
+    def create_time_series_chart(self, time_series_data):
+        """Create a comprehensive time series chart showing key metrics over time."""
+        if not time_series_data:
+            return go.Figure()
+        
+        # Extract time labels and metrics
+        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        
+        fig = go.Figure()
+        
+        # Add traces for key metrics
+        metrics = {
+            'New Users': ([item.get('first_open', 0) for item in time_series_data], self.color_scheme['success']),
+            'App Opens': ([item.get('app_open', 0) for item in time_series_data], self.color_scheme['primary']),
+            'Practice Sessions': ([item.get('practice_with_video', 0) + item.get('practice_with_ai', 0) for item in time_series_data], self.color_scheme['secondary']),
+            'App Removals': ([item.get('app_remove', 0) for item in time_series_data], self.color_scheme['error'])
+        }
+        
+        for metric_name, (values, color) in metrics.items():
+            fig.add_trace(go.Scatter(
+                x=weeks,
+                y=values,
+                mode='lines+markers',
+                name=metric_name,
+                line=dict(color=color, width=3),
+                marker=dict(size=8, color=color),
+                hovertemplate=f'<b>{metric_name}</b><br>Week: %{{x}}<br>Count: %{{y}}<extra></extra>'
+            ))
+        
+        fig.update_layout(
+            title="Key Metrics Trends Over Time",
+            xaxis_title="Time Period",
+            yaxis_title="Count",
+            height=400,
+            hovermode='x unified',
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        return fig
+    
+    def create_user_flow_trends_chart(self, time_series_data):
+        """Create a chart showing user acquisition vs churn trends."""
+        if not time_series_data:
+            return go.Figure()
+        
+        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        new_users = [item.get('first_open', 0) for item in time_series_data]
+        churn = [item.get('app_remove', 0) for item in time_series_data]
+        
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=new_users,
+            mode='lines+markers',
+            name='New Users',
+            line=dict(color=self.color_scheme['success'], width=3),
+            marker=dict(size=8),
+            fill='tonexty',
+            hovertemplate='<b>New Users</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=churn,
+            mode='lines+markers',
+            name='Churn',
+            line=dict(color=self.color_scheme['error'], width=3),
+            marker=dict(size=8),
+            hovertemplate='<b>Churn</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title="User Acquisition vs Churn Trends",
+            xaxis_title="Time Period",
+            yaxis_title="Count",
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        return fig
+    
+    def create_practice_trends_chart(self, time_series_data):
+        """Create a chart showing practice session trends (video vs AI)."""
+        if not time_series_data:
+            return go.Figure()
+        
+        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        video_practice = [item.get('practice_with_video', 0) for item in time_series_data]
+        ai_practice = [item.get('practice_with_ai', 0) for item in time_series_data]
+        
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=video_practice,
+            mode='lines+markers',
+            name='Video Practice',
+            line=dict(color=self.color_scheme['primary'], width=3),
+            marker=dict(size=8),
+            stackgroup='one',
+            hovertemplate='<b>Video Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=ai_practice,
+            mode='lines+markers',
+            name='AI Practice',
+            line=dict(color=self.color_scheme['secondary'], width=3),
+            marker=dict(size=8),
+            stackgroup='one',
+            hovertemplate='<b>AI Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title="Practice Session Trends",
+            xaxis_title="Time Period",
+            yaxis_title="Practice Sessions",
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        return fig
