@@ -54,24 +54,71 @@ with col2:
         if webhook_url:
             try:
                 with st.spinner("Fetching data from webhook..."):
-                    response = requests.get(webhook_url, timeout=10)
-                    response.raise_for_status()
-                    data = response.json()
+                    # Add headers that n8n might expect
+                    headers = {
+                        'User-Agent': 'Yoga-Analytics-Dashboard/1.0',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
                     
-                    # Validate data structure
-                    processor = DataProcessor()
-                    if processor.validate_data(data):
-                        st.session_state.data = data
-                        st.session_state.webhook_url = webhook_url
-                        st.success("✅ Data fetched successfully!")
-                        st.rerun()
-                    else:
-                        st.error("❌ Invalid data format received from webhook")
+                    # Try both GET and POST methods
+                    st.info(f"🔗 Attempting to connect to: {webhook_url}")
+                    
+                    try:
+                        # First try GET
+                        response = requests.get(webhook_url, headers=headers, timeout=15)
+                        if response.status_code == 405:  # Method not allowed
+                            st.warning("⚠️ GET method not allowed, trying POST...")
+                            # Try POST if GET fails
+                            response = requests.post(webhook_url, headers=headers, json={}, timeout=15)
                         
-            except requests.exceptions.RequestException as e:
-                st.error(f"❌ Failed to fetch data: {str(e)}")
-            except json.JSONDecodeError:
+                        response.raise_for_status()
+                        
+                        # Check if response is empty
+                        if not response.content:
+                            st.error("❌ Webhook returned empty response. Please check your n8n workflow configuration.")
+                            st.info("💡 Make sure your n8n workflow has a 'Respond to Webhook' node that returns the required data format.")
+                        else:
+                            data = response.json()
+                            
+                            # Show received data for debugging
+                            with st.expander("🔍 Debug: Raw Response Data"):
+                                st.json(data)
+                            
+                            # Validate data structure
+                            processor = DataProcessor()
+                            if processor.validate_data(data):
+                                st.session_state.data = data
+                                st.session_state.webhook_url = webhook_url
+                                st.success("✅ Data fetched successfully!")
+                                st.rerun()
+                            else:
+                                st.error("❌ Invalid data format received from webhook")
+                                st.info("💡 Expected data format is shown below in the 'Expected Data Format' section.")
+                                
+                    except requests.exceptions.HTTPError as e:
+                        if response.status_code == 404:
+                            st.error("❌ Webhook not found (404). Please check:")
+                            st.write("• Is your n8n workflow active and saved?")
+                            st.write("• Does the webhook URL match exactly?")
+                            st.write("• Try copying the webhook URL directly from n8n")
+                        elif response.status_code == 500:
+                            st.error("❌ Server error (500). Your n8n workflow might have an error.")
+                        else:
+                            st.error(f"❌ HTTP Error {response.status_code}: {str(e)}")
+                            
+            except requests.exceptions.ConnectionError:
+                st.error("❌ Connection failed. Please check:")
+                st.write("• Is your n8n instance running?")
+                st.write("• Can you access the n8n URL in your browser?")
+                st.write("• Check your internet connection")
+            except requests.exceptions.Timeout:
+                st.error("❌ Request timed out. The webhook might be taking too long to respond.")
+            except json.JSONDecodeError as e:
                 st.error("❌ Invalid JSON response from webhook")
+                st.write(f"Response content: {response.text[:500]}...")
+            except Exception as e:
+                st.error(f"❌ Unexpected error: {str(e)}")
         else:
             st.error("❌ Please enter a webhook URL")
 
@@ -264,7 +311,7 @@ else:
     # Empty state
     st.info("👆 Please enter your webhook URL and click 'Fetch Data' to begin analyzing your yoga app metrics.")
     
-    # Show sample data structure
+    # Show sample data structure and n8n setup guide
     with st.expander("📋 Expected Data Format"):
         st.code("""
 {
@@ -285,6 +332,66 @@ else:
   "close_popup": 9
 }
         """, language="json")
+    
+    with st.expander("🔧 n8n Webhook Setup Guide"):
+        st.markdown("""
+        **To set up your n8n webhook correctly:**
+        
+        1. **Create a new workflow** in your n8n instance
+        2. **Add a Webhook node** as the trigger:
+           - Set HTTP Method to `GET` or `POST`
+           - Leave Authentication as `None`
+           - Copy the generated webhook URL
+        
+        3. **Add your data source** (e.g., database query, API call, etc.)
+        
+        4. **Add a 'Respond to Webhook' node** at the end:
+           - Set Response Code to `200`
+           - Set Response Body to return the JSON data format shown above
+        
+        5. **Activate your workflow** (click the toggle switch)
+        
+        6. **Test the webhook** by visiting the URL in your browser - you should see the JSON response
+        
+        **Common Issues:**
+        - ❌ Workflow not activated → Click the toggle to activate
+        - ❌ Missing 'Respond to Webhook' node → Webhook will return empty response
+        - ❌ Wrong data format → Check the expected format above
+        - ❌ n8n Cloud URL format → Use the full webhook URL from n8n
+        
+        **Example n8n Cloud URL format:**
+        `https://yourinstance.app.n8n.cloud/webhook/your-webhook-id`
+        """)
+    
+    # Add test data button for demonstration
+    st.divider()
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🧪 Load Sample Data (for testing)"):
+            sample_data = {
+                "time": "1/1/2025 - 7/1/2025",
+                "first_open": 150,
+                "app_remove": 25,
+                "session_start": 420,
+                "app_open": 280,
+                "login": 320,
+                "view_exercise": 380,
+                "health_survey": 190,
+                "view_roadmap": 45,
+                "practice_with_video": 160,
+                "practice_with_ai": 85,
+                "chat_ai": 65,
+                "show_popup": 200,
+                "view_detail_popup": 85,
+                "close_popup": 140
+            }
+            st.session_state.data = sample_data
+            st.success("✅ Sample data loaded! You can now explore the dashboard features.")
+            st.rerun()
+    
+    with col2:
+        st.info("💡 **Tip:** Use sample data to explore dashboard features while setting up your webhook.")
 
 # Sidebar with additional controls
 with st.sidebar:
