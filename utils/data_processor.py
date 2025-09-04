@@ -96,6 +96,40 @@ class DataProcessor:
         
         return aggregated
     
+    def calculate_week_over_week_kpis(self, data_list):
+        """Calculate KPIs comparing the two most recent weeks."""
+        if not data_list or len(data_list) < 2:
+            # If less than 2 weeks, return current week only
+            current_week = data_list[-1] if data_list else {}
+            return {
+                'current': self.calculate_kpis(current_week),
+                'previous': {},
+                'deltas': {}
+            }
+        
+        # Get the two most recent weeks
+        current_week = data_list[-1]
+        previous_week = data_list[-2]
+        
+        # Calculate KPIs for both weeks
+        current_kpis = self.calculate_kpis(current_week)
+        previous_kpis = self.calculate_kpis(previous_week)
+        
+        # Calculate percentage changes
+        deltas = {}
+        for key in current_kpis:
+            if key in previous_kpis and previous_kpis[key] > 0:
+                change = (current_kpis[key] - previous_kpis[key]) / previous_kpis[key]
+                deltas[key] = change
+            else:
+                deltas[key] = 0
+        
+        return {
+            'current': current_kpis,
+            'previous': previous_kpis,
+            'deltas': deltas
+        }
+    
     def process_data(self, data):
         """Process raw webhook data into structured format."""
         processed = {}
