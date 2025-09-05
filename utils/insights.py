@@ -42,6 +42,27 @@ class InsightsGenerator:
         
         return insights
     
+    def generate_split_insights(self, overall_data, overall_kpis, recent_data, recent_kpis):
+        """Generate insights split into 'Overall' and 'This Week' sections."""
+        # Generate overall insights
+        overall_insights = self.generate_insights(overall_data, overall_kpis)
+        
+        # Generate recent week insights
+        recent_insights = self.generate_insights(recent_data, recent_kpis)
+        
+        return {
+            'overall': {
+                'key_insights': overall_insights['key_insights'],
+                'recommendations': overall_insights['recommendations'],
+                'opportunities': overall_insights['opportunities']
+            },
+            'this_week': {
+                'key_insights': recent_insights['key_insights'],
+                'recommendations': recent_insights['recommendations'],
+                'opportunities': recent_insights['opportunities']
+            }
+        }
+    
     def _analyze_retention(self, kpis):
         """Analyze user retention metrics."""
         insights = []

@@ -436,19 +436,66 @@ if st.session_state.data:
     
     # Insights Panel
     st.header("🧠 Insights & Recommendations")
-    insights = insights_gen.generate_insights(aggregated_data, kpis)
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("🎯 Key Insights")
-        for insight in insights['key_insights']:
-            st.info(f"💡 {insight}")
-    
-    with col2:
+    # Prepare data for split insights
+    if is_time_series and len(filtered_periods) >= 2:
+        # Use filtered data for "Overall" and recent 2 weeks for "This Week"
+        recent_periods = filtered_periods[-2:]
+        recent_aggregated = processor._aggregate_time_series_data(recent_periods)
+        recent_kpis = processor.calculate_kpis(recent_aggregated)
+        
+        # Generate split insights
+        split_insights = insights_gen.generate_split_insights(
+            overall_data=aggregated_data, 
+            overall_kpis=kpis,
+            recent_data=recent_aggregated,
+            recent_kpis=recent_kpis
+        )
+        
+        # Display split insights
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🌍 Overall Insights")
+            st.markdown("*Based on all available data*")
+            for insight in split_insights['overall']['key_insights']:
+                st.info(f"💡 {insight}")
+        
+        with col2:
+            st.subheader("📅 This Week Insights") 
+            st.markdown("*Based on the 2 most recent weeks*")
+            for insight in split_insights['this_week']['key_insights']:
+                st.info(f"💡 {insight}")
+        
+        # Recommendations section
         st.subheader("🚀 Recommendations")
-        for recommendation in insights['recommendations']:
-            st.success(f"✅ {recommendation}")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Overall Strategy:**")
+            for recommendation in split_insights['overall']['recommendations']:
+                st.success(f"✅ {recommendation}")
+        
+        with col2:
+            st.markdown("**Recent Focus:**")
+            for recommendation in split_insights['this_week']['recommendations']:
+                st.success(f"✅ {recommendation}")
+    
+    else:
+        # Single insights for non-time-series or insufficient data
+        insights = insights_gen.generate_insights(aggregated_data, kpis)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🎯 Key Insights")
+            for insight in insights['key_insights']:
+                st.info(f"💡 {insight}")
+        
+        with col2:
+            st.subheader("🚀 Recommendations")
+            for recommendation in insights['recommendations']:
+                st.success(f"✅ {recommendation}")
     
     # Feature Adoption Analysis
     st.subheader("📊 Feature Adoption Analysis")
