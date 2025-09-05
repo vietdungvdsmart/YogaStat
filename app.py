@@ -467,19 +467,12 @@ if st.session_state.data:
             for insight in split_insights['this_week']['key_insights']:
                 st.info(f"💡 {insight}")
         
-        # Recommendations section
+        # Recommendations section (unified)
         st.subheader("🚀 Recommendations")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Overall Strategy:**")
-            for recommendation in split_insights['overall']['recommendations']:
-                st.success(f"✅ {recommendation}")
-        
-        with col2:
-            st.markdown("**Recent Focus:**")
-            for recommendation in split_insights['this_week']['recommendations']:
-                st.success(f"✅ {recommendation}")
+        # Combine and deduplicate recommendations from both overall and recent insights
+        all_recommendations = list(set(split_insights['overall']['recommendations'] + split_insights['this_week']['recommendations']))
+        for recommendation in all_recommendations:
+            st.success(f"✅ {recommendation}")
     
     else:
         # Single insights for non-time-series or insufficient data
