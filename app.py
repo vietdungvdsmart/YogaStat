@@ -460,9 +460,9 @@ if st.session_state.data:
             st.markdown("*Based on all available data*")
             for sentiment, insight in split_insights['overall']['key_insights']:
                 if sentiment == "positive":
-                    st.success(f"💡 {insight}")
+                    st.success(f"✅ {insight}")
                 elif sentiment == "negative":
-                    st.error(f"💡 {insight}")
+                    st.error(f"⚠️ {insight}")
                 else:  # neutral
                     st.info(f"💡 {insight}")
         
@@ -471,9 +471,9 @@ if st.session_state.data:
             st.markdown("*Based on the 2 most recent weeks*")
             for sentiment, insight in split_insights['this_week']['key_insights']:
                 if sentiment == "positive":
-                    st.success(f"💡 {insight}")
+                    st.success(f"✅ {insight}")
                 elif sentiment == "negative":
-                    st.error(f"💡 {insight}")
+                    st.error(f"⚠️ {insight}")
                 else:  # neutral
                     st.info(f"💡 {insight}")
         
@@ -494,9 +494,9 @@ if st.session_state.data:
             st.subheader("🎯 Key Insights")
             for sentiment, insight in insights['key_insights']:
                 if sentiment == "positive":
-                    st.success(f"💡 {insight}")
+                    st.success(f"✅ {insight}")
                 elif sentiment == "negative":
-                    st.error(f"💡 {insight}")
+                    st.error(f"⚠️ {insight}")
                 else:  # neutral
                     st.info(f"💡 {insight}")
         
