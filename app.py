@@ -458,14 +458,24 @@ if st.session_state.data:
         with col1:
             st.subheader("🌍 Overall Insights")
             st.markdown("*Based on all available data*")
-            for insight in split_insights['overall']['key_insights']:
-                st.info(f"💡 {insight}")
+            for sentiment, insight in split_insights['overall']['key_insights']:
+                if sentiment == "positive":
+                    st.success(f"💡 {insight}")
+                elif sentiment == "negative":
+                    st.error(f"💡 {insight}")
+                else:  # neutral
+                    st.info(f"💡 {insight}")
         
         with col2:
             st.subheader("📅 This Week Insights") 
             st.markdown("*Based on the 2 most recent weeks*")
-            for insight in split_insights['this_week']['key_insights']:
-                st.info(f"💡 {insight}")
+            for sentiment, insight in split_insights['this_week']['key_insights']:
+                if sentiment == "positive":
+                    st.success(f"💡 {insight}")
+                elif sentiment == "negative":
+                    st.error(f"💡 {insight}")
+                else:  # neutral
+                    st.info(f"💡 {insight}")
         
         # Recommendations section (unified)
         st.subheader("🚀 Recommendations")
@@ -482,8 +492,13 @@ if st.session_state.data:
         
         with col1:
             st.subheader("🎯 Key Insights")
-            for insight in insights['key_insights']:
-                st.info(f"💡 {insight}")
+            for sentiment, insight in insights['key_insights']:
+                if sentiment == "positive":
+                    st.success(f"💡 {insight}")
+                elif sentiment == "negative":
+                    st.error(f"💡 {insight}")
+                else:  # neutral
+                    st.info(f"💡 {insight}")
         
         with col2:
             st.subheader("🚀 Recommendations")

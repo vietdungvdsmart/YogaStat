@@ -22,22 +22,22 @@ class InsightsGenerator:
             'opportunities': []
         }
         
-        # Analyze retention
+        # Analyze retention (returns tuples with sentiment)
         insights['key_insights'].extend(self._analyze_retention(kpis))
         
-        # Analyze engagement
+        # Analyze engagement (returns tuples with sentiment)
         insights['key_insights'].extend(self._analyze_engagement(data, kpis))
         
-        # Analyze feature usage
+        # Analyze feature usage (returns tuples with sentiment)
         insights['key_insights'].extend(self._analyze_feature_usage(data))
         
-        # Analyze popup performance
+        # Analyze popup performance (returns tuples with sentiment)
         insights['key_insights'].extend(self._analyze_popup_performance(data))
         
-        # Generate recommendations
+        # Generate recommendations (still strings)
         insights['recommendations'].extend(self._generate_recommendations(data, kpis))
         
-        # Identify opportunities
+        # Identify opportunities (still strings)
         insights['opportunities'].extend(self._identify_opportunities(data, kpis))
         
         return insights
@@ -70,16 +70,16 @@ class InsightsGenerator:
         churn_rate = kpis.get('churn_rate', 0)
         
         if retention_rate > self.benchmarks['retention_rate_good']:
-            insights.append(f"Excellent user retention at {retention_rate:.1%} - significantly above industry average")
+            insights.append(("positive", f"Excellent user retention at {retention_rate:.1%} - significantly above industry average"))
         elif retention_rate > 0.15:
-            insights.append(f"Moderate retention rate of {retention_rate:.1%} - room for improvement")
+            insights.append(("neutral", f"Moderate retention rate of {retention_rate:.1%} - room for improvement"))
         else:
-            insights.append(f"Low retention rate of {retention_rate:.1%} - immediate attention needed")
+            insights.append(("negative", f"Low retention rate of {retention_rate:.1%} - immediate attention needed"))
         
         if churn_rate > self.benchmarks['churn_rate_warning']:
-            insights.append(f"High churn rate of {churn_rate:.1%} detected - users are leaving at concerning rate")
+            insights.append(("negative", f"High churn rate of {churn_rate:.1%} detected - users are leaving at concerning rate"))
         else:
-            insights.append(f"Churn rate of {churn_rate:.1%} is within acceptable range")
+            insights.append(("positive", f"Churn rate of {churn_rate:.1%} is within acceptable range"))
         
         return insights
     
@@ -93,19 +93,19 @@ class InsightsGenerator:
         total_practice = practice_video + practice_ai
         
         if engagement_rate > self.benchmarks['engagement_rate_good']:
-            insights.append(f"Strong engagement rate of {engagement_rate:.1%} - users are actively practicing")
+            insights.append(("positive", f"Strong engagement rate of {engagement_rate:.1%} - users are actively practicing"))
         else:
-            insights.append(f"Engagement rate of {engagement_rate:.1%} below target - need to boost practice sessions")
+            insights.append(("negative", f"Engagement rate of {engagement_rate:.1%} below target - need to boost practice sessions"))
         
         # Analyze practice preferences
         if total_practice > 0:
             video_preference = practice_video / total_practice
             if video_preference > 0.7:
-                insights.append("Users strongly prefer video-guided practice sessions over AI assistance")
+                insights.append(("neutral", "Users strongly prefer video-guided practice sessions over AI assistance"))
             elif video_preference < 0.3:
-                insights.append("Users are embracing AI-guided practice sessions over traditional videos")
+                insights.append(("positive", "Users are embracing AI-guided practice sessions over traditional videos"))
             else:
-                insights.append("Balanced usage between video and AI practice sessions")
+                insights.append(("positive", "Balanced usage between video and AI practice sessions"))
         
         return insights
     
@@ -123,22 +123,22 @@ class InsightsGenerator:
         
         # Exercise content analysis
         if exercise_views / total_sessions > 0.8:
-            insights.append("Exercise content is highly popular - users are actively exploring workouts")
+            insights.append(("positive", "Exercise content is highly popular - users are actively exploring workouts"))
         elif exercise_views / total_sessions < 0.3:
-            insights.append("Low exercise content engagement - content discovery needs improvement")
+            insights.append(("negative", "Low exercise content engagement - content discovery needs improvement"))
         
         # Roadmap feature analysis
         if roadmap_views / total_sessions < 0.2:
-            insights.append("Roadmap feature is underutilized - users may not understand its value")
+            insights.append(("negative", "Roadmap feature is underutilized - users may not understand its value"))
         
         # Health survey completion
         if health_surveys / total_sessions > 0.7:
-            insights.append("High health survey completion rate - users are engaged with wellness tracking")
+            insights.append(("positive", "High health survey completion rate - users are engaged with wellness tracking"))
         
         # AI chat adoption
         ai_adoption_rate = ai_chat / total_sessions
         if ai_adoption_rate < self.benchmarks['ai_adoption_target']:
-            insights.append(f"AI chat adoption at {ai_adoption_rate:.1%} is below target - promote AI features")
+            insights.append(("negative", f"AI chat adoption at {ai_adoption_rate:.1%} is below target - promote AI features"))
         
         return insights
     
@@ -155,12 +155,12 @@ class InsightsGenerator:
             close_rate = popups_closed / popups_shown
             
             if conversion_rate > self.benchmarks['popup_conversion_good']:
-                insights.append(f"Popup conversion rate of {conversion_rate:.1%} is excellent - content is relevant")
+                insights.append(("positive", f"Popup conversion rate of {conversion_rate:.1%} is excellent - content is relevant"))
             else:
-                insights.append(f"Popup conversion rate of {conversion_rate:.1%} needs improvement - review content relevance")
+                insights.append(("negative", f"Popup conversion rate of {conversion_rate:.1%} needs improvement - review content relevance"))
             
             if close_rate > 0.8:
-                insights.append("High popup close rate suggests users find them intrusive or irrelevant")
+                insights.append(("negative", "High popup close rate suggests users find them intrusive or irrelevant"))
             
         return insights
     
