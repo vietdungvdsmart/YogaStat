@@ -398,13 +398,13 @@ if st.session_state.data:
     col1, col2 = st.columns(2)
     
     with col1:
-        chart_title = "👥 User Acquisition vs Churn" if not is_time_series else "👥 Overall User Metrics"
+        chart_title = get_text('user_acquisition_vs_churn', st.session_state.language) if not is_time_series else get_text('overall_user_metrics', st.session_state.language)
         st.subheader(chart_title)
         acquisition_chart = chart_gen.create_acquisition_churn_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(acquisition_chart, use_container_width=True)
     
     with col2:
-        chart_title = "🏃‍♀️ Practice Preferences" if not is_time_series else "🏃‍♀️ Total Practice Distribution"
+        chart_title = get_text('practice_preferences', st.session_state.language) if not is_time_series else get_text('total_practice_distribution', st.session_state.language)
         st.subheader(chart_title)
         practice_chart = chart_gen.create_practice_preferences_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(practice_chart, use_container_width=True)
@@ -413,36 +413,36 @@ if st.session_state.data:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📱 Feature Usage Analysis")
+        st.subheader(get_text('feature_usage_analysis', st.session_state.language))
         feature_chart = chart_gen.create_feature_usage_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(feature_chart, use_container_width=True)
     
     with col2:
-        st.subheader("🤖 AI Engagement Metrics")
+        st.subheader(get_text('ai_engagement_metrics', st.session_state.language))
         ai_chart = chart_gen.create_ai_engagement_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(ai_chart, use_container_width=True)
     
     # Popup Performance
-    st.subheader("💬 Popup Performance Dashboard")
+    st.subheader(get_text('popup_performance_header', st.session_state.language))
     col1, col2, col3 = st.columns(3)
     
     popup_metrics = processor.calculate_popup_metrics(aggregated_data)
     
     with col1:
         st.metric(
-            label="👁️ Total Popups Shown",
+            label=get_text('total_popups_shown', st.session_state.language),
             value=f"{popup_metrics['total_shown']:,}"
         )
     
     with col2:
         st.metric(
-            label="🔍 Detail Views",
+            label=get_text('detail_views', st.session_state.language),
             value=f"{popup_metrics['detail_views']:,}"
         )
     
     with col3:
         st.metric(
-            label="💯 Conversion Rate",
+            label=get_text('conversion_rate', st.session_state.language),
             value=f"{popup_metrics['conversion_rate']:.1%}"
         )
     
@@ -524,37 +524,37 @@ if st.session_state.data:
                 st.success(f"✅ {recommendation}")
     
     # Feature Adoption Analysis
-    st.subheader("📊 Feature Adoption Analysis")
+    st.subheader(get_text('feature_adoption_header', st.session_state.language))
     adoption_data = processor.calculate_feature_adoption(aggregated_data)
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("**🏆 Most Used Features:**")
+        st.markdown(get_text('most_used_features', st.session_state.language))
         for feature, usage in adoption_data['most_used'][:3]:
             st.write(f"• {feature}: {usage}")
     
     with col2:
-        st.markdown("**📈 Growing Features:**")
+        st.markdown(get_text('growing_features', st.session_state.language))
         for feature, growth in adoption_data['growing'][:3]:
             st.write(f"• {feature}: +{growth:.1%}")
     
     with col3:
-        st.markdown("**⚠️ Underutilized Features:**")
+        st.markdown(get_text('underutilized_features', st.session_state.language))
         for feature, usage in adoption_data['least_used'][:3]:
             st.write(f"• {feature}: {usage}")
     
     st.divider()
     
     # Export Section
-    st.header("📤 Export Data")
+    st.header(get_text('export_header', st.session_state.language))
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("📊 Export Raw Data (CSV)"):
+        if st.button(get_text('export_raw_data', st.session_state.language)):
             csv_data = processor.export_to_csv(aggregated_data)
             st.download_button(
-                label="Download CSV",
+                label=get_text('download_csv', st.session_state.language),
                 data=csv_data,
                 file_name=f"yoga_app_analytics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv"
