@@ -47,6 +47,10 @@ TRANSLATIONS = {
         'active_sessions': '🎯 Active Sessions',
         'engagement_rate': '💪 Engagement Rate',
         
+        # Country analytics
+        'analytics': 'Analytics',
+        'all_countries_analytics': 'All Countries Analytics',
+        
         # Charts section
         'analytics_overview_header': '📈 Analytics Overview',
         'time_series_analysis': '📊 Time Series Analysis',
@@ -237,6 +241,10 @@ TRANSLATIONS = {
         'churn_rate': '📉 Tỷ Lệ Rời Bỏ',
         'active_sessions': '🎯 Phiên Hoạt Động',
         'engagement_rate': '💪 Tỷ Lệ Tương Tác',
+        
+        # Country analytics
+        'analytics': 'Phân Tích',
+        'all_countries_analytics': 'Phân Tích Tất Cả Các Quốc Gia',
         
         # Charts section
         'analytics_overview_header': '📈 Tổng Quan Phân Tích',
