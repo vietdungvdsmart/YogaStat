@@ -13,6 +13,12 @@ class DataProcessor:
             'practice_with_video', 'practice_with_ai', 'chat_ai',
             'show_popup', 'view_detail_popup', 'close_popup'
         ]
+        
+        # Field normalization mapping
+        self.field_mapping = {
+            'in_app_purchasse': 'in_app_purchase',  # Fix typo in field name
+            'buy_package': 'in_app_purchase',      # Alternative field name
+        }
     
     def validate_data(self, data):
         """Validate that the webhook data contains all required fields."""
@@ -34,41 +40,21 @@ class DataProcessor:
         return True
     
     def process_webhook_data(self, raw_data):
-        """Process webhook data that can be either single object or array format."""
+        """Process webhook data in new country-based format or legacy formats."""
         try:
-            # Check if data is an array (your new format)
-            if isinstance(raw_data, list):
-                if len(raw_data) == 0:
-                    return None
-                
-                # Validate each item in the array
-                valid_data = []
-                for item in raw_data:
-                    if self.validate_data(item):
-                        valid_data.append(item)
-                
-                if not valid_data:
-                    return None
-                
-                # Return the processed array data with time series info
-                return {
-                    'is_time_series': True,
-                    'time_periods': len(valid_data),
-                    'data': valid_data,
-                    'latest_period': valid_data[-1],  # Most recent data for current metrics
-                    'aggregated': self._aggregate_time_series_data(valid_data)
-                }
+            # Check if data is country-based array format
+            if isinstance(raw_data, list) and len(raw_data) > 0:
+                # Check if this is the new country-based format
+                first_item = raw_data[0]
+                if isinstance(first_item, dict) and 'country' in first_item and 'data' in first_item:
+                    return self._process_country_data(raw_data)
+                else:
+                    # Legacy time-series array format
+                    return self._process_legacy_array(raw_data)
             
             # Check if data is a single object (original format)
             elif isinstance(raw_data, dict):
-                if self.validate_data(raw_data):
-                    return {
-                        'is_time_series': False,
-                        'time_periods': 1,
-                        'data': [raw_data],
-                        'latest_period': raw_data,
-                        'aggregated': raw_data
-                    }
+                return self._process_single_object(raw_data)
             
             return None
             
@@ -256,3 +242,120 @@ class DataProcessor:
         }
         
         return journey
+    
+    def _process_country_data(self, country_array):
+        """Process new country-based data format."""
+        countries_data = {}
+        all_time_periods = {}  # For aggregating across countries
+        
+        for country_obj in country_array:
+            country = country_obj.get('country', 'Unknown')
+            country_data = country_obj.get('data', [])
+            
+            # Normalize and validate each time period data
+            normalized_data = []
+            for item in country_data:
+                normalized_item = self._normalize_fields(item)
+                if self._validate_data_relaxed(normalized_item):
+                    normalized_data.append(normalized_item)
+            
+            if normalized_data:
+                # Store individual country data
+                countries_data[country] = {
+                    'is_time_series': True,
+                    'time_periods': len(normalized_data),
+                    'data': normalized_data,
+                    'latest_period': normalized_data[-1],
+                    'aggregated': self._aggregate_time_series_data(normalized_data)
+                }
+                
+                # Collect data for aggregation across countries
+                for item in normalized_data:
+                    time_key = item.get('time', 'Unknown')
+                    if time_key not in all_time_periods:
+                        all_time_periods[time_key] = item.copy()
+                    else:
+                        # Sum numeric fields across countries for same time period
+                        for field, value in item.items():
+                            if field != 'time' and isinstance(value, (int, float)):
+                                all_time_periods[time_key][field] = all_time_periods[time_key].get(field, 0) + value
+        
+        # Create "All Countries" aggregated data
+        if all_time_periods:
+            aggregated_periods = list(all_time_periods.values())
+            countries_data['All Countries'] = {
+                'is_time_series': True,
+                'time_periods': len(aggregated_periods),
+                'data': aggregated_periods,
+                'latest_period': aggregated_periods[-1] if aggregated_periods else {},
+                'aggregated': self._aggregate_time_series_data(aggregated_periods)
+            }
+        
+        return countries_data
+    
+    def _process_legacy_array(self, data_array):
+        """Process legacy time-series array format."""
+        valid_data = []
+        for item in data_array:
+            if self.validate_data(item):
+                valid_data.append(item)
+        
+        if not valid_data:
+            return None
+        
+        return {
+            'is_time_series': True,
+            'time_periods': len(valid_data),
+            'data': valid_data,
+            'latest_period': valid_data[-1],
+            'aggregated': self._aggregate_time_series_data(valid_data)
+        }
+    
+    def _process_single_object(self, data_obj):
+        """Process single object format."""
+        if self.validate_data(data_obj):
+            return {
+                'is_time_series': False,
+                'time_periods': 1,
+                'data': [data_obj],
+                'latest_period': data_obj,
+                'aggregated': data_obj
+            }
+        return None
+    
+    def _normalize_fields(self, data):
+        """Normalize field names across different data sources."""
+        normalized = {}
+        for key, value in data.items():
+            # Apply field mapping
+            new_key = self.field_mapping.get(key, key)
+            normalized[new_key] = value
+        return normalized
+    
+    def _validate_data_relaxed(self, data):
+        """Relaxed validation that allows for additional fields in new format."""
+        if not isinstance(data, dict):
+            return False
+        
+        # Check if we have the essential fields (time is required)
+        if 'time' not in data:
+            return False
+        
+        # Check if we have at least some core numeric fields
+        core_fields = ['first_open', 'session_start', 'app_open']
+        has_core = any(field in data for field in core_fields)
+        
+        if not has_core:
+            return False
+        
+        # Validate numeric fields that are present
+        for field, value in data.items():
+            if field != 'time' and field != 'row_number':  # Skip non-numeric fields
+                try:
+                    float(value)
+                except (ValueError, TypeError):
+                    # If it's not numeric but it's not a required field, it's okay
+                    if field in self.required_fields:
+                        return False
+        
+        return True
