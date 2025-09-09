@@ -86,8 +86,8 @@ TRANSLATIONS = {
         'recommendations_header': '🚀 Recommendations',
         'key_insights_header': '🎯 Key Insights',
         
-        # Feature adoption
-        'feature_adoption_header': '📊 Feature Adoption Analysis',
+        # Feature adoption (now changed to performance)
+        'feature_adoption_header': '📊 Feature Performance Analysis',
         'most_used_features': '**🏆 Most Used Features:**',
         'growing_features': '**📈 Growing Features:**',
         'underutilized_features': '**⚠️ Underutilized Features:**',
@@ -172,7 +172,24 @@ TRANSLATIONS = {
         'high_engagement_low_retention': 'High engagement but low retention - focus on habit formation features',
         'video_users_ai_benefit': 'Video users could benefit from AI personalization - cross-promote features',
         'browse_more_than_practice': 'Users browse more than they practice - simplify practice initiation',
-        'high_health_survey_engagement': 'High health survey engagement - expand wellness tracking features'
+        'high_health_survey_engagement': 'High health survey engagement - expand wellness tracking features',
+        
+        # Feature Performance (changed from adoption)
+        'feature_performance_header': '📊 Feature Performance Analysis',
+        
+        # Weekly breakdown content
+        'best_week_new_users_text': '**📈 Best Week (New Users):**',
+        'most_engaged_week_text': '**💪 Most Engaged Week:**',
+        'top_ai_week_text': '**🤖 Top AI Week:**',
+        'week_colon': 'Week:',
+        'new_users_colon': 'New Users:',
+        'practice_sessions_colon': 'Practice Sessions:',
+        'ai_interactions_colon': 'AI Interactions:',
+        
+        # Export buttons
+        'export_kpis': '📈 Export KPIs (JSON)',
+        'download_kpis': 'Download KPIs',
+        'export_insights_txt': '🧠 Export Insights (TXT)'
     },
     
     'vi': {
@@ -260,8 +277,8 @@ TRANSLATIONS = {
         'recommendations_header': '🚀 Khuyến Nghị',
         'key_insights_header': '🎯 Thông Tin Chính',
         
-        # Feature adoption
-        'feature_adoption_header': '📊 Phân Tích Chấp Nhận Tính Năng',
+        # Feature adoption (now changed to performance)
+        'feature_adoption_header': '📊 Phân Tích Hiệu Suất Tính Năng',
         'most_used_features': '**🏆 Tính Năng Được Sử Dụng Nhiều Nhất:**',
         'growing_features': '**📈 Tính Năng Đang Phát Triển:**',
         'underutilized_features': '**⚠️ Tính Năng Chưa Được Sử Dụng Hiệu Quả:**',
@@ -310,7 +327,24 @@ TRANSLATIONS = {
         'practice_trends_title': 'Xu Hướng Phiên Luyện Tập',
         'popups_shown': 'Popup Hiển Thị',
         'popups_viewed': 'Popup Được Xem',
-        'interaction_rate': 'Tỷ Lệ Tương Tác'
+        'interaction_rate': 'Tỷ Lệ Tương Tác',
+        
+        # Feature Performance (changed from adoption)
+        'feature_performance_header': '📊 Phân Tích Hiệu Suất Tính Năng',
+        
+        # Weekly breakdown content  
+        'best_week_new_users_text': '**📈 Tuần Tốt Nhất (Người Dùng Mới):**',
+        'most_engaged_week_text': '**💪 Tuần Tương Tác Nhiều Nhất:**',
+        'top_ai_week_text': '**🤖 Tuần AI Hàng Đầu:**',
+        'week_colon': 'Tuần:',
+        'new_users_colon': 'Người Dùng Mới:',
+        'practice_sessions_colon': 'Phiên Luyện Tập:',
+        'ai_interactions_colon': 'Tương Tác AI:',
+        
+        # Export buttons
+        'export_kpis': '📈 Xuất KPIs (JSON)',
+        'download_kpis': 'Tải KPIs',
+        'export_insights_txt': '🧠 Xuất Thông Tin Chi Tiết (TXT)'
     }
 }
 

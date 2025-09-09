@@ -377,22 +377,22 @@ if st.session_state.data:
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.markdown("**📈 Best Week (New Users):**")
+                st.markdown(get_text('best_week_new_users_text', st.session_state.language))
                 best_week = max(filtered_periods, key=lambda x: x.get('first_open', 0))
-                st.write(f"Week: {best_week.get('time', 'N/A')}")
-                st.write(f"New Users: {best_week.get('first_open', 0)}")
+                st.write(f"{get_text('week_colon', st.session_state.language)} {best_week.get('time', 'N/A')}")
+                st.write(f"{get_text('new_users_colon', st.session_state.language)} {best_week.get('first_open', 0)}")
             
             with col2:
-                st.markdown("**💪 Most Engaged Week:**")
+                st.markdown(get_text('most_engaged_week_text', st.session_state.language))
                 most_engaged = max(filtered_periods, key=lambda x: x.get('practice_with_video', 0) + x.get('practice_with_ai', 0))
-                st.write(f"Week: {most_engaged.get('time', 'N/A')}")
-                st.write(f"Practice Sessions: {most_engaged.get('practice_with_video', 0) + most_engaged.get('practice_with_ai', 0)}")
+                st.write(f"{get_text('week_colon', st.session_state.language)} {most_engaged.get('time', 'N/A')}")
+                st.write(f"{get_text('practice_sessions_colon', st.session_state.language)} {most_engaged.get('practice_with_video', 0) + most_engaged.get('practice_with_ai', 0)}")
             
             with col3:
-                st.markdown("**🤖 Top AI Week:**")
+                st.markdown(get_text('top_ai_week_text', st.session_state.language))
                 top_ai = max(filtered_periods, key=lambda x: x.get('chat_ai', 0))
-                st.write(f"Week: {top_ai.get('time', 'N/A')}")
-                st.write(f"AI Interactions: {top_ai.get('chat_ai', 0)}")
+                st.write(f"{get_text('week_colon', st.session_state.language)} {top_ai.get('time', 'N/A')}")
+                st.write(f"{get_text('ai_interactions_colon', st.session_state.language)} {top_ai.get('chat_ai', 0)}")
     
     # Current period or aggregated charts
     col1, col2 = st.columns(2)
@@ -561,17 +561,17 @@ if st.session_state.data:
             )
     
     with col2:
-        if st.button("📈 Export KPIs (JSON)"):
+        if st.button(get_text('export_kpis', st.session_state.language)):
             json_data = json.dumps(kpis, indent=2)
             st.download_button(
-                label="Download KPIs",
+                label=get_text('download_kpis', st.session_state.language),
                 data=json_data,
                 file_name=f"yoga_app_kpis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
                 mime="application/json"
             )
     
     with col3:
-        if st.button("🧠 Export Insights (TXT)"):
+        if st.button(get_text('export_insights_txt', st.session_state.language)):
             # Generate insights for export if not already available
             if 'insights' not in locals():
                 insights = insights_gen.generate_insights(aggregated_data, kpis)
