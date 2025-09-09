@@ -663,20 +663,122 @@ if st.session_state.data:
         # Legacy format - render single dashboard
         render_dashboard(st.session_state.data)
 
-    # OLD LOGIC TO BE REMOVED - PLACEHOLDER
-    webhook_data = st.session_state.data
-    processor = DataProcessor()
-    chart_gen = ChartGenerator()
-    insights_gen = InsightsGenerator()
+else:
+    # Empty state
+    st.info("👆 Please enter your webhook URL and click 'Fetch Data' to begin analyzing your yoga app metrics.")
     
-    # Check if we have time series data or single data point
-    is_time_series = webhook_data.get('is_time_series', False)
-    time_periods = webhook_data.get('time_periods', 1)
-    all_periods = webhook_data.get('data', [])
+    # Show sample data structure and n8n setup guide
+    with st.expander("📋 Expected Data Format"):
+        st.code("""
+{
+  "time": "1/7/2025 - 7/7/2025",
+  "first_open": 3,
+  "app_remove": 5,
+  "session_start": 9,
+  "app_open": 6,
+  "login": 9,
+  "view_exercise": 9,
+  "health_survey": 9,
+  "view_roadmap": 1,
+  "practice_with_video": 3,
+  "practice_with_ai": 3,
+  "chat_ai": 2,
+  "show_popup": 9,
+  "view_detail_popup": 9,
+  "close_popup": 9
+}
+        """, language="json")
     
-    # Add date range filter for time series data
-    if is_time_series and len(all_periods) > 1:
-        st.subheader(get_text('date_filter_header', st.session_state.language))
+    with st.expander("🔧 n8n Webhook Setup Guide"):
+        st.markdown("""
+        **To set up your n8n webhook correctly:**
+        
+        1. **Create a new workflow** in your n8n instance
+        2. **Add a Webhook node** as the trigger:
+           - Set HTTP Method to `GET` or `POST`
+           - Leave Authentication as `None`
+           - Copy the generated webhook URL
+        
+        3. **Add your data source** (e.g., database query, API call, etc.)
+        
+        4. **Add a 'Respond to Webhook' node** at the end:
+           - Set Response Code to `200`
+           - Set Response Body to return the JSON data format shown above
+        
+        5. **Activate your workflow** (click the toggle switch)
+        
+        6. **Test the webhook** by visiting the URL in your browser - you should see the JSON response
+        
+        **Common Issues:**
+        - ❌ Workflow not activated → Click the toggle to activate
+        - ❌ Missing 'Respond to Webhook' node → Webhook will return empty response
+        - ❌ Wrong data format → Check the expected format above
+        - ❌ n8n Cloud URL format → Use the full webhook URL from n8n
+        
+        **Example n8n Cloud URL format:**
+        `https://yourinstance.app.n8n.cloud/webhook/your-webhook-id`
+        """)
+    
+    # Add test data button for demonstration
+    st.divider()
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🧪 Load Sample Data (for testing)"):
+            # Create sample time series data matching your webhook format
+            sample_time_series = [
+                {"time": "1/7/2025 - 7/7/2025", "first_open": 25, "app_remove": 8, "session_start": 45, "app_open": 32, "login": 40, "view_exercise": 42, "health_survey": 38, "view_roadmap": 12, "practice_with_video": 22, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 35, "view_detail_popup": 20, "close_popup": 28},
+                {"time": "8/7/2025 - 14/7/2025", "first_open": 30, "app_remove": 5, "session_start": 52, "app_open": 28, "login": 35, "view_exercise": 38, "health_survey": 32, "view_roadmap": 8, "practice_with_video": 25, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 40, "view_detail_popup": 25, "close_popup": 30},
+                {"time": "15/7/2025 - 21/7/2025", "first_open": 20, "app_remove": 12, "session_start": 38, "app_open": 35, "login": 42, "view_exercise": 45, "health_survey": 35, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 38, "view_detail_popup": 22, "close_popup": 32},
+                {"time": "22/7/2025 - 28/7/2025", "first_open": 35, "app_remove": 6, "session_start": 48, "app_open": 40, "login": 38, "view_exercise": 40, "health_survey": 30, "view_roadmap": 18, "practice_with_video": 30, "practice_with_ai": 25, "chat_ai": 20, "show_popup": 42, "view_detail_popup": 28, "close_popup": 35}
+            ]
+            
+            # Process the sample data using the new format
+            processor = DataProcessor()
+            processed_sample = processor.process_webhook_data(sample_time_series)
+            
+            st.session_state.data = processed_sample
+            st.success("✅ Sample time series data loaded! You can now explore the dashboard with weekly data trends.")
+            st.rerun()
+    
+    with col2:
+        st.info("💡 **Tip:** Use sample data to explore dashboard features while setting up your webhook.")
+
+# Sidebar with additional controls
+with st.sidebar:
+    st.title("🎛️ Dashboard Controls")
+    
+    if st.session_state.data:
+        st.success("✅ Data Loaded")
+        st.json(st.session_state.data)
+        
+        if st.button("🗑️ Clear Data"):
+            st.session_state.data = None
+            st.session_state.webhook_url = ""
+            st.rerun()
+    else:
+        st.warning("⚠️ No data loaded")
+    
+    st.divider()
+    
+    st.markdown("### 📖 About")
+    st.markdown("""
+    This dashboard provides comprehensive analytics for yoga app user engagement:
+    
+    - **Real-time data** from n8n webhooks
+    - **KPI tracking** for user retention
+    - **Feature usage** analysis
+    - **AI engagement** metrics
+    - **Popup performance** monitoring
+    - **Actionable insights** for optimization
+    """)
+    
+    st.markdown("### 🎨 Theme")
+    st.markdown("""
+    - Primary: Soft Teal (#4FD1C7)
+    - Secondary: Lavender (#B19CD9)
+    - Accent: Sage Green (#87A96B)
+    """)
         col1, col2, col3 = st.columns([2, 2, 1])
         
         # Parse dates from the time periods to get min/max dates
