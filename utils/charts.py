@@ -333,7 +333,7 @@ class ChartGenerator:
                 y=values,
                 mode='lines+markers',
                 name=metric_name,
-                line=dict(color=color, width=3),
+                line=dict(color=color, width=3, shape='spline'),
                 marker=dict(size=8, color=color),
                 hovertemplate=f'<b>{metric_name}</b><br>Week: %{{x}}<br>Count: %{{y}}<extra></extra>'
             ))
@@ -376,7 +376,7 @@ class ChartGenerator:
             y=new_users,
             mode='lines+markers',
             name='New Users',
-            line=dict(color=self.color_scheme['success'], width=3),
+            line=dict(color=self.color_scheme['success'], width=3, shape='spline'),
             marker=dict(size=8),
             fill='tonexty',
             hovertemplate='<b>New Users</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
@@ -387,7 +387,7 @@ class ChartGenerator:
             y=churn,
             mode='lines+markers',
             name='Churn',
-            line=dict(color=self.color_scheme['error'], width=3),
+            line=dict(color=self.color_scheme['error'], width=3, shape='spline'),
             marker=dict(size=8),
             hovertemplate='<b>Churn</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
         ))
@@ -420,7 +420,7 @@ class ChartGenerator:
             y=video_practice,
             mode='lines+markers',
             name='Video Practice',
-            line=dict(color=self.color_scheme['primary'], width=3),
+            line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
             hovertemplate='<b>Video Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
@@ -431,7 +431,7 @@ class ChartGenerator:
             y=ai_practice,
             mode='lines+markers',
             name='AI Practice',
-            line=dict(color=self.color_scheme['secondary'], width=3),
+            line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
             hovertemplate='<b>AI Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
