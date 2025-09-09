@@ -41,7 +41,7 @@ if 'language' not in st.session_state:
 st.sidebar.subheader(get_text('language_selector', st.session_state.language))
 language_options = get_language_options()
 selected_language_display = st.sidebar.selectbox(
-    "",
+    "Select Language",
     options=list(language_options.keys()),
     index=list(language_options.values()).index(st.session_state.language)
 )
@@ -56,23 +56,23 @@ st.title(f"🧘‍♀️ {get_text('page_title', st.session_state.language)}")
 st.markdown(f"*{get_text('page_subtitle', st.session_state.language)}*")
 
 # Webhook input section
-st.header("📡 Data Source Configuration")
+st.header(get_text('data_source_header', st.session_state.language))
 col1, col2 = st.columns([4, 1])
 
 with col1:
     webhook_url = st.text_input(
-        "Enter your n8n webhook URL:",
+        get_text('webhook_input_label', st.session_state.language),
         value=st.session_state.webhook_url,
-        placeholder="https://your-n8n-instance.com/webhook/yoga-analytics",
-        help="Paste your n8n webhook URL that returns JSON data with yoga app metrics"
+        placeholder=get_text('webhook_placeholder', st.session_state.language),
+        help=get_text('webhook_help', st.session_state.language)
     )
 
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔄 Fetch Data", type="primary"):
+    if st.button(get_text('fetch_data_button', st.session_state.language), type="primary"):
         if webhook_url:
             try:
-                with st.spinner("Fetching data from webhook..."):
+                with st.spinner(get_text('fetching_data', st.session_state.language)):
                     # Add headers that n8n might expect
                     headers = {
                         'User-Agent': 'Yoga-Analytics-Dashboard/1.0',
@@ -112,38 +112,38 @@ with col2:
                             if processed_data:
                                 st.session_state.data = processed_data
                                 st.session_state.webhook_url = webhook_url
-                                st.success("✅ Data fetched successfully!")
+                                st.success(get_text('data_fetched_success', st.session_state.language))
                                 st.rerun()
                             else:
-                                st.error("❌ Invalid data format received from webhook")
+                                st.error(get_text('invalid_data_format', st.session_state.language))
                                 st.info("💡 Expected data format is shown below in the 'Expected Data Format' section.")
                                 
                     except requests.exceptions.HTTPError as e:
                         if response and response.status_code == 404:
-                            st.error("❌ Webhook not found (404). Please check:")
+                            st.error(get_text('webhook_not_found', st.session_state.language))
                             st.write("• Is your n8n workflow active and saved?")
                             st.write("• Does the webhook URL match exactly?")
                             st.write("• Try copying the webhook URL directly from n8n")
                         elif response and response.status_code == 500:
-                            st.error("❌ Server error (500). Your n8n workflow might have an error.")
+                            st.error(get_text('server_error', st.session_state.language))
                         else:
                             st.error(f"❌ HTTP Error: {str(e)}")
                             
             except requests.exceptions.ConnectionError:
-                st.error("❌ Connection failed. Please check:")
+                st.error(get_text('connection_failed', st.session_state.language))
                 st.write("• Is your n8n instance running?")
                 st.write("• Can you access the n8n URL in your browser?")
                 st.write("• Check your internet connection")
             except requests.exceptions.Timeout:
-                st.error("❌ Request timed out. The webhook might be taking too long to respond.")
+                st.error(get_text('request_timeout', st.session_state.language))
             except json.JSONDecodeError as e:
-                st.error("❌ Invalid JSON response from webhook")
+                st.error(get_text('invalid_json', st.session_state.language))
                 if 'response' in locals() and response is not None:
                     st.write(f"Response content: {response.text[:500]}...")
             except Exception as e:
                 st.error(f"❌ Unexpected error: {str(e)}")
         else:
-            st.error("❌ Please enter a webhook URL")
+            st.error(get_text('enter_webhook_url', st.session_state.language))
 
 # Main dashboard
 if st.session_state.data:
@@ -159,7 +159,7 @@ if st.session_state.data:
     
     # Add date range filter for time series data
     if is_time_series and len(all_periods) > 1:
-        st.subheader("📅 Date Range Filter")
+        st.subheader(get_text('date_filter_header', st.session_state.language))
         col1, col2, col3 = st.columns([2, 2, 1])
         
         # Parse dates from the time periods to get min/max dates
@@ -190,7 +190,7 @@ if st.session_state.data:
             with col1:
                 # Date range selector
                 selected_start = st.date_input(
-                    "Start Date:",
+                    get_text('start_date_label', st.session_state.language),
                     value=min_date,
                     min_value=min_date,
                     max_value=max_date,
@@ -198,7 +198,7 @@ if st.session_state.data:
                 )
                 
                 selected_end = st.date_input(
-                    "End Date:",
+                    get_text('end_date_label', st.session_state.language),
                     value=max_date,
                     min_value=min_date,
                     max_value=max_date,
@@ -219,13 +219,13 @@ if st.session_state.data:
                         if date_ranges_intersect(selected_start, selected_end, period_start, period_end):
                             preview_filtered.append(period)
                 
-                st.info(f"📊 Preview: {len(preview_filtered)} week(s) will be included")
+                st.info(get_text('preview_weeks', st.session_state.language, count=len(preview_filtered)))
                 if len(preview_filtered) == 0:
-                    st.warning("⚠️ No weeks match this date range")
+                    st.warning(get_text('no_weeks_match', st.session_state.language))
             
             with col3:
                 st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🔄 Apply Filter", type="primary"):
+                if st.button(get_text('apply_filter_button', st.session_state.language), type="primary"):
                     # Apply the filter and store in session state
                     filtered_periods = []
                     for period in all_periods:
@@ -243,14 +243,14 @@ if st.session_state.data:
                             'latest_period': filtered_periods[-1],
                             'aggregated': processor._aggregate_time_series_data(filtered_periods)
                         }
-                        st.success(f"✅ Filter applied! Showing {len(filtered_periods)} week(s) of data.")
+                        st.success(get_text('filter_applied', st.session_state.language, count=len(filtered_periods)))
                         st.rerun()
                     else:
-                        st.error("❌ No data matches selected range")
+                        st.error(get_text('no_data_matches', st.session_state.language))
                 
-                if st.button("📊 Show All Data", type="secondary"):
+                if st.button(get_text('show_all_data_button', st.session_state.language), type="secondary"):
                     st.session_state.filtered_data = None
-                    st.success("✅ Showing all available data.")
+                    st.success(get_text('showing_all_data', st.session_state.language))
                     st.rerun()
             
             # Use filtered data if available, otherwise use all data
@@ -258,11 +258,11 @@ if st.session_state.data:
                 # Use the stored filtered data
                 webhook_data = st.session_state.filtered_data
                 filtered_periods = webhook_data.get('data', [])
-                st.info(f"🎯 Currently showing filtered data: {len(filtered_periods)} week(s)")
+                st.info(get_text('currently_showing_filtered', st.session_state.language, count=len(filtered_periods)))
             else:
                 # No filter applied yet, use all data
                 filtered_periods = all_periods
-                st.info("📊 Showing all available data (no filter applied)")
+                st.info(get_text('showing_all_available', st.session_state.language))
         else:
             filtered_periods = all_periods
             st.warning("⚠️ Could not parse dates from time periods")
@@ -290,22 +290,22 @@ if st.session_state.data:
         previous_week_time = filtered_periods[-2].get('time', 'Previous Week')
         
         # KPI Section
-        st.header("📊 Key Performance")
-        st.info(f"📅 Latest Week: {current_week_time} (vs Previous Week: {previous_week_time})")
+        st.header(get_text('key_performance_header', st.session_state.language))
+        st.info(get_text('latest_week', st.session_state.language, current=current_week_time, previous=previous_week_time))
     else:
         # Fallback for Key Performance section if not enough periods
         key_performance_kpis = kpis
         key_performance_deltas = {}
         
         # KPI Section
-        st.header("📊 Key Performance")
+        st.header(get_text('key_performance_header', st.session_state.language))
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         delta_val = f"{key_performance_deltas.get('total_new_users', 0):+.1%}" if key_performance_deltas.get('total_new_users') else None
         st.metric(
-            label="👥 Total New Users",
+            label=get_text('total_new_users', st.session_state.language),
             value=f"{key_performance_kpis['total_new_users']:,}",
             delta=delta_val
         )
@@ -313,7 +313,7 @@ if st.session_state.data:
     with col2:
         delta_val = f"{key_performance_deltas.get('retention_rate', 0):+.1%}" if key_performance_deltas.get('retention_rate') else None
         st.metric(
-            label="🔄 User Retention Rate",
+            label=get_text('user_retention_rate', st.session_state.language),
             value=f"{key_performance_kpis['retention_rate']:.1%}",
             delta=delta_val
         )
@@ -321,7 +321,7 @@ if st.session_state.data:
     with col3:
         delta_val = f"{key_performance_deltas.get('churn_rate', 0):+.1%}" if key_performance_deltas.get('churn_rate') else None
         st.metric(
-            label="📉 Churn Rate",
+            label=get_text('churn_rate', st.session_state.language),
             value=f"{key_performance_kpis['churn_rate']:.1%}",
             delta=delta_val,
             delta_color="inverse"
@@ -330,7 +330,7 @@ if st.session_state.data:
     with col4:
         delta_val = f"{key_performance_deltas.get('active_sessions', 0):+.1%}" if key_performance_deltas.get('active_sessions') else None
         st.metric(
-            label="🎯 Active Sessions",
+            label=get_text('active_sessions', st.session_state.language),
             value=f"{key_performance_kpis['active_sessions']:,}",
             delta=delta_val
         )
@@ -338,7 +338,7 @@ if st.session_state.data:
     with col5:
         delta_val = f"{key_performance_deltas.get('engagement_rate', 0):+.1%}" if key_performance_deltas.get('engagement_rate') else None
         st.metric(
-            label="💪 Engagement Rate",
+            label=get_text('engagement_rate', st.session_state.language),
             value=f"{key_performance_kpis['engagement_rate']:.1%}",
             delta=delta_val
         )
@@ -346,11 +346,11 @@ if st.session_state.data:
     st.divider()
     
     # Charts Section
-    st.header("📈 Analytics Overview")
+    st.header(get_text('analytics_overview_header', st.session_state.language))
     
     if is_time_series:
         # Time Series Charts for weekly data
-        st.subheader("📊 Time Series Analysis")
+        st.subheader(get_text('time_series_analysis', st.session_state.language))
         
         # Create time series chart using filtered data
         time_series_chart = chart_gen.create_time_series_chart(filtered_periods)
@@ -360,12 +360,12 @@ if st.session_state.data:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("👥 User Flow Trends")
+            st.subheader(get_text('user_flow_trends', st.session_state.language))
             flow_chart = chart_gen.create_user_flow_trends_chart(filtered_periods)
             st.plotly_chart(flow_chart, use_container_width=True)
         
         with col2:
-            st.subheader("🏃‍♀️ Practice Trends")
+            st.subheader(get_text('practice_trends', st.session_state.language))
             practice_trends_chart = chart_gen.create_practice_trends_chart(filtered_periods)
             st.plotly_chart(practice_trends_chart, use_container_width=True)
         
@@ -373,7 +373,7 @@ if st.session_state.data:
         
         # Weekly breakdown using filtered data
         if len(filtered_periods) > 1:
-            st.subheader("📅 Weekly Breakdown")
+            st.subheader(get_text('weekly_breakdown_header', st.session_state.language))
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -452,7 +452,7 @@ if st.session_state.data:
     st.divider()
     
     # Insights Panel
-    st.header("🧠 Thông Tin Chi Tiết & Khuyến Nghị")
+    st.header(get_text('insights_header', st.session_state.language))
     
     # Prepare data for split insights
     if is_time_series and len(filtered_periods) >= 2:
@@ -473,8 +473,8 @@ if st.session_state.data:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("🌍 Thông Tin Tổng Quan")
-            st.markdown("*Dựa trên tất cả dữ liệu có sẵn*")
+            st.subheader(get_text('overall_insights', st.session_state.language))
+            st.markdown(f"*{get_text('overall_insights_subtitle', st.session_state.language)}*")
             for sentiment, insight in split_insights['overall']['key_insights']:
                 if sentiment == "positive":
                     st.success(f"✅ {insight}")
@@ -484,8 +484,8 @@ if st.session_state.data:
                     st.info(f"💡 {insight}")
         
         with col2:
-            st.subheader("📅 Thông Tin Tuần Này") 
-            st.markdown("*Dựa trên 2 tuần gần nhất*")
+            st.subheader(get_text('this_week_insights', st.session_state.language)) 
+            st.markdown(f"*{get_text('this_week_insights_subtitle', st.session_state.language)}*")
             for sentiment, insight in split_insights['this_week']['key_insights']:
                 if sentiment == "positive":
                     st.success(f"✅ {insight}")
@@ -495,7 +495,7 @@ if st.session_state.data:
                     st.info(f"💡 {insight}")
         
         # Recommendations section (unified)
-        st.subheader("🚀 Khuyến Nghị")
+        st.subheader(get_text('recommendations_header', st.session_state.language))
         # Combine and deduplicate recommendations from both overall and recent insights
         all_recommendations = list(set(split_insights['overall']['recommendations'] + split_insights['this_week']['recommendations']))
         for recommendation in all_recommendations:
@@ -508,7 +508,7 @@ if st.session_state.data:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("🎯 Thông Tin Chính")
+            st.subheader(get_text('key_insights_header', st.session_state.language))
             for sentiment, insight in insights['key_insights']:
                 if sentiment == "positive":
                     st.success(f"✅ {insight}")
@@ -518,7 +518,7 @@ if st.session_state.data:
                     st.info(f"💡 {insight}")
         
         with col2:
-            st.subheader("🚀 Khuyến Nghị")
+            st.subheader(get_text('recommendations_header', st.session_state.language))
             for recommendation in insights['recommendations']:
                 st.success(f"✅ {recommendation}")
     
