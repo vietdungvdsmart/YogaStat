@@ -779,7 +779,6 @@ with st.sidebar:
     - Secondary: Lavender (#B19CD9)
     - Accent: Sage Green (#87A96B)
     """)
-        col1, col2, col3 = st.columns([2, 2, 1])
         
         # Parse dates from the time periods to get min/max dates
         def parse_date_range(time_str):
