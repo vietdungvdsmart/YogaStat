@@ -282,7 +282,7 @@ class ChartGenerator:
         )
     
     def create_time_series_chart(self, time_series_data):
-        """Create a comprehensive time series chart showing key metrics over time."""
+        """Create a comprehensive time series chart showing all metrics over time."""
         if not time_series_data:
             return go.Figure()
         
@@ -291,12 +291,40 @@ class ChartGenerator:
         
         fig = go.Figure()
         
-        # Add traces for key metrics
+        # Extended color palette for all metrics
+        metric_colors = [
+            '#48BB78',  # Green - success
+            '#F56565',  # Red - error  
+            '#4FD1C7',  # Teal - primary
+            '#B19CD9',  # Purple - secondary
+            '#ED8936',  # Orange - warning
+            '#87A96B',  # Olive - accent
+            '#38B2AC',  # Teal variant
+            '#9F7AEA',  # Purple variant
+            '#F6AD55',  # Orange variant
+            '#68D391',  # Green variant
+            '#FC8181',  # Red variant
+            '#4299E1',  # Blue
+            '#A0AEC0',  # Gray
+            '#2D3748'   # Dark gray
+        ]
+        
+        # Add traces for all available metrics
         metrics = {
-            'New Users': ([item.get('first_open', 0) for item in time_series_data], self.color_scheme['success']),
-            'App Opens': ([item.get('app_open', 0) for item in time_series_data], self.color_scheme['primary']),
-            'Practice Sessions': ([item.get('practice_with_video', 0) + item.get('practice_with_ai', 0) for item in time_series_data], self.color_scheme['secondary']),
-            'App Removals': ([item.get('app_remove', 0) for item in time_series_data], self.color_scheme['error'])
+            'New Users': ([item.get('first_open', 0) for item in time_series_data], metric_colors[0]),
+            'App Removals': ([item.get('app_remove', 0) for item in time_series_data], metric_colors[1]),
+            'Session Starts': ([item.get('session_start', 0) for item in time_series_data], metric_colors[2]),
+            'App Opens': ([item.get('app_open', 0) for item in time_series_data], metric_colors[3]),
+            'Logins': ([item.get('login', 0) for item in time_series_data], metric_colors[4]),
+            'Exercise Views': ([item.get('view_exercise', 0) for item in time_series_data], metric_colors[5]),
+            'Health Surveys': ([item.get('health_survey', 0) for item in time_series_data], metric_colors[6]),
+            'Roadmap Views': ([item.get('view_roadmap', 0) for item in time_series_data], metric_colors[7]),
+            'Video Practice': ([item.get('practice_with_video', 0) for item in time_series_data], metric_colors[8]),
+            'AI Practice': ([item.get('practice_with_ai', 0) for item in time_series_data], metric_colors[9]),
+            'AI Chat': ([item.get('chat_ai', 0) for item in time_series_data], metric_colors[10]),
+            'Popups Shown': ([item.get('show_popup', 0) for item in time_series_data], metric_colors[11]),
+            'Popup Details': ([item.get('view_detail_popup', 0) for item in time_series_data], metric_colors[12]),
+            'Popups Closed': ([item.get('close_popup', 0) for item in time_series_data], metric_colors[13])
         }
         
         for metric_name, (values, color) in metrics.items():
@@ -311,14 +339,23 @@ class ChartGenerator:
             ))
         
         fig.update_layout(
-            title="Key Metrics Trends Over Time",
+            title="All Metrics Trends Over Time",
             xaxis_title="Time Period",
             yaxis_title="Count",
-            height=400,
+            height=600,  # Increased height for better visibility with more metrics
             hovermode='x unified',
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(
+                orientation="v",  # Vertical legend for better space utilization
+                yanchor="top", 
+                y=1, 
+                xanchor="left", 
+                x=1.02,
+                bgcolor='rgba(255,255,255,0.8)',
+                bordercolor='rgba(0,0,0,0.2)',
+                borderwidth=1
+            )
         )
         
         return fig

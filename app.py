@@ -435,7 +435,7 @@ if st.session_state.data:
     st.divider()
     
     # Insights Panel
-    st.header("🧠 Insights & Recommendations")
+    st.header("🧠 Thông Tin Chi Tiết & Khuyến Nghị")
     
     # Prepare data for split insights
     if is_time_series and len(filtered_periods) >= 2:
@@ -456,8 +456,8 @@ if st.session_state.data:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("🌍 Overall Insights")
-            st.markdown("*Based on all available data*")
+            st.subheader("🌍 Thông Tin Tổng Quan")
+            st.markdown("*Dựa trên tất cả dữ liệu có sẵn*")
             for sentiment, insight in split_insights['overall']['key_insights']:
                 if sentiment == "positive":
                     st.success(f"✅ {insight}")
@@ -467,8 +467,8 @@ if st.session_state.data:
                     st.info(f"💡 {insight}")
         
         with col2:
-            st.subheader("📅 This Week Insights") 
-            st.markdown("*Based on the 2 most recent weeks*")
+            st.subheader("📅 Thông Tin Tuần Này") 
+            st.markdown("*Dựa trên 2 tuần gần nhất*")
             for sentiment, insight in split_insights['this_week']['key_insights']:
                 if sentiment == "positive":
                     st.success(f"✅ {insight}")
@@ -478,7 +478,7 @@ if st.session_state.data:
                     st.info(f"💡 {insight}")
         
         # Recommendations section (unified)
-        st.subheader("🚀 Recommendations")
+        st.subheader("🚀 Khuyến Nghị")
         # Combine and deduplicate recommendations from both overall and recent insights
         all_recommendations = list(set(split_insights['overall']['recommendations'] + split_insights['this_week']['recommendations']))
         for recommendation in all_recommendations:
@@ -491,7 +491,7 @@ if st.session_state.data:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("🎯 Key Insights")
+            st.subheader("🎯 Thông Tin Chính")
             for sentiment, insight in insights['key_insights']:
                 if sentiment == "positive":
                     st.success(f"✅ {insight}")
@@ -501,7 +501,7 @@ if st.session_state.data:
                     st.info(f"💡 {insight}")
         
         with col2:
-            st.subheader("🚀 Recommendations")
+            st.subheader("🚀 Khuyến Nghị")
             for recommendation in insights['recommendations']:
                 st.success(f"✅ {recommendation}")
     

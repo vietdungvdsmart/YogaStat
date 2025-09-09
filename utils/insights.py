@@ -70,16 +70,16 @@ class InsightsGenerator:
         churn_rate = kpis.get('churn_rate', 0)
         
         if retention_rate > self.benchmarks['retention_rate_good']:
-            insights.append(("positive", f"Excellent user retention at {retention_rate:.1%} - significantly above industry average"))
+            insights.append(("positive", f"Tỷ lệ giữ chân người dùng xuất sắc ở mức {retention_rate:.1%} - cao hơn đáng kể so với trung bình ngành"))
         elif retention_rate > 0.15:
-            insights.append(("neutral", f"Moderate retention rate of {retention_rate:.1%} - room for improvement"))
+            insights.append(("neutral", f"Tỷ lệ giữ chân ở mức trung bình {retention_rate:.1%} - có thể cải thiện"))
         else:
-            insights.append(("negative", f"Low retention rate of {retention_rate:.1%} - immediate attention needed"))
+            insights.append(("negative", f"Tỷ lệ giữ chân thấp {retention_rate:.1%} - cần chú ý ngay lập tức"))
         
         if churn_rate > self.benchmarks['churn_rate_warning']:
-            insights.append(("negative", f"High churn rate of {churn_rate:.1%} detected - users are leaving at concerning rate"))
+            insights.append(("negative", f"Phát hiện tỷ lệ rời bỏ cao {churn_rate:.1%} - người dùng đang rời đi với tốc độ đáng lo ngại"))
         else:
-            insights.append(("positive", f"Churn rate of {churn_rate:.1%} is within acceptable range"))
+            insights.append(("positive", f"Tỷ lệ rời bỏ {churn_rate:.1%} nằm trong phạm vi chấp nhận được"))
         
         return insights
     
@@ -93,19 +93,19 @@ class InsightsGenerator:
         total_practice = practice_video + practice_ai
         
         if engagement_rate > self.benchmarks['engagement_rate_good']:
-            insights.append(("positive", f"Strong engagement rate of {engagement_rate:.1%} - users are actively practicing"))
+            insights.append(("positive", f"Tỷ lệ tương tác mạnh {engagement_rate:.1%} - người dùng đang tích cực luyện tập"))
         else:
-            insights.append(("negative", f"Engagement rate of {engagement_rate:.1%} below target - need to boost practice sessions"))
+            insights.append(("negative", f"Tỷ lệ tương tác {engagement_rate:.1%} dưới mục tiêu - cần tăng cường buổi luyện tập"))
         
         # Analyze practice preferences
         if total_practice > 0:
             video_preference = practice_video / total_practice
             if video_preference > 0.7:
-                insights.append(("neutral", "Users strongly prefer video-guided practice sessions over AI assistance"))
+                insights.append(("neutral", "Người dùng thích buổi luyện tập có hướng dẫn video hơn hỗ trợ AI"))
             elif video_preference < 0.3:
-                insights.append(("positive", "Users are embracing AI-guided practice sessions over traditional videos"))
+                insights.append(("positive", "Người dùng đang ưa chuộng buổi luyện tập có hướng dẫn AI hơn video truyền thống"))
             else:
-                insights.append(("positive", "Balanced usage between video and AI practice sessions"))
+                insights.append(("positive", "Sử dụng cân bằng giữa buổi luyện tập video và AI"))
         
         return insights
     
@@ -123,22 +123,22 @@ class InsightsGenerator:
         
         # Exercise content analysis
         if exercise_views / total_sessions > 0.8:
-            insights.append(("positive", "Exercise content is highly popular - users are actively exploring workouts"))
+            insights.append(("positive", "Nội dung bài tập rất phổ biến - người dùng đang tích cực khám phá các bài tập"))
         elif exercise_views / total_sessions < 0.3:
-            insights.append(("negative", "Low exercise content engagement - content discovery needs improvement"))
+            insights.append(("negative", "Tương tác với nội dung bài tập thấp - cần cải thiện khả năng khám phá nội dung"))
         
         # Roadmap feature analysis
         if roadmap_views / total_sessions < 0.2:
-            insights.append(("negative", "Roadmap feature is underutilized - users may not understand its value"))
+            insights.append(("negative", "Tính năng lộ trình được sử dụng ít - người dùng có thể không hiểu giá trị của nó"))
         
         # Health survey completion
         if health_surveys / total_sessions > 0.7:
-            insights.append(("positive", "High health survey completion rate - users are engaged with wellness tracking"))
+            insights.append(("positive", "Tỷ lệ hoàn thành khảo sát sức khỏe cao - người dùng quan tâm đến theo dõi sức khỏe"))
         
         # AI chat adoption
         ai_adoption_rate = ai_chat / total_sessions
         if ai_adoption_rate < self.benchmarks['ai_adoption_target']:
-            insights.append(("negative", f"AI chat adoption at {ai_adoption_rate:.1%} is below target - promote AI features"))
+            insights.append(("negative", f"Việc áp dụng chat AI ở mức {ai_adoption_rate:.1%} dưới mục tiêu - cần quảng bá tính năng AI"))
         
         return insights
     
@@ -155,12 +155,12 @@ class InsightsGenerator:
             close_rate = popups_closed / popups_shown
             
             if conversion_rate > self.benchmarks['popup_conversion_good']:
-                insights.append(("positive", f"Popup conversion rate of {conversion_rate:.1%} is excellent - content is relevant"))
+                insights.append(("positive", f"Tỷ lệ chuyển đổi popup {conversion_rate:.1%} xuất sắc - nội dung phù hợp"))
             else:
-                insights.append(("negative", f"Popup conversion rate of {conversion_rate:.1%} needs improvement - review content relevance"))
+                insights.append(("negative", f"Tỷ lệ chuyển đổi popup {conversion_rate:.1%} cần cải thiện - xem xét tính phù hợp của nội dung"))
             
             if close_rate > 0.8:
-                insights.append(("negative", "High popup close rate suggests users find them intrusive or irrelevant"))
+                insights.append(("negative", "Tỷ lệ đóng popup cao cho thấy người dùng thấy chúng xâm phạm hoặc không phù hợp"))
             
         return insights
     
@@ -170,28 +170,28 @@ class InsightsGenerator:
         
         # Retention recommendations
         if kpis.get('retention_rate', 0) < self.benchmarks['retention_rate_good']:
-            recommendations.append("Implement onboarding flow improvements to boost user retention")
-            recommendations.append("Create personalized practice recommendations for new users")
+            recommendations.append("Thực hiện cải tiến quy trình giới thiệu để tăng khả năng giữ chân người dùng")
+            recommendations.append("Tạo khuyến nghị luyện tập cá nhân hóa cho người dùng mới")
         
         # Engagement recommendations
         if kpis.get('engagement_rate', 0) < self.benchmarks['engagement_rate_good']:
-            recommendations.append("Add gamification elements to increase practice session frequency")
-            recommendations.append("Send push notifications for practice reminders and streaks")
+            recommendations.append("Thêm yếu tố gamification để tăng tần suất buổi luyện tập")
+            recommendations.append("Gửi thông báo đẩy để nhắc nhở luyện tập và duy trì chuỗi")
         
         # Feature usage recommendations
         roadmap_usage = data.get('view_roadmap', 0) / data.get('session_start', 1)
         if roadmap_usage < 0.2:
-            recommendations.append("Highlight roadmap feature in app tour and main navigation")
+            recommendations.append("Làm nổi bật tính năng lộ trình trong hướng dẫn ứng dụng và menu chính")
         
         ai_usage = data.get('chat_ai', 0) / data.get('session_start', 1)
         if ai_usage < 0.25:
-            recommendations.append("Promote AI chat feature with guided tutorials and use cases")
+            recommendations.append("Quảng bá tính năng chat AI với hướng dẫn và các trường hợp sử dụng")
         
         # Popup recommendations
         popup_conversion = data.get('view_detail_popup', 0) / max(data.get('show_popup', 1), 1)
         if popup_conversion < 0.15:
-            recommendations.append("A/B test popup timing and content to improve engagement")
-            recommendations.append("Reduce popup frequency to avoid user fatigue")
+            recommendations.append("Kiểm tra A/B thời gian và nội dung popup để cải thiện tương tác")
+            recommendations.append("Giảm tần suất popup để tránh mệt mỏi người dùng")
         
         return recommendations
     
@@ -201,25 +201,25 @@ class InsightsGenerator:
         
         # High engagement, low retention opportunity
         if kpis.get('engagement_rate', 0) > 0.4 and kpis.get('retention_rate', 0) < 0.3:
-            opportunities.append("High engagement but low retention - focus on habit formation features")
+            opportunities.append("Tương tác cao nhưng giữ chân thấp - tập trung vào tính năng hình thành thói quen")
         
         # AI adoption opportunity
         practice_video = data.get('practice_with_video', 0)
         practice_ai = data.get('practice_with_ai', 0)
         if practice_video > practice_ai * 3:
-            opportunities.append("Video users could benefit from AI personalization - cross-promote features")
+            opportunities.append("Người dùng video có thể hưởng lợi từ cá nhân hóa AI - quảng bá chéo tính năng")
         
         # Content expansion opportunity
         exercise_views = data.get('view_exercise', 0)
         practice_sessions = practice_video + practice_ai
         if exercise_views > practice_sessions * 2:
-            opportunities.append("Users browse more than they practice - simplify practice initiation")
+            opportunities.append("Người dùng duyệt nhiều hơn thực hành - đơn giản hóa việc bắt đầu luyện tập")
         
         # Health tracking opportunity
         health_surveys = data.get('health_survey', 0)
         total_users = kpis.get('total_new_users', 0) + kpis.get('total_app_opens', 0)
         if health_surveys / max(total_users, 1) > 0.6:
-            opportunities.append("High health survey engagement - expand wellness tracking features")
+            opportunities.append("Tương tác khảo sát sức khỏe cao - mở rộng tính năng theo dõi sức khỏe")
         
         return opportunities
     
