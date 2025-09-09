@@ -614,38 +614,50 @@ if st.session_state.data:
     
     # Check if we have country-based data (new format)
     if isinstance(countries_data, dict) and any(key in ['US', 'India', 'VN', 'All Countries'] for key in countries_data.keys()):
-        # New country-based format - create tabs
+        # New country-based format - create dropdown selector
         available_countries = [key for key in countries_data.keys() if key != 'All Countries']
         available_countries.sort()  # Sort for consistent order
         
-        # Create tab names with flags
-        tab_names = []
+        # Create dropdown options with Vietnamese labels
+        country_options = {}
         for country in available_countries:
             if country == 'US':
-                tab_names.append("🇺🇸 US")
+                country_options["🇺🇸 USA"] = country
             elif country == 'India':
-                tab_names.append("🇮🇳 India")
+                country_options["🇮🇳 Ấn Độ"] = country
             elif country == 'VN':
-                tab_names.append("🇻🇳 Vietnam")
+                country_options["🇻🇳 Việt Nam"] = country
             else:
-                tab_names.append(f"🌍 {country}")
+                country_options[f"🌍 {country}"] = country
         
-        # Add "All Countries" tab if it exists
+        # Add "All Countries" option if it exists
         if 'All Countries' in countries_data:
-            tab_names.append("🌎 All Countries")
+            country_options["🌎 Tổng Hợp"] = 'All Countries'
         
-        # Create tabs
-        tabs = st.tabs(tab_names)
+        # Initialize session state for country selection
+        if 'selected_country' not in st.session_state:
+            st.session_state.selected_country = list(country_options.values())[0]
         
-        # Render individual country tabs
-        for i, country in enumerate(available_countries):
-            with tabs[i]:
-                render_dashboard(countries_data[country], country)
+        # Country selector dropdown
+        st.subheader("🌍 Chọn Quốc Gia/Khu Vực")
+        selected_display = st.selectbox(
+            "Xem analytics cho:",
+            options=list(country_options.keys()),
+            index=list(country_options.values()).index(st.session_state.selected_country),
+            key="country_selector"
+        )
         
-        # Render "All Countries" tab if available
-        if 'All Countries' in countries_data:
-            with tabs[-1]:
-                render_dashboard(countries_data['All Countries'], 'All Countries')
+        # Update selected country
+        selected_country = country_options[selected_display]
+        st.session_state.selected_country = selected_country
+        
+        st.divider()
+        
+        # Render dashboard for selected country
+        if selected_country in countries_data:
+            render_dashboard(countries_data[selected_country], selected_country)
+        else:
+            st.error(f"❌ Không có dữ liệu cho {selected_display}")
     
     else:
         # Legacy format - render single dashboard
