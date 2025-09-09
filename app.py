@@ -152,6 +152,11 @@ def render_dashboard(webhook_data, country_name=""):
     chart_gen = ChartGenerator()
     insights_gen = InsightsGenerator()
     
+    # Validate webhook_data
+    if webhook_data is None:
+        st.error("❌ No data available for this country/tab")
+        return
+    
     # Add country name to the header if specified
     if country_name and country_name != "All Countries":
         st.subheader(f"🌍 {country_name} Analytics")
@@ -268,10 +273,11 @@ def render_dashboard(webhook_data, country_name=""):
             
             # Use filtered data if available, otherwise use all data
             filter_key = f"filtered_data_{country_name}" if country_name else "filtered_data"
-            if filter_key in st.session_state:
+            if filter_key in st.session_state and st.session_state[filter_key] is not None:
                 # Use the stored filtered data
-                webhook_data = st.session_state[filter_key]
-                filtered_periods = webhook_data.get('data', [])
+                filtered_webhook_data = st.session_state[filter_key]
+                filtered_periods = filtered_webhook_data.get('data', [])
+                webhook_data = filtered_webhook_data  # Update webhook_data for later use
                 st.info(get_text('currently_showing_filtered', st.session_state.language, count=len(filtered_periods)))
             else:
                 # No filter applied yet, use all data
