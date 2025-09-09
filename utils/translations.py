@@ -112,7 +112,67 @@ TRANSLATIONS = {
         'vietnamese': 'Tiếng Việt',
         
         # Debug section
-        'debug_raw_response': '🔍 Debug: Raw Response Data'
+        'debug_raw_response': '🔍 Debug: Raw Response Data',
+        
+        # Chart content
+        'new_users': 'New Users',
+        'app_removals': 'App Removals', 
+        'returning_users': 'Returning Users',
+        'user_category': 'User Category',
+        'count': 'Count',
+        'user_acquisition_vs_churn_title': 'User Acquisition vs Churn Analysis',
+        'video_practice': 'Video Practice',
+        'ai_practice': 'AI Practice', 
+        'sessions': 'Sessions',
+        'practice_session_preferences_title': 'Practice Session Preferences',
+        'percentage': 'Percentage',
+        'feature_usage_title': 'Feature Usage Distribution',
+        'ai_engagement_title': 'AI Feature Engagement',
+        'popup_performance_title': 'Popup Interaction Analysis',
+        'week': 'Week',
+        'metrics_trends_title': 'All Metrics Trends Over Time',
+        'user_flow_trends_title': 'User Flow Trends',
+        'churn': 'Churn',
+        'practice_trends_title': 'Practice Session Trends',
+        'popups_shown': 'Popups Shown',
+        'popups_viewed': 'Popups Viewed',
+        'interaction_rate': 'Interaction Rate',
+        
+        # Insights content
+        'retention_excellent': 'Excellent user retention rate of {rate:.1%} - significantly higher than industry average',
+        'retention_average': 'Average retention rate of {rate:.1%} - room for improvement', 
+        'retention_low': 'Low retention rate of {rate:.1%} - requires immediate attention',
+        'churn_high': 'High churn rate detected at {rate:.1%} - users leaving at concerning pace',
+        'churn_acceptable': 'Churn rate of {rate:.1%} within acceptable range',
+        'engagement_strong': 'Strong engagement rate of {rate:.1%} - users are actively practicing',
+        'engagement_below_target': 'Engagement rate of {rate:.1%} below target - need to boost practice sessions',
+        'video_preference': 'Users prefer guided video sessions over AI assistance',
+        'ai_preference': 'Users are embracing AI-guided practice over traditional videos',
+        'balanced_practice': 'Balanced usage between video and AI practice sessions',
+        'exercise_content_popular': 'Exercise content very popular - users actively exploring workouts',
+        'exercise_content_low': 'Low exercise content engagement - need to improve content discoverability',
+        'roadmap_underused': 'Roadmap feature underutilized - users may not understand its value',
+        'health_survey_high': 'High health survey completion rate - users care about health tracking',
+        'ai_adoption_low': 'AI chat adoption at {rate:.1%} below target - need to promote AI features',
+        'popup_conversion_excellent': 'Popup conversion rate of {rate:.1%} excellent - content is relevant',
+        'popup_conversion_needs_improvement': 'Popup conversion rate of {rate:.1%} needs improvement - consider content relevance',
+        'popup_close_rate_high': 'High popup close rate indicates users find them intrusive or irrelevant',
+        
+        # Recommendations
+        'improve_onboarding': 'Implement improved onboarding process to increase user retention',
+        'personalized_recommendations': 'Create personalized practice recommendations for new users',
+        'add_gamification': 'Add gamification elements to increase practice session frequency',
+        'push_notifications': 'Send push notifications to remind practice and maintain streaks',
+        'highlight_roadmap': 'Highlight roadmap feature in app tutorial and main menu',
+        'promote_ai_chat': 'Promote AI chat feature with tutorials and use cases',
+        'ab_test_popup': 'A/B test popup timing and content to improve engagement',
+        'reduce_popup_frequency': 'Reduce popup frequency to avoid user fatigue',
+        
+        # Opportunities
+        'high_engagement_low_retention': 'High engagement but low retention - focus on habit formation features',
+        'video_users_ai_benefit': 'Video users could benefit from AI personalization - cross-promote features',
+        'browse_more_than_practice': 'Users browse more than they practice - simplify practice initiation',
+        'high_health_survey_engagement': 'High health survey engagement - expand wellness tracking features'
     },
     
     'vi': {
@@ -226,7 +286,31 @@ TRANSLATIONS = {
         'vietnamese': 'Tiếng Việt',
         
         # Debug section
-        'debug_raw_response': '🔍 Debug: Dữ Liệu Phản Hồi Thô'
+        'debug_raw_response': '🔍 Debug: Dữ Liệu Phản Hồi Thô',
+        
+        # Chart content
+        'new_users': 'Người Dùng Mới',
+        'app_removals': 'Xóa Ứng Dụng', 
+        'returning_users': 'Người Dùng Quay Lại',
+        'user_category': 'Danh Mục Người Dùng',
+        'count': 'Số Lượng',
+        'user_acquisition_vs_churn_title': 'Phân Tích Thu Hút vs Rời Bỏ Người Dùng',
+        'video_practice': 'Luyện Tập Video',
+        'ai_practice': 'Luyện Tập AI', 
+        'sessions': 'Phiên',
+        'practice_session_preferences_title': 'Sở Thích Phiên Luyện Tập',
+        'percentage': 'Tỷ Lệ Phần Trăm',
+        'feature_usage_title': 'Phân Bố Sử Dụng Tính Năng',
+        'ai_engagement_title': 'Tương Tác Tính Năng AI',
+        'popup_performance_title': 'Phân Tích Tương Tác Popup',
+        'week': 'Tuần',
+        'metrics_trends_title': 'Xu Hướng Tất Cả Chỉ Số Theo Thời Gian',
+        'user_flow_trends_title': 'Xu Hướng Luồng Người Dùng',
+        'churn': 'Rời Bỏ',
+        'practice_trends_title': 'Xu Hướng Phiên Luyện Tập',
+        'popups_shown': 'Popup Hiển Thị',
+        'popups_viewed': 'Popup Được Xem',
+        'interaction_rate': 'Tỷ Lệ Tương Tác'
     }
 }
 

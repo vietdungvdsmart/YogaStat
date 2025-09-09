@@ -1,5 +1,6 @@
 import numpy as np
 from datetime import datetime
+from .translations import get_text
 
 class InsightsGenerator:
     """Generates actionable insights and recommendations from yoga app analytics data."""
@@ -13,7 +14,7 @@ class InsightsGenerator:
             'ai_adoption_target': 0.25       # 25% AI adoption target
         }
     
-    def generate_insights(self, data, kpis):
+    def generate_insights(self, data, kpis, language='en'):
         """Generate comprehensive insights from the analytics data."""
         insights = {
             'key_insights': [],
@@ -23,32 +24,32 @@ class InsightsGenerator:
         }
         
         # Analyze retention (returns tuples with sentiment)
-        insights['key_insights'].extend(self._analyze_retention(kpis))
+        insights['key_insights'].extend(self._analyze_retention(kpis, language))
         
         # Analyze engagement (returns tuples with sentiment)
-        insights['key_insights'].extend(self._analyze_engagement(data, kpis))
+        insights['key_insights'].extend(self._analyze_engagement(data, kpis, language))
         
         # Analyze feature usage (returns tuples with sentiment)
-        insights['key_insights'].extend(self._analyze_feature_usage(data))
+        insights['key_insights'].extend(self._analyze_feature_usage(data, language))
         
         # Analyze popup performance (returns tuples with sentiment)
-        insights['key_insights'].extend(self._analyze_popup_performance(data))
+        insights['key_insights'].extend(self._analyze_popup_performance(data, language))
         
         # Generate recommendations (still strings)
-        insights['recommendations'].extend(self._generate_recommendations(data, kpis))
+        insights['recommendations'].extend(self._generate_recommendations(data, kpis, language))
         
         # Identify opportunities (still strings)
-        insights['opportunities'].extend(self._identify_opportunities(data, kpis))
+        insights['opportunities'].extend(self._identify_opportunities(data, kpis, language))
         
         return insights
     
-    def generate_split_insights(self, overall_data, overall_kpis, recent_data, recent_kpis):
+    def generate_split_insights(self, overall_data, overall_kpis, recent_data, recent_kpis, language='en'):
         """Generate insights split into 'Overall' and 'This Week' sections."""
         # Generate overall insights
-        overall_insights = self.generate_insights(overall_data, overall_kpis)
+        overall_insights = self.generate_insights(overall_data, overall_kpis, language)
         
         # Generate recent week insights
-        recent_insights = self.generate_insights(recent_data, recent_kpis)
+        recent_insights = self.generate_insights(recent_data, recent_kpis, language)
         
         return {
             'overall': {
@@ -63,7 +64,7 @@ class InsightsGenerator:
             }
         }
     
-    def _analyze_retention(self, kpis):
+    def _analyze_retention(self, kpis, language='en'):
         """Analyze user retention metrics."""
         insights = []
         retention_rate = kpis.get('retention_rate', 0)
@@ -83,7 +84,7 @@ class InsightsGenerator:
         
         return insights
     
-    def _analyze_engagement(self, data, kpis):
+    def _analyze_engagement(self, data, kpis, language='en'):
         """Analyze user engagement patterns."""
         insights = []
         engagement_rate = kpis.get('engagement_rate', 0)
@@ -109,7 +110,7 @@ class InsightsGenerator:
         
         return insights
     
-    def _analyze_feature_usage(self, data):
+    def _analyze_feature_usage(self, data, language='en'):
         """Analyze feature adoption and usage patterns."""
         insights = []
         
@@ -142,7 +143,7 @@ class InsightsGenerator:
         
         return insights
     
-    def _analyze_popup_performance(self, data):
+    def _analyze_popup_performance(self, data, language='en'):
         """Analyze popup effectiveness and user interaction."""
         insights = []
         
@@ -164,7 +165,7 @@ class InsightsGenerator:
             
         return insights
     
-    def _generate_recommendations(self, data, kpis):
+    def _generate_recommendations(self, data, kpis, language='en'):
         """Generate actionable recommendations based on data analysis."""
         recommendations = []
         
@@ -195,7 +196,7 @@ class InsightsGenerator:
         
         return recommendations
     
-    def _identify_opportunities(self, data, kpis):
+    def _identify_opportunities(self, data, kpis, language='en'):
         """Identify growth opportunities and optimization areas."""
         opportunities = []
         

@@ -353,7 +353,7 @@ if st.session_state.data:
         st.subheader(get_text('time_series_analysis', st.session_state.language))
         
         # Create time series chart using filtered data
-        time_series_chart = chart_gen.create_time_series_chart(filtered_periods)
+        time_series_chart = chart_gen.create_time_series_chart(filtered_periods, st.session_state.language)
         st.plotly_chart(time_series_chart, use_container_width=True)
         
         # User Acquisition vs Churn over time
@@ -361,12 +361,12 @@ if st.session_state.data:
         
         with col1:
             st.subheader(get_text('user_flow_trends', st.session_state.language))
-            flow_chart = chart_gen.create_user_flow_trends_chart(filtered_periods)
+            flow_chart = chart_gen.create_user_flow_trends_chart(filtered_periods, st.session_state.language)
             st.plotly_chart(flow_chart, use_container_width=True)
         
         with col2:
             st.subheader(get_text('practice_trends', st.session_state.language))
-            practice_trends_chart = chart_gen.create_practice_trends_chart(filtered_periods)
+            practice_trends_chart = chart_gen.create_practice_trends_chart(filtered_periods, st.session_state.language)
             st.plotly_chart(practice_trends_chart, use_container_width=True)
         
         st.divider()
@@ -400,13 +400,13 @@ if st.session_state.data:
     with col1:
         chart_title = "👥 User Acquisition vs Churn" if not is_time_series else "👥 Overall User Metrics"
         st.subheader(chart_title)
-        acquisition_chart = chart_gen.create_acquisition_churn_chart(aggregated_data)
+        acquisition_chart = chart_gen.create_acquisition_churn_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(acquisition_chart, use_container_width=True)
     
     with col2:
         chart_title = "🏃‍♀️ Practice Preferences" if not is_time_series else "🏃‍♀️ Total Practice Distribution"
         st.subheader(chart_title)
-        practice_chart = chart_gen.create_practice_preferences_chart(aggregated_data)
+        practice_chart = chart_gen.create_practice_preferences_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(practice_chart, use_container_width=True)
     
     # Feature Analysis
@@ -414,12 +414,12 @@ if st.session_state.data:
     
     with col1:
         st.subheader("📱 Feature Usage Analysis")
-        feature_chart = chart_gen.create_feature_usage_chart(aggregated_data)
+        feature_chart = chart_gen.create_feature_usage_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(feature_chart, use_container_width=True)
     
     with col2:
         st.subheader("🤖 AI Engagement Metrics")
-        ai_chart = chart_gen.create_ai_engagement_chart(aggregated_data)
+        ai_chart = chart_gen.create_ai_engagement_chart(aggregated_data, st.session_state.language)
         st.plotly_chart(ai_chart, use_container_width=True)
     
     # Popup Performance
@@ -446,7 +446,7 @@ if st.session_state.data:
             value=f"{popup_metrics['conversion_rate']:.1%}"
         )
     
-    popup_chart = chart_gen.create_popup_performance_chart(aggregated_data)
+    popup_chart = chart_gen.create_popup_performance_chart(aggregated_data, st.session_state.language)
     st.plotly_chart(popup_chart, use_container_width=True)
     
     st.divider()
@@ -466,7 +466,8 @@ if st.session_state.data:
             overall_data=aggregated_data, 
             overall_kpis=kpis,
             recent_data=recent_aggregated,
-            recent_kpis=recent_kpis
+            recent_kpis=recent_kpis,
+            language=st.session_state.language
         )
         
         # Display split insights
@@ -503,7 +504,7 @@ if st.session_state.data:
     
     else:
         # Single insights for non-time-series or insufficient data
-        insights = insights_gen.generate_insights(aggregated_data, kpis)
+        insights = insights_gen.generate_insights(aggregated_data, kpis, st.session_state.language)
         
         col1, col2 = st.columns(2)
         

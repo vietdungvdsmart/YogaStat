@@ -2,6 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
+from .translations import get_text
 
 class ChartGenerator:
     """Generates interactive charts for the yoga app analytics dashboard."""
@@ -17,9 +18,9 @@ class ChartGenerator:
             'text': '#2D3748'
         }
     
-    def create_acquisition_churn_chart(self, data):
+    def create_acquisition_churn_chart(self, data, language='en'):
         """Create a chart showing user acquisition vs churn."""
-        categories = ['New Users', 'App Removals', 'Returning Users']
+        categories = [get_text('new_users', language), get_text('app_removals', language), get_text('returning_users', language)]
         values = [
             data.get('first_open', 0),
             data.get('app_remove', 0),
@@ -39,9 +40,9 @@ class ChartGenerator:
         ])
         
         fig.update_layout(
-            title="User Acquisition vs Churn Analysis",
-            xaxis_title="User Category",
-            yaxis_title="Count",
+            title=get_text('user_acquisition_vs_churn_title', language),
+            xaxis_title=get_text('user_category', language),
+            yaxis_title=get_text('count', language),
             showlegend=False,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
@@ -50,9 +51,9 @@ class ChartGenerator:
         
         return fig
     
-    def create_practice_preferences_chart(self, data):
+    def create_practice_preferences_chart(self, data, language='en'):
         """Create a donut chart showing practice preferences."""
-        labels = ['Video Practice', 'AI Practice']
+        labels = [get_text('video_practice', language), get_text('ai_practice', language)]
         values = [
             data.get('practice_with_video', 0),
             data.get('practice_with_ai', 0)
@@ -65,12 +66,12 @@ class ChartGenerator:
                 values=values,
                 hole=0.4,
                 marker_colors=colors,
-                hovertemplate='<b>%{label}</b><br>Sessions: %{value}<br>Percentage: %{percent}<extra></extra>'
+                hovertemplate=f'<b>%{{label}}</b><br>{get_text("sessions", language)}: %{{value}}<br>{get_text("percentage", language)}: %{{percent}}<extra></extra>'
             )
         ])
         
         fig.update_layout(
-            title="Practice Session Preferences",
+            title=get_text('practice_session_preferences_title', language),
             showlegend=True,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
@@ -115,7 +116,7 @@ class ChartGenerator:
         
         return fig
     
-    def create_ai_engagement_chart(self, data):
+    def create_ai_engagement_chart(self, data, language='en'):
         """Create a gauge chart for AI engagement."""
         ai_practice = data.get('practice_with_ai', 0)
         ai_chat = data.get('chat_ai', 0)
@@ -128,7 +129,7 @@ class ChartGenerator:
             mode = "gauge+number+delta",
             value = ai_engagement_rate,
             domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "AI Engagement Rate (%)"},
+            title = {'text': get_text('ai_engagement_title', language) + " (%)"},
             delta = {'reference': 50},
             gauge = {
                 'axis': {'range': [None, 100]},
@@ -155,9 +156,9 @@ class ChartGenerator:
         
         return fig
     
-    def create_popup_performance_chart(self, data):
+    def create_popup_performance_chart(self, data, language='en'):
         """Create a funnel chart for popup performance."""
-        stages = ['Popups Shown', 'Detail Views', 'Popups Closed']
+        stages = [get_text('popups_shown', language), get_text('popups_viewed', language), 'Popups Closed']
         values = [
             data.get('show_popup', 0),
             data.get('view_detail_popup', 0),
@@ -175,7 +176,7 @@ class ChartGenerator:
         ))
         
         fig.update_layout(
-            title="Popup Interaction Funnel",
+            title=get_text('popup_performance_title', language),
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)'
@@ -281,7 +282,7 @@ class ChartGenerator:
             showarrow=False, font=dict(size=16)
         )
     
-    def create_time_series_chart(self, time_series_data):
+    def create_time_series_chart(self, time_series_data, language='en'):
         """Create a comprehensive time series chart showing all metrics over time."""
         if not time_series_data:
             return go.Figure()
@@ -339,8 +340,8 @@ class ChartGenerator:
             ))
         
         fig.update_layout(
-            title="All Metrics Trends Over Time",
-            xaxis_title="Time Period",
+            title=get_text('metrics_trends_title', language),
+            xaxis_title=get_text('week', language),
             yaxis_title="Count",
             height=600,  # Increased height for better visibility with more metrics
             hovermode='x unified',
@@ -360,7 +361,7 @@ class ChartGenerator:
         
         return fig
     
-    def create_user_flow_trends_chart(self, time_series_data):
+    def create_user_flow_trends_chart(self, time_series_data, language='en'):
         """Create a chart showing user acquisition vs churn trends."""
         if not time_series_data:
             return go.Figure()
@@ -375,7 +376,7 @@ class ChartGenerator:
             x=weeks,
             y=new_users,
             mode='lines+markers',
-            name='New Users',
+            name=get_text('new_users', language),
             line=dict(color=self.color_scheme['success'], width=3, shape='spline'),
             marker=dict(size=8),
             fill='tonexty',
@@ -386,14 +387,14 @@ class ChartGenerator:
             x=weeks,
             y=churn,
             mode='lines+markers',
-            name='Churn',
+            name=get_text('churn', language),
             line=dict(color=self.color_scheme['error'], width=3, shape='spline'),
             marker=dict(size=8),
             hovertemplate='<b>Churn</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
         ))
         
         fig.update_layout(
-            title="User Acquisition vs Churn Trends",
+            title=get_text('user_flow_trends_title', language),
             xaxis_title="Time Period",
             yaxis_title="Count",
             height=400,
@@ -404,7 +405,7 @@ class ChartGenerator:
         
         return fig
     
-    def create_practice_trends_chart(self, time_series_data):
+    def create_practice_trends_chart(self, time_series_data, language='en'):
         """Create a chart showing practice session trends (video vs AI)."""
         if not time_series_data:
             return go.Figure()
@@ -419,7 +420,7 @@ class ChartGenerator:
             x=weeks,
             y=video_practice,
             mode='lines+markers',
-            name='Video Practice',
+            name=get_text('video_practice', language),
             line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
@@ -430,7 +431,7 @@ class ChartGenerator:
             x=weeks,
             y=ai_practice,
             mode='lines+markers',
-            name='AI Practice',
+            name=get_text('ai_practice', language),
             line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
@@ -438,7 +439,7 @@ class ChartGenerator:
         ))
         
         fig.update_layout(
-            title="Practice Session Trends",
+            title=get_text('practice_trends_title', language),
             xaxis_title="Time Period",
             yaxis_title="Practice Sessions",
             height=400,
