@@ -10,6 +10,7 @@ import numpy as np
 from utils.data_processor import DataProcessor
 from utils.charts import ChartGenerator
 from utils.insights import InsightsGenerator
+from utils.translations import get_text, get_language_options
 
 # Page configuration
 st.set_page_config(
@@ -33,10 +34,26 @@ if 'webhook_url' not in st.session_state:
     st.session_state.webhook_url = ""
 if 'filtered_data' not in st.session_state:
     st.session_state.filtered_data = None
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
+
+# Language selector
+st.sidebar.subheader(get_text('language_selector', st.session_state.language))
+language_options = get_language_options()
+selected_language_display = st.sidebar.selectbox(
+    "",
+    options=list(language_options.keys()),
+    index=list(language_options.values()).index(st.session_state.language)
+)
+
+selected_language = language_options[selected_language_display]
+if selected_language != st.session_state.language:
+    st.session_state.language = selected_language
+    st.rerun()
 
 # Header
-st.title("🧘‍♀️ Yoga App Analytics Dashboard")
-st.markdown("*Visualize user engagement metrics and gain actionable insights for app optimization*")
+st.title(f"🧘‍♀️ {get_text('page_title', st.session_state.language)}")
+st.markdown(f"*{get_text('page_subtitle', st.session_state.language)}*")
 
 # Webhook input section
 st.header("📡 Data Source Configuration")
