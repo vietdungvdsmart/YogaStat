@@ -80,7 +80,7 @@ class ChartGenerator:
         
         return fig
     
-    def create_feature_usage_chart(self, data):
+    def create_feature_usage_chart(self, data, language='en'):
         """Create a horizontal bar chart for feature usage."""
         features = {
             'Exercise Views': data.get('view_exercise', 0),
@@ -107,7 +107,7 @@ class ChartGenerator:
         
         fig.update_layout(
             title="Feature Usage Distribution",
-            xaxis_title="Usage Count",
+            xaxis_title=get_text('count', language),
             yaxis_title="Features",
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
