@@ -121,7 +121,7 @@ with col2:
                 st.error("❌ Request timed out. The webhook might be taking too long to respond.")
             except json.JSONDecodeError as e:
                 st.error("❌ Invalid JSON response from webhook")
-                if response is not None:
+                if 'response' in locals() and response is not None:
                     st.write(f"Response content: {response.text[:500]}...")
             except Exception as e:
                 st.error(f"❌ Unexpected error: {str(e)}")
@@ -271,16 +271,16 @@ if st.session_state.data:
         # Get the current and previous week time periods for display
         current_week_time = filtered_periods[-1].get('time', 'Current Week')
         previous_week_time = filtered_periods[-2].get('time', 'Previous Week')
+        
+        # KPI Section
+        st.header("📊 Key Performance")
+        st.info(f"📅 Latest Week: {current_week_time} (vs Previous Week: {previous_week_time})")
     else:
         # Fallback for Key Performance section if not enough periods
         key_performance_kpis = kpis
         key_performance_deltas = {}
-    
-    # KPI Section
-    if is_time_series and len(filtered_periods) >= 2:
-        st.header("📊 Key Performance")
-        st.info(f"📅 Latest Week: {current_week_time} (vs Previous Week: {previous_week_time})")
-    else:
+        
+        # KPI Section
         st.header("📊 Key Performance")
     
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -554,6 +554,9 @@ if st.session_state.data:
     
     with col3:
         if st.button("🧠 Export Insights (TXT)"):
+            # Generate insights for export if not already available
+            if 'insights' not in locals():
+                insights = insights_gen.generate_insights(aggregated_data, kpis)
             insights_text = insights_gen.export_insights_text(insights)
             st.download_button(
                 label="Download Insights",
