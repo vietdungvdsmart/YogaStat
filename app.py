@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import json
 from datetime import datetime, timedelta
+import time
 import numpy as np
 from utils.data_processor import DataProcessor
 from utils.charts import ChartGenerator
@@ -27,6 +28,76 @@ def load_css():
 
 load_css()
 
+# Helper functions for multi-country data accumulation
+def detect_country_from_data(data):
+    """Detect which country this data represents based on patterns or explicit country field."""
+    if isinstance(data, dict):
+        # Check if there's an explicit country field
+        if 'country' in data:
+            return data['country']
+        
+        # Check if this looks like single country time-series data
+        if isinstance(data, list) and len(data) > 0:
+            # This is likely time-series data for one country
+            return None  # Cannot determine country from time-series alone
+        
+        # For single object, try to infer country from data patterns
+        # This would need custom logic based on your data patterns
+        return None
+    
+    return None
+
+def add_country_data(country, data):
+    """Add data for a specific country to the accumulator."""
+    if not st.session_state.country_accumulator['collecting']:
+        # Start collecting
+        st.session_state.country_accumulator['collecting'] = True
+        st.session_state.country_accumulator['start_time'] = time.time()
+        st.session_state.country_accumulator['data'] = {}
+    
+    # Store the country data
+    st.session_state.country_accumulator['data'][country] = data
+    
+    # Check if we have all expected countries
+    expected = set(st.session_state.country_accumulator['expected_countries'])
+    received = set(st.session_state.country_accumulator['data'].keys())
+    
+    return expected.issubset(received)
+
+def check_accumulator_timeout():
+    """Check if accumulator has timed out."""
+    if not st.session_state.country_accumulator['collecting']:
+        return False
+    
+    start_time = st.session_state.country_accumulator['start_time']
+    timeout = st.session_state.country_accumulator['timeout_seconds']
+    
+    return (time.time() - start_time) > timeout
+
+def reset_accumulator():
+    """Reset the accumulator state."""
+    st.session_state.country_accumulator['data'] = {}
+    st.session_state.country_accumulator['start_time'] = None
+    st.session_state.country_accumulator['collecting'] = False
+
+def process_accumulated_data():
+    """Process all accumulated country data into final format."""
+    accumulated_data = st.session_state.country_accumulator['data']
+    
+    # Convert to the expected format for DataProcessor
+    country_array = []
+    for country, data in accumulated_data.items():
+        country_array.append({
+            'country': country,
+            'data': data if isinstance(data, list) else [data]
+        })
+    
+    # Process using DataProcessor
+    processor = DataProcessor()
+    processed_data = processor.process_webhook_data(country_array)
+    
+    return processed_data
+
 # Initialize session state
 if 'data' not in st.session_state:
     st.session_state.data = None
@@ -34,6 +105,16 @@ if 'webhook_url' not in st.session_state:
     st.session_state.webhook_url = ""
 if 'filtered_data' not in st.session_state:
     st.session_state.filtered_data = None
+
+# Initialize multi-country accumulator session state
+if 'country_accumulator' not in st.session_state:
+    st.session_state.country_accumulator = {
+        'data': {},  # Store data for each country
+        'expected_countries': ['US', 'India', 'VN'],  # Expected countries
+        'start_time': None,  # When collection started
+        'timeout_seconds': 60,  # Wait max 60 seconds for all countries
+        'collecting': False  # Whether we're currently collecting
+    }
 if 'language' not in st.session_state:
     st.session_state.language = 'en'
 
@@ -105,18 +186,66 @@ with col2:
                             with st.expander("🔍 Debug: Raw Response Data"):
                                 st.json(data)
                             
-                            # Validate and process data structure (handle both single object and array formats)
+                            # NEW: Multi-country accumulator system
+                            # Check if this is multi-country data (all at once) or single country
                             processor = DataProcessor()
-                            processed_data = processor.process_webhook_data(data)
                             
-                            if processed_data:
-                                st.session_state.data = processed_data
-                                st.session_state.webhook_url = webhook_url
-                                st.success(get_text('data_fetched_success', st.session_state.language))
-                                st.rerun()
+                            # Try to process as complete multi-country data first
+                            if isinstance(data, list) and len(data) > 0 and all(isinstance(item, dict) and 'country' in item for item in data):
+                                # This is complete multi-country format - process normally
+                                processed_data = processor.process_webhook_data(data)
+                                if processed_data:
+                                    st.session_state.data = processed_data
+                                    st.session_state.webhook_url = webhook_url
+                                    st.success(get_text('data_fetched_success', st.session_state.language))
+                                    st.rerun()
+                                else:
+                                    st.error(get_text('invalid_data_format', st.session_state.language))
                             else:
-                                st.error(get_text('invalid_data_format', st.session_state.language))
-                                st.info("💡 Expected data format is shown below in the 'Expected Data Format' section.")
+                                # This might be single country data - use accumulator
+                                country = detect_country_from_data(data)
+                                
+                                if country:
+                                    # We detected a country - add to accumulator
+                                    all_received = add_country_data(country, data)
+                                    
+                                    # Show progress
+                                    accumulated = st.session_state.country_accumulator['data']
+                                    received_countries = list(accumulated.keys())
+                                    expected_countries = st.session_state.country_accumulator['expected_countries']
+                                    
+                                    st.info(f"🔄 Collected data for: {', '.join(received_countries)} ({len(received_countries)}/{len(expected_countries)})")
+                                    
+                                    if all_received:
+                                        # All countries received - process now
+                                        st.success("✅ All countries received! Processing data...")
+                                        processed_data = process_accumulated_data()
+                                        if processed_data:
+                                            st.session_state.data = processed_data
+                                            st.session_state.webhook_url = webhook_url
+                                            reset_accumulator()
+                                            st.success(get_text('data_fetched_success', st.session_state.language))
+                                            st.rerun()
+                                        else:
+                                            st.error("❌ Failed to process accumulated data")
+                                            reset_accumulator()
+                                    else:
+                                        # Still waiting for more countries
+                                        remaining = set(expected_countries) - set(received_countries)
+                                        st.warning(f"⏳ Waiting for more countries: {', '.join(remaining)}")
+                                        st.info("💡 Make sure to call the webhook for all countries within 60 seconds")
+                                        
+                                else:
+                                    # Could not detect country, ask user to specify
+                                    st.warning("⚠️ Could not detect country from data. Please specify:")
+                                    selected_country = st.selectbox(
+                                        "Which country is this data for?",
+                                        ['US', 'India', 'VN'],
+                                        key="manual_country_select"
+                                    )
+                                    if st.button("Add to Collection", key="manual_add_country"):
+                                        all_received = add_country_data(selected_country, data)
+                                        st.rerun()
                                 
                     except requests.exceptions.HTTPError as e:
                         if response and response.status_code == 404:
