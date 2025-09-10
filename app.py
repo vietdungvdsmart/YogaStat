@@ -74,18 +74,25 @@ def process_n8n_array_format(data_array):
 
 def add_country_data(country, data):
     """Add data for a specific country to the accumulator."""
+    # Debug logging
+    current_time = time.strftime("%H:%M:%S", time.localtime())
+    
     if not st.session_state.country_accumulator['collecting']:
         # Start collecting
         st.session_state.country_accumulator['collecting'] = True
         st.session_state.country_accumulator['start_time'] = time.time()
         st.session_state.country_accumulator['data'] = {}
+        print(f"[{current_time}] DEBUG: Started accumulator collection")
     
     # Store the country data
     st.session_state.country_accumulator['data'][country] = data
+    print(f"[{current_time}] DEBUG: Added {country} to accumulator. Current countries: {list(st.session_state.country_accumulator['data'].keys())}")
     
     # Check if we have all expected countries
     expected = set(st.session_state.country_accumulator['expected_countries'])
     received = set(st.session_state.country_accumulator['data'].keys())
+    
+    print(f"[{current_time}] DEBUG: Expected: {expected}, Received: {received}")
     
     return expected.issubset(received)
 
@@ -266,7 +273,10 @@ with col2:
                                     country = first_item['country']
                                     country_data = first_item['data']
                                     
-                                    st.info(f"🔍 Detected single-country request: {country}")
+                                    # Add timestamp for debugging
+                                    import time
+                                    timestamp = time.strftime("%H:%M:%S", time.localtime())
+                                    st.info(f"⏰ {timestamp} - Detected single-country request: {country}")
                                     
                                     # Add to accumulator
                                     all_received = add_country_data(country, country_data)
@@ -276,26 +286,28 @@ with col2:
                                     received_countries = list(accumulated.keys())
                                     expected_countries = st.session_state.country_accumulator['expected_countries']
                                     
-                                    st.info(f"🔄 Collected data for: {', '.join(received_countries)} ({len(received_countries)}/{len(expected_countries)})")
+                                    st.success(f"✅ {timestamp} - Added {country} to accumulator")
+                                    st.info(f"🔄 Progress: {', '.join(received_countries)} ({len(received_countries)}/{len(expected_countries)})")
                                     
                                     if all_received:
                                         # All countries received - process now
-                                        st.success("✅ All countries received! Processing data...")
+                                        st.success("🎉 All countries received! Processing data...")
                                         processed_data = process_accumulated_data()
                                         if processed_data:
                                             st.session_state.data = processed_data
                                             st.session_state.webhook_url = webhook_url
                                             reset_accumulator()
                                             st.success(get_text('data_fetched_success', st.session_state.language))
-                                            st.rerun()
+                                            st.balloons()  # Celebrate completion
+                                            # Don't call st.rerun() immediately to avoid interference
                                         else:
                                             st.error("❌ Failed to process accumulated data")
                                             reset_accumulator()
                                     else:
-                                        # Still waiting for more countries
+                                        # Still waiting for more countries - DON'T rerun to avoid interference
                                         remaining = set(expected_countries) - set(received_countries)
-                                        st.warning(f"⏳ Waiting for more countries: {', '.join(remaining)}")
-                                        st.info("💡 Send the next country data via webhook within 60 seconds")
+                                        st.warning(f"⏳ Waiting for: {', '.join(remaining)}")
+                                        st.info("💡 Next webhook call will add to accumulator")
                                 
                                 # Case 2: Complete multi-country format with explicit country field (3+ countries)
                                 elif len(data) >= 3 and all(isinstance(item, dict) and 'country' in item for item in data):
