@@ -36,16 +36,41 @@ def detect_country_from_data(data):
         if 'country' in data:
             return data['country']
         
-        # Check if this looks like single country time-series data
-        if isinstance(data, list) and len(data) > 0:
-            # This is likely time-series data for one country
-            return None  # Cannot determine country from time-series alone
+        # Check for row_number field that might indicate sequence
+        if 'row_number' in data:
+            row_num = data.get('row_number', 1)
+            # Map row numbers to countries based on n8n sequence
+            country_map = {1: 'US', 2: 'India', 3: 'VN'}
+            return country_map.get(row_num)
         
-        # For single object, try to infer country from data patterns
-        # This would need custom logic based on your data patterns
+        # Try to infer from data patterns (first item = US, etc)
         return None
     
     return None
+
+def process_n8n_array_format(data_array):
+    """Process array format from n8n where each item represents a country."""
+    countries_data = []
+    
+    for i, item in enumerate(data_array):
+        # Detect country for this item
+        country = detect_country_from_data(item)
+        
+        if not country:
+            # Fallback: use position to determine country
+            country_map = {0: 'US', 1: 'India', 2: 'VN'}
+            country = country_map.get(i, f'Country_{i+1}')
+        
+        # Remove metadata fields and keep only metric data
+        clean_data = {k: v for k, v in item.items() 
+                     if k not in ['row_number', 'country'] and not k.startswith('_')}
+        
+        countries_data.append({
+            'country': country,
+            'data': [clean_data]  # Wrap in array for time-series format
+        })
+    
+    return countries_data
 
 def add_country_data(country, data):
     """Add data for a specific country to the accumulator."""
@@ -232,17 +257,48 @@ with col2:
                             # Check if this is multi-country data (all at once) or single country
                             processor = DataProcessor()
                             
-                            # Try to process as complete multi-country data first
-                            if isinstance(data, list) and len(data) > 0 and all(isinstance(item, dict) and 'country' in item for item in data):
-                                # This is complete multi-country format - process normally
-                                processed_data = processor.process_webhook_data(data)
-                                if processed_data:
-                                    st.session_state.data = processed_data
-                                    st.session_state.webhook_url = webhook_url
-                                    st.success(get_text('data_fetched_success', st.session_state.language))
-                                    st.rerun()
+                            # Check for different data formats
+                            if isinstance(data, list) and len(data) > 0:
+                                first_item = data[0]
+                                
+                                # Case 1: Complete multi-country format with explicit country field
+                                if all(isinstance(item, dict) and 'country' in item for item in data):
+                                    processed_data = processor.process_webhook_data(data)
+                                    if processed_data:
+                                        st.session_state.data = processed_data
+                                        st.session_state.webhook_url = webhook_url
+                                        st.success(get_text('data_fetched_success', st.session_state.language))
+                                        st.rerun()
+                                    else:
+                                        st.error(get_text('invalid_data_format', st.session_state.language))
+                                
+                                # Case 2: n8n array format (3 items, each is a country)
+                                elif len(data) == 3 and all(isinstance(item, dict) for item in data):
+                                    st.info("🔍 Detected n8n array format with 3 items - processing as multi-country data")
+                                    
+                                    # Convert n8n format to our expected format
+                                    countries_data = process_n8n_array_format(data)
+                                    processed_data = processor.process_webhook_data(countries_data)
+                                    
+                                    if processed_data:
+                                        st.session_state.data = processed_data
+                                        st.session_state.webhook_url = webhook_url
+                                        st.success("✅ Processed 3-country data from n8n array format!")
+                                        st.rerun()
+                                    else:
+                                        st.error("❌ Failed to process n8n array format")
+                                
+                                # Case 3: Legacy time-series format
                                 else:
-                                    st.error(get_text('invalid_data_format', st.session_state.language))
+                                    # Try legacy processing
+                                    processed_data = processor.process_webhook_data(data)
+                                    if processed_data:
+                                        st.session_state.data = processed_data
+                                        st.session_state.webhook_url = webhook_url
+                                        st.success(get_text('data_fetched_success', st.session_state.language))
+                                        st.rerun()
+                                    else:
+                                        st.error(get_text('invalid_data_format', st.session_state.language))
                             else:
                                 # This might be single country data - use accumulator
                                 country = detect_country_from_data(data)
