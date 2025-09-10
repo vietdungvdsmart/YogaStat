@@ -1034,39 +1034,91 @@ else:
         
         # Test accumulator system
         st.markdown("**🧪 Test Multi-Country Accumulator:**")
-        st.caption("Simulate webhook calls sending one country at a time")
+        st.caption("Simulate n8n single-country webhook calls")
         
         test_col1, test_col2, test_col3 = st.columns(3)
         
         with test_col1:
-            if st.button("📨 Send US Data", key="test_us_data"):
-                us_data = [
-                    {"time": "1/7/2025 - 7/7/2025", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52}
+            if st.button("📨 Send US Request", key="test_us_request"):
+                # Simulate n8n single-country format
+                us_request = [
+                    {
+                        "country": "US",
+                        "data": [
+                            {"time": "11/08/2025 - 17/08/2025", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52, "store_subscription": 5, "in_app_purchase": 2, "renew": 2, "revenue": 15000, "active_time": 800}
+                        ]
+                    }
                 ]
-                all_received = add_country_data("US", us_data)
+                
+                # Simulate webhook processing logic
+                processor = DataProcessor()
+                data = us_request
+                first_item = data[0]
+                
+                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
+                    country = first_item['country']
+                    country_data = first_item['data']
+                    all_received = add_country_data(country, country_data)
+                    st.info(f"✅ Added {country} data to accumulator")
+                
                 st.rerun()
         
         with test_col2:
-            if st.button("📨 Send India Data", key="test_india_data"):
-                india_data = [
-                    {"time": "1/7/2025 - 7/7/2025", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35}
+            if st.button("📨 Send India Request", key="test_india_request"):
+                # Simulate n8n single-country format
+                india_request = [
+                    {
+                        "country": "India",
+                        "data": [
+                            {"time": "11/08/2025 - 17/08/2025", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35, "store_subscription": 3, "in_app_purchase": 1, "renew": 1, "revenue": 8000, "active_time": 600}
+                        ]
+                    }
                 ]
-                all_received = add_country_data("India", india_data)
+                
+                # Simulate webhook processing logic
+                processor = DataProcessor()
+                data = india_request
+                first_item = data[0]
+                
+                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
+                    country = first_item['country']
+                    country_data = first_item['data']
+                    all_received = add_country_data(country, country_data)
+                    st.info(f"✅ Added {country} data to accumulator")
+                
                 st.rerun()
         
         with test_col3:
-            if st.button("📨 Send VN Data", key="test_vn_data"):
-                vn_data = [
-                    {"time": "1/7/2025 - 7/7/2025", "first_open": 18, "app_remove": 3, "session_start": 32, "app_open": 22, "login": 28, "view_exercise": 28, "health_survey": 25, "view_roadmap": 8, "practice_with_video": 15, "practice_with_ai": 12, "chat_ai": 10, "show_popup": 22, "view_detail_popup": 12, "close_popup": 18}
+            if st.button("📨 Send VN Request", key="test_vn_request"):
+                # Simulate n8n single-country format (same as user's data)
+                vn_request = [
+                    {
+                        "country": "VN",
+                        "data": [
+                            {"time": "11/08/2025 - 17/08/2025", "first_open": 35, "app_remove": 3, "session_start": 56, "app_open": 12, "login": 6, "view_exercise": 20, "health_survey": 12, "view_roadmap": 4, "practice_with_video": 10, "practice_with_ai": 4, "chat_ai": 10, "show_popup": 0, "view_detail_popup": 0, "close_popup": 0, "store_subscription": 3, "in_app_purchase": 1, "renew": 1, "revenue": 9000, "active_time": 505}
+                        ]
+                    }
                 ]
-                all_received = add_country_data("VN", vn_data)
-                if all_received:
-                    # Auto-process when all received
-                    processed_data = process_accumulated_data()
-                    if processed_data:
-                        st.session_state.data = processed_data
-                        reset_accumulator()
-                        st.success("✅ All 3 countries collected and processed!")
+                
+                # Simulate webhook processing logic
+                processor = DataProcessor()
+                data = vn_request
+                first_item = data[0]
+                
+                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
+                    country = first_item['country']
+                    country_data = first_item['data']
+                    all_received = add_country_data(country, country_data)
+                    st.info(f"✅ Added {country} data to accumulator")
+                    
+                    if all_received:
+                        # Auto-process when all received
+                        processed_data = process_accumulated_data()
+                        if processed_data:
+                            st.session_state.data = processed_data
+                            reset_accumulator()
+                            st.success("🎉 All 3 countries collected and processed!")
+                
                 st.rerun()
 
 # Sidebar with additional controls
