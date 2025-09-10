@@ -938,6 +938,43 @@ else:
     
     with col2:
         st.info("💡 **Tip:** Use sample data to explore dashboard features while setting up your webhook.")
+        
+        # Test accumulator system
+        st.markdown("**🧪 Test Multi-Country Accumulator:**")
+        st.caption("Simulate webhook calls sending one country at a time")
+        
+        test_col1, test_col2, test_col3 = st.columns(3)
+        
+        with test_col1:
+            if st.button("📨 Send US Data", key="test_us_data"):
+                us_data = [
+                    {"time": "1/7/2025 - 7/7/2025", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52}
+                ]
+                all_received = add_country_data("US", us_data)
+                st.rerun()
+        
+        with test_col2:
+            if st.button("📨 Send India Data", key="test_india_data"):
+                india_data = [
+                    {"time": "1/7/2025 - 7/7/2025", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35}
+                ]
+                all_received = add_country_data("India", india_data)
+                st.rerun()
+        
+        with test_col3:
+            if st.button("📨 Send VN Data", key="test_vn_data"):
+                vn_data = [
+                    {"time": "1/7/2025 - 7/7/2025", "first_open": 18, "app_remove": 3, "session_start": 32, "app_open": 22, "login": 28, "view_exercise": 28, "health_survey": 25, "view_roadmap": 8, "practice_with_video": 15, "practice_with_ai": 12, "chat_ai": 10, "show_popup": 22, "view_detail_popup": 12, "close_popup": 18}
+                ]
+                all_received = add_country_data("VN", vn_data)
+                if all_received:
+                    # Auto-process when all received
+                    processed_data = process_accumulated_data()
+                    if processed_data:
+                        st.session_state.data = processed_data
+                        reset_accumulator()
+                        st.success("✅ All 3 countries collected and processed!")
+                st.rerun()
 
 # Sidebar with additional controls
 with st.sidebar:
