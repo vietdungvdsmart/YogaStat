@@ -261,8 +261,45 @@ with col2:
                             if isinstance(data, list) and len(data) > 0:
                                 first_item = data[0]
                                 
-                                # Case 1: Complete multi-country format with explicit country field
-                                if all(isinstance(item, dict) and 'country' in item for item in data):
+                                # Case 1: Single-country request from n8n (array with 1 country object)
+                                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
+                                    country = first_item['country']
+                                    country_data = first_item['data']
+                                    
+                                    st.info(f"🔍 Detected single-country request: {country}")
+                                    
+                                    # Add to accumulator
+                                    all_received = add_country_data(country, country_data)
+                                    
+                                    # Show progress
+                                    accumulated = st.session_state.country_accumulator['data']
+                                    received_countries = list(accumulated.keys())
+                                    expected_countries = st.session_state.country_accumulator['expected_countries']
+                                    
+                                    st.info(f"🔄 Collected data for: {', '.join(received_countries)} ({len(received_countries)}/{len(expected_countries)})")
+                                    
+                                    if all_received:
+                                        # All countries received - process now
+                                        st.success("✅ All countries received! Processing data...")
+                                        processed_data = process_accumulated_data()
+                                        if processed_data:
+                                            st.session_state.data = processed_data
+                                            st.session_state.webhook_url = webhook_url
+                                            reset_accumulator()
+                                            st.success(get_text('data_fetched_success', st.session_state.language))
+                                            st.rerun()
+                                        else:
+                                            st.error("❌ Failed to process accumulated data")
+                                            reset_accumulator()
+                                    else:
+                                        # Still waiting for more countries
+                                        remaining = set(expected_countries) - set(received_countries)
+                                        st.warning(f"⏳ Waiting for more countries: {', '.join(remaining)}")
+                                        st.info("💡 Send the next country data via webhook within 60 seconds")
+                                
+                                # Case 2: Complete multi-country format with explicit country field (3+ countries)
+                                elif len(data) >= 3 and all(isinstance(item, dict) and 'country' in item for item in data):
+                                    st.info("🔍 Detected complete multi-country format")
                                     processed_data = processor.process_webhook_data(data)
                                     if processed_data:
                                         st.session_state.data = processed_data
@@ -272,7 +309,7 @@ with col2:
                                     else:
                                         st.error(get_text('invalid_data_format', st.session_state.language))
                                 
-                                # Case 2: n8n array format (3 items, each is a country)
+                                # Case 3: n8n array format (3 items, each is a country)
                                 elif len(data) == 3 and all(isinstance(item, dict) for item in data):
                                     st.info("🔍 Detected n8n array format with 3 items - processing as multi-country data")
                                     
