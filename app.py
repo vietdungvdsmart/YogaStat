@@ -729,20 +729,40 @@ else:
     
     with col1:
         if st.button("🧪 Load Sample Data (for testing)"):
-            # Create sample time series data matching your webhook format
-            sample_time_series = [
-                {"time": "1/7/2025 - 7/7/2025", "first_open": 25, "app_remove": 8, "session_start": 45, "app_open": 32, "login": 40, "view_exercise": 42, "health_survey": 38, "view_roadmap": 12, "practice_with_video": 22, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 35, "view_detail_popup": 20, "close_popup": 28},
-                {"time": "8/7/2025 - 14/7/2025", "first_open": 30, "app_remove": 5, "session_start": 52, "app_open": 28, "login": 35, "view_exercise": 38, "health_survey": 32, "view_roadmap": 8, "practice_with_video": 25, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 40, "view_detail_popup": 25, "close_popup": 30},
-                {"time": "15/7/2025 - 21/7/2025", "first_open": 20, "app_remove": 12, "session_start": 38, "app_open": 35, "login": 42, "view_exercise": 45, "health_survey": 35, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 38, "view_detail_popup": 22, "close_popup": 32},
-                {"time": "22/7/2025 - 28/7/2025", "first_open": 35, "app_remove": 6, "session_start": 48, "app_open": 40, "login": 38, "view_exercise": 40, "health_survey": 30, "view_roadmap": 18, "practice_with_video": 30, "practice_with_ai": 25, "chat_ai": 20, "show_popup": 42, "view_detail_popup": 28, "close_popup": 35}
+            # Create sample data in new country-based format (3 countries as webhook will send)
+            sample_country_data = [
+                {
+                    "country": "US", 
+                    "data": [
+                        {"time": "1/7/2025 - 7/7/2025", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52},
+                        {"time": "8/7/2025 - 14/7/2025", "first_open": 52, "app_remove": 8, "session_start": 95, "app_open": 58, "login": 68, "view_exercise": 78, "health_survey": 62, "view_roadmap": 15, "practice_with_video": 48, "practice_with_ai": 32, "chat_ai": 25, "show_popup": 72, "view_detail_popup": 45, "close_popup": 58},
+                        {"time": "15/7/2025 - 21/7/2025", "first_open": 38, "app_remove": 18, "session_start": 72, "app_open": 65, "login": 78, "view_exercise": 85, "health_survey": 65, "view_roadmap": 28, "practice_with_video": 52, "practice_with_ai": 42, "chat_ai": 35, "show_popup": 68, "view_detail_popup": 42, "close_popup": 62}
+                    ]
+                },
+                {
+                    "country": "India", 
+                    "data": [
+                        {"time": "1/7/2025 - 7/7/2025", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35},
+                        {"time": "8/7/2025 - 14/7/2025", "first_open": 38, "app_remove": 4, "session_start": 65, "app_open": 38, "login": 42, "view_exercise": 48, "health_survey": 38, "view_roadmap": 8, "practice_with_video": 32, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 48, "view_detail_popup": 28, "close_popup": 38},
+                        {"time": "15/7/2025 - 21/7/2025", "first_open": 28, "app_remove": 10, "session_start": 45, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 42, "view_roadmap": 18, "practice_with_video": 35, "practice_with_ai": 25, "chat_ai": 22, "show_popup": 45, "view_detail_popup": 28, "close_popup": 38}
+                    ]
+                },
+                {
+                    "country": "VN", 
+                    "data": [
+                        {"time": "1/7/2025 - 7/7/2025", "first_open": 18, "app_remove": 3, "session_start": 32, "app_open": 22, "login": 28, "view_exercise": 28, "health_survey": 25, "view_roadmap": 8, "practice_with_video": 15, "practice_with_ai": 12, "chat_ai": 10, "show_popup": 22, "view_detail_popup": 12, "close_popup": 18},
+                        {"time": "8/7/2025 - 14/7/2025", "first_open": 22, "app_remove": 2, "session_start": 38, "app_open": 18, "login": 25, "view_exercise": 25, "health_survey": 22, "view_roadmap": 5, "practice_with_video": 18, "practice_with_ai": 10, "chat_ai": 8, "show_popup": 28, "view_detail_popup": 15, "close_popup": 22},
+                        {"time": "15/7/2025 - 21/7/2025", "first_open": 15, "app_remove": 5, "session_start": 28, "app_open": 22, "login": 25, "view_exercise": 28, "health_survey": 22, "view_roadmap": 12, "practice_with_video": 20, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 25, "view_detail_popup": 15, "close_popup": 20}
+                    ]
+                }
             ]
             
-            # Process the sample data using the new format
+            # Process the sample data using the new country-based format
             processor = DataProcessor()
-            processed_sample = processor.process_webhook_data(sample_time_series)
+            processed_sample = processor.process_webhook_data(sample_country_data)
             
             st.session_state.data = processed_sample
-            st.success("✅ Sample time series data loaded! You can now explore the dashboard with weekly data trends.")
+            st.success("✅ Sample data với 3 countries (US, India, VN) đã được load! Bạn có thể test dropdown selector.")
             st.rerun()
     
     with col2:
