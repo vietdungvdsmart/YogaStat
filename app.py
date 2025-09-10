@@ -203,10 +203,15 @@ if st.session_state.country_accumulator['collecting']:
         if remaining_time > 0 and remaining_time % 10 == 0:
             st.info("💡 Page will update automatically when new data arrives")
         
-        # Manual reset button
-        if st.button("🔄 Reset Collection", key="reset_collection"):
-            reset_accumulator()
-            st.rerun()
+        # Manual controls
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Reset Collection", key="reset_collection"):
+                reset_accumulator()
+                st.rerun()
+        with col2:
+            if st.button("📊 Check Status", key="check_status"):
+                st.info("Status checked - see accumulator progress above")
         
         st.divider()
 
