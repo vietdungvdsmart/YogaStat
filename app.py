@@ -136,6 +136,48 @@ if selected_language != st.session_state.language:
 st.title(f"🧘‍♀️ {get_text('page_title', st.session_state.language)}")
 st.markdown(f"*{get_text('page_subtitle', st.session_state.language)}*")
 
+# Multi-country data collection status
+if st.session_state.country_accumulator['collecting']:
+    # Check for timeout
+    if check_accumulator_timeout():
+        st.error("⏰ Timeout: Not all countries received within 60 seconds. Resetting collection.")
+        reset_accumulator()
+        st.rerun()
+    else:
+        # Show progress
+        accumulated = st.session_state.country_accumulator['data']
+        received_countries = list(accumulated.keys())
+        expected_countries = st.session_state.country_accumulator['expected_countries']
+        start_time = st.session_state.country_accumulator['start_time']
+        elapsed = int(time.time() - start_time)
+        remaining_time = 60 - elapsed
+        
+        st.info(f"🔄 **Collecting multi-country data:** {len(received_countries)}/{len(expected_countries)} countries received")
+        
+        # Progress bar
+        progress = len(received_countries) / len(expected_countries)
+        st.progress(progress)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Received", ', '.join(received_countries) if received_countries else "None")
+        with col2:
+            missing = set(expected_countries) - set(received_countries)
+            st.metric("Still Waiting", ', '.join(missing) if missing else "None")
+        with col3:
+            st.metric("Time Remaining", f"{remaining_time}s")
+        
+        # Show refresh instruction instead of auto-refresh
+        if remaining_time > 0 and remaining_time % 10 == 0:
+            st.info("💡 Page will update automatically when new data arrives")
+        
+        # Manual reset button
+        if st.button("🔄 Reset Collection", key="reset_collection"):
+            reset_accumulator()
+            st.rerun()
+        
+        st.divider()
+
 # Webhook input section
 st.header(get_text('data_source_header', st.session_state.language))
 col1, col2 = st.columns([4, 1])
