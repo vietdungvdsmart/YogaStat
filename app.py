@@ -163,6 +163,47 @@ if selected_language != st.session_state.language:
 st.title(f"🧘‍♀️ {get_text('page_title', st.session_state.language)}")
 st.markdown(f"*{get_text('page_subtitle', st.session_state.language)}*")
 
+# Test mode for displaying only the three new charts
+if st.sidebar.checkbox("📊 Test Mode - Show Only Three New Charts", value=False):
+    if st.session_state.data:
+        st.header("Testing Three New Charts")
+        
+        # Get the aggregated data
+        from utils.data_processor import DataProcessor
+        from utils.charts import ChartGenerator
+        
+        processor = DataProcessor()
+        chart_gen = ChartGenerator()
+        
+        # Get All Countries data for testing
+        countries_data = st.session_state.data
+        webhook_data = countries_data.get('All Countries', None)
+        
+        if webhook_data:
+            all_periods = webhook_data.get('data', [])
+            aggregated_data = processor._aggregate_time_series_data(all_periods)
+            
+            # Display the three new charts
+            st.subheader(f"1. {get_text('user_activity_comparison_title', st.session_state.language)}")
+            user_activity_chart = chart_gen.create_user_activity_comparison(all_periods, st.session_state.language)
+            st.plotly_chart(user_activity_chart, use_container_width=True)
+            
+            st.subheader(f"2. {get_text('user_funnel_analysis_title', st.session_state.language)}")
+            funnel_chart = chart_gen.create_user_funnel_analysis(aggregated_data, st.session_state.language)
+            st.plotly_chart(funnel_chart, use_container_width=True)
+            
+            st.subheader(f"3. {get_text('churn_risk_indicator_title', st.session_state.language)}")
+            churn_risk_chart = chart_gen.create_churn_risk_indicator(aggregated_data, st.session_state.language)
+            st.plotly_chart(churn_risk_chart, use_container_width=True)
+            
+            st.success("✅ All three charts are loaded and displaying data!")
+        else:
+            st.error("No All Countries data available")
+    else:
+        st.warning("No data loaded. Sample data should auto-load on refresh.")
+    
+    st.stop()  # Stop rendering the rest of the page
+
 # Multi-country data collection status
 if st.session_state.country_accumulator['collecting']:
     # Check for timeout
