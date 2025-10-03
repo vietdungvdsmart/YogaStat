@@ -74,25 +74,18 @@ def process_n8n_array_format(data_array):
 
 def add_country_data(country, data):
     """Add data for a specific country to the accumulator."""
-    # Debug logging
-    current_time = time.strftime("%H:%M:%S", time.localtime())
-    
     if not st.session_state.country_accumulator['collecting']:
         # Start collecting
         st.session_state.country_accumulator['collecting'] = True
         st.session_state.country_accumulator['start_time'] = time.time()
         st.session_state.country_accumulator['data'] = {}
-        print(f"[{current_time}] DEBUG: Started accumulator collection")
     
     # Store the country data
     st.session_state.country_accumulator['data'][country] = data
-    print(f"[{current_time}] DEBUG: Added {country} to accumulator. Current countries: {list(st.session_state.country_accumulator['data'].keys())}")
     
     # Check if we have all expected countries
     expected = set(st.session_state.country_accumulator['expected_countries'])
     received = set(st.session_state.country_accumulator['data'].keys())
-    
-    print(f"[{current_time}] DEBUG: Expected: {expected}, Received: {received}")
     
     return expected.issubset(received)
 
@@ -105,13 +98,7 @@ def check_accumulator_timeout():
     timeout = st.session_state.country_accumulator['timeout_seconds']
     elapsed = time.time() - start_time
     
-    if elapsed > timeout:
-        # Log timeout for debugging
-        print(f"[TIMEOUT] Data collection exceeded {timeout} seconds. Elapsed: {elapsed:.2f}s")
-        print(f"[TIMEOUT] Received countries: {list(st.session_state.country_accumulator['data'].keys())}")
-        print(f"[TIMEOUT] Expected countries: {st.session_state.country_accumulator['expected_countries']}")
-        return True
-    return False
+    return elapsed > timeout
 
 def reset_accumulator():
     """Reset the accumulator state."""
@@ -257,11 +244,7 @@ with col2:
                         else:
                             data = response.json()
                             
-                            # Show received data for debugging
-                            with st.expander("🔍 Debug: Raw Response Data"):
-                                st.json(data)
-                            
-                            # NEW: Multi-country accumulator system
+                            # Multi-country accumulator system
                             # Check if this is multi-country data (all at once) or single country
                             processor = DataProcessor()
                             
@@ -339,46 +322,29 @@ with col2:
                                 country = detect_country_from_data(data)
                                 
                                 if country:
-                                    # We detected a country - add to accumulator
+                                    # We detected a country - add to accumulator silently
                                     all_received = add_country_data(country, data)
-                                    
-                                    # Show progress
-                                    accumulated = st.session_state.country_accumulator['data']
-                                    received_countries = list(accumulated.keys())
-                                    expected_countries = st.session_state.country_accumulator['expected_countries']
-                                    
-                                    st.info(f"🔄 Collected data for: {', '.join(received_countries)} ({len(received_countries)}/{len(expected_countries)})")
                                     
                                     if all_received:
                                         # All countries received - process now
-                                        st.success("✅ All countries received! Processing data...")
+                                        st.success("✅ Data loaded successfully!")
                                         processed_data = process_accumulated_data()
                                         if processed_data:
                                             st.session_state.data = processed_data
                                             st.session_state.webhook_url = webhook_url
                                             reset_accumulator()
                                             st.success(get_text('data_fetched_success', st.session_state.language))
-                                            st.rerun()
+                                            st.balloons()
                                         else:
-                                            st.error("❌ Failed to process accumulated data")
+                                            st.error("❌ Failed to process data")
                                             reset_accumulator()
                                     else:
-                                        # Still waiting for more countries
-                                        remaining = set(expected_countries) - set(received_countries)
-                                        st.warning(f"⏳ Waiting for more countries: {', '.join(remaining)}")
-                                        st.info("💡 Make sure to call the webhook for all countries within 60 seconds")
+                                        # Still waiting - no detailed messages, loading state shown above
+                                        pass
                                         
                                 else:
-                                    # Could not detect country, ask user to specify
-                                    st.warning("⚠️ Could not detect country from data. Please specify:")
-                                    selected_country = st.selectbox(
-                                        "Which country is this data for?",
-                                        ['US', 'India', 'VN'],
-                                        key="manual_country_select"
-                                    )
-                                    if st.button("Add to Collection", key="manual_add_country"):
-                                        all_received = add_country_data(selected_country, data)
-                                        st.rerun()
+                                    # Could not detect country - fail silently and show in loading state
+                                    st.error("❌ Could not detect country from data format")
                                 
                     except requests.exceptions.HTTPError as e:
                         if response and response.status_code == 404:
@@ -1120,14 +1086,25 @@ else:
                 st.rerun()
 
 # Sidebar with additional controls
+@st.dialog("📊 Input Data (JSON)")
+def show_input_dialog():
+    """Display the current data in JSON format in a dialog."""
+    if st.session_state.data:
+        st.json(st.session_state.data)
+    else:
+        st.warning("No data available")
+
 with st.sidebar:
     st.title("🎛️ Dashboard Controls")
     
     if st.session_state.data:
         st.success("✅ Data Loaded")
-        st.json(st.session_state.data)
         
-        if st.button("🗑️ Clear Data"):
+        # Show Input button - opens dialog
+        if st.button("📊 Show Input", key="show_input_btn", use_container_width=True):
+            show_input_dialog()
+        
+        if st.button("🗑️ Clear Data", key="clear_data_btn", use_container_width=True):
             st.session_state.data = None
             st.session_state.webhook_url = ""
             st.rerun()
