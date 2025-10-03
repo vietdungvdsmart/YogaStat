@@ -396,124 +396,28 @@ def render_dashboard(webhook_data, country_name=""):
     time_periods = webhook_data.get('time_periods', 1)
     all_periods = webhook_data.get('data', [])
     
-    # Add date range filter for time series data
+    # Add Google Analytics-style date range filter
     if is_time_series and len(all_periods) > 1:
-        st.subheader(get_text('date_filter_header', st.session_state.language))
-        col1, col2, col3 = st.columns([2, 2, 1])
+        from utils.date_filter import DateRangeFilter
         
-        # Parse dates from the time periods to get min/max dates
-        def parse_date_range(time_str):
-            """Parse date range from time string like '1/7/2025 - 7/7/2025'"""
-            try:
-                if ' - ' in time_str:
-                    start_str, end_str = time_str.split(' - ')
-                    from datetime import datetime
-                    start_date = datetime.strptime(start_str.strip(), '%d/%m/%Y').date()
-                    end_date = datetime.strptime(end_str.strip(), '%d/%m/%Y').date()
-                    return start_date, end_date
-                return None, None
-            except:
-                return None, None
+        # Create unique filter for each country/tab
+        filter_key_prefix = f"{country_name}_" if country_name else ""
+        date_filter = DateRangeFilter(key_prefix=filter_key_prefix, data=all_periods)
         
-        # Get all dates from periods
-        all_dates = []
-        for period in all_periods:
-            start_date, end_date = parse_date_range(period.get('time', ''))
-            if start_date and end_date:
-                all_dates.extend([start_date, end_date])
+        # Render the filter and get selected range
+        st.subheader("📅 Date Range")
+        selected_range = date_filter.render()
         
-        if all_dates:
-            min_date = min(all_dates)
-            max_date = max(all_dates)
-            
-            with col1:
-                # Date range selector - use unique keys for each country/tab
-                filter_key_prefix = f"{country_name}_" if country_name else ""
-                selected_start = st.date_input(
-                    get_text('start_date_label', st.session_state.language),
-                    value=min_date,
-                    min_value=min_date,
-                    max_value=max_date,
-                    key=f"{filter_key_prefix}filter_start_date"
-                )
-                
-                selected_end = st.date_input(
-                    get_text('end_date_label', st.session_state.language),
-                    value=max_date,
-                    min_value=min_date,
-                    max_value=max_date,
-                    key=f"{filter_key_prefix}filter_end_date"
-                )
-            
-            with col2:
-                # Preview filtered data count
-                def date_ranges_intersect(start1, end1, start2, end2):
-                    """Check if two date ranges intersect"""
-                    return start1 <= end2 and start2 <= end1
-                
-                # Calculate preview of filtered periods
-                preview_filtered = []
-                for period in all_periods:
-                    period_start, period_end = parse_date_range(period.get('time', ''))
-                    if period_start and period_end:
-                        if date_ranges_intersect(selected_start, selected_end, period_start, period_end):
-                            preview_filtered.append(period)
-                
-                st.info(get_text('preview_weeks', st.session_state.language, count=len(preview_filtered)))
-                if len(preview_filtered) == 0:
-                    st.warning(get_text('no_weeks_match', st.session_state.language))
-            
-            with col3:
-                st.markdown("<br>", unsafe_allow_html=True)
-                apply_key = f"{filter_key_prefix}apply_filter"
-                show_all_key = f"{filter_key_prefix}show_all"
-                
-                if st.button(get_text('apply_filter_button', st.session_state.language), type="primary", key=apply_key):
-                    # Apply the filter and store in session state with country-specific key
-                    filtered_periods = []
-                    for period in all_periods:
-                        period_start, period_end = parse_date_range(period.get('time', ''))
-                        if period_start and period_end:
-                            if date_ranges_intersect(selected_start, selected_end, period_start, period_end):
-                                filtered_periods.append(period)
-                    
-                    # Store filtered data in session state with country-specific key
-                    if filtered_periods:
-                        filter_key = f"filtered_data_{country_name}" if country_name else "filtered_data"
-                        st.session_state[filter_key] = {
-                            'is_time_series': True,
-                            'time_periods': len(filtered_periods),
-                            'data': filtered_periods,
-                            'latest_period': filtered_periods[-1],
-                            'aggregated': processor._aggregate_time_series_data(filtered_periods)
-                        }
-                        st.success(get_text('filter_applied', st.session_state.language, count=len(filtered_periods)))
-                        st.rerun()
-                    else:
-                        st.error(get_text('no_data_matches', st.session_state.language))
-                
-                if st.button(get_text('show_all_data_button', st.session_state.language), type="secondary", key=show_all_key):
-                    filter_key = f"filtered_data_{country_name}" if country_name else "filtered_data"
-                    if filter_key in st.session_state:
-                        del st.session_state[filter_key]
-                    st.success(get_text('showing_all_data', st.session_state.language))
-                    st.rerun()
-            
-            # Use filtered data if available, otherwise use all data
-            filter_key = f"filtered_data_{country_name}" if country_name else "filtered_data"
-            if filter_key in st.session_state and st.session_state[filter_key] is not None:
-                # Use the stored filtered data
-                filtered_webhook_data = st.session_state[filter_key]
-                filtered_periods = filtered_webhook_data.get('data', [])
-                webhook_data = filtered_webhook_data  # Update webhook_data for later use
-                st.info(get_text('currently_showing_filtered', st.session_state.language, count=len(filtered_periods)))
-            else:
-                # No filter applied yet, use all data
-                filtered_periods = all_periods
-                st.info(get_text('showing_all_available', st.session_state.language))
+        # Filter the data based on selected range
+        filtered_periods = date_filter.filter_data(all_periods, date_field='time')
+        
+        # Show filter status
+        if filtered_periods:
+            range_string = date_filter.get_range_string()
+            st.success(f"📊 Showing data for: **{range_string}** ({len(filtered_periods)} data points)")
         else:
-            filtered_periods = all_periods
-            st.warning("⚠️ Could not parse dates from time periods")
+            st.warning("No data available for the selected date range")
+            filtered_periods = []
         
         st.divider()
     else:
@@ -962,25 +866,37 @@ else:
                 {
                     "country": "US", 
                     "data": [
-                        {"time": "1/7/2025 - 7/7/2025", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52},
-                        {"time": "8/7/2025 - 14/7/2025", "first_open": 52, "app_remove": 8, "session_start": 95, "app_open": 58, "login": 68, "view_exercise": 78, "health_survey": 62, "view_roadmap": 15, "practice_with_video": 48, "practice_with_ai": 32, "chat_ai": 25, "show_popup": 72, "view_detail_popup": 45, "close_popup": 58},
-                        {"time": "15/7/2025 - 21/7/2025", "first_open": 38, "app_remove": 18, "session_start": 72, "app_open": 65, "login": 78, "view_exercise": 85, "health_survey": 65, "view_roadmap": 28, "practice_with_video": 52, "practice_with_ai": 42, "chat_ai": 35, "show_popup": 68, "view_detail_popup": 42, "close_popup": 62}
+                        {"time": "07/10/2024", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52},
+                        {"time": "14/10/2024", "first_open": 52, "app_remove": 8, "session_start": 95, "app_open": 58, "login": 68, "view_exercise": 78, "health_survey": 62, "view_roadmap": 15, "practice_with_video": 48, "practice_with_ai": 32, "chat_ai": 25, "show_popup": 72, "view_detail_popup": 45, "close_popup": 58},
+                        {"time": "21/10/2024", "first_open": 38, "app_remove": 18, "session_start": 72, "app_open": 65, "login": 78, "view_exercise": 85, "health_survey": 65, "view_roadmap": 28, "practice_with_video": 52, "practice_with_ai": 42, "chat_ai": 35, "show_popup": 68, "view_detail_popup": 42, "close_popup": 62},
+                        {"time": "28/10/2024", "first_open": 48, "app_remove": 10, "session_start": 88, "app_open": 70, "login": 82, "view_exercise": 88, "health_survey": 72, "view_roadmap": 30, "practice_with_video": 55, "practice_with_ai": 45, "chat_ai": 38, "show_popup": 75, "view_detail_popup": 48, "close_popup": 65},
+                        {"time": "04/11/2024", "first_open": 55, "app_remove": 7, "session_start": 92, "app_open": 75, "login": 85, "view_exercise": 90, "health_survey": 75, "view_roadmap": 32, "practice_with_video": 58, "practice_with_ai": 48, "chat_ai": 40, "show_popup": 78, "view_detail_popup": 50, "close_popup": 68},
+                        {"time": "11/11/2024", "first_open": 60, "app_remove": 5, "session_start": 98, "app_open": 80, "login": 88, "view_exercise": 92, "health_survey": 78, "view_roadmap": 35, "practice_with_video": 62, "practice_with_ai": 52, "chat_ai": 42, "show_popup": 82, "view_detail_popup": 52, "close_popup": 70},
+                        {"time": "18/11/2024", "first_open": 42, "app_remove": 15, "session_start": 75, "app_open": 68, "login": 72, "view_exercise": 80, "health_survey": 70, "view_roadmap": 25, "practice_with_video": 48, "practice_with_ai": 38, "chat_ai": 32, "show_popup": 70, "view_detail_popup": 45, "close_popup": 60}
                     ]
                 },
                 {
                     "country": "India", 
                     "data": [
-                        {"time": "1/7/2025 - 7/7/2025", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35},
-                        {"time": "8/7/2025 - 14/7/2025", "first_open": 38, "app_remove": 4, "session_start": 65, "app_open": 38, "login": 42, "view_exercise": 48, "health_survey": 38, "view_roadmap": 8, "practice_with_video": 32, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 48, "view_detail_popup": 28, "close_popup": 38},
-                        {"time": "15/7/2025 - 21/7/2025", "first_open": 28, "app_remove": 10, "session_start": 45, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 42, "view_roadmap": 18, "practice_with_video": 35, "practice_with_ai": 25, "chat_ai": 22, "show_popup": 45, "view_detail_popup": 28, "close_popup": 38}
+                        {"time": "07/10/2024", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35},
+                        {"time": "14/10/2024", "first_open": 38, "app_remove": 4, "session_start": 65, "app_open": 38, "login": 42, "view_exercise": 48, "health_survey": 38, "view_roadmap": 8, "practice_with_video": 32, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 48, "view_detail_popup": 28, "close_popup": 38},
+                        {"time": "21/10/2024", "first_open": 28, "app_remove": 10, "session_start": 45, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 42, "view_roadmap": 18, "practice_with_video": 35, "practice_with_ai": 25, "chat_ai": 22, "show_popup": 45, "view_detail_popup": 28, "close_popup": 38},
+                        {"time": "28/10/2024", "first_open": 35, "app_remove": 5, "session_start": 60, "app_open": 45, "login": 52, "view_exercise": 55, "health_survey": 48, "view_roadmap": 20, "practice_with_video": 38, "practice_with_ai": 28, "chat_ai": 25, "show_popup": 50, "view_detail_popup": 32, "close_popup": 42},
+                        {"time": "04/11/2024", "first_open": 40, "app_remove": 4, "session_start": 68, "app_open": 50, "login": 55, "view_exercise": 58, "health_survey": 50, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 32, "chat_ai": 28, "show_popup": 55, "view_detail_popup": 35, "close_popup": 45},
+                        {"time": "11/11/2024", "first_open": 45, "app_remove": 3, "session_start": 72, "app_open": 55, "login": 60, "view_exercise": 62, "health_survey": 52, "view_roadmap": 25, "practice_with_video": 45, "practice_with_ai": 35, "chat_ai": 30, "show_popup": 58, "view_detail_popup": 38, "close_popup": 48},
+                        {"time": "18/11/2024", "first_open": 30, "app_remove": 8, "session_start": 50, "app_open": 40, "login": 45, "view_exercise": 50, "health_survey": 43, "view_roadmap": 17, "practice_with_video": 30, "practice_with_ai": 24, "chat_ai": 20, "show_popup": 44, "view_detail_popup": 27, "close_popup": 36}
                     ]
                 },
                 {
                     "country": "VN", 
                     "data": [
-                        {"time": "1/7/2025 - 7/7/2025", "first_open": 18, "app_remove": 3, "session_start": 32, "app_open": 22, "login": 28, "view_exercise": 28, "health_survey": 25, "view_roadmap": 8, "practice_with_video": 15, "practice_with_ai": 12, "chat_ai": 10, "show_popup": 22, "view_detail_popup": 12, "close_popup": 18},
-                        {"time": "8/7/2025 - 14/7/2025", "first_open": 22, "app_remove": 2, "session_start": 38, "app_open": 18, "login": 25, "view_exercise": 25, "health_survey": 22, "view_roadmap": 5, "practice_with_video": 18, "practice_with_ai": 10, "chat_ai": 8, "show_popup": 28, "view_detail_popup": 15, "close_popup": 22},
-                        {"time": "15/7/2025 - 21/7/2025", "first_open": 15, "app_remove": 5, "session_start": 28, "app_open": 22, "login": 25, "view_exercise": 28, "health_survey": 22, "view_roadmap": 12, "practice_with_video": 20, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 25, "view_detail_popup": 15, "close_popup": 20}
+                        {"time": "07/10/2024", "first_open": 18, "app_remove": 3, "session_start": 32, "app_open": 22, "login": 28, "view_exercise": 28, "health_survey": 25, "view_roadmap": 8, "practice_with_video": 15, "practice_with_ai": 12, "chat_ai": 10, "show_popup": 22, "view_detail_popup": 12, "close_popup": 18},
+                        {"time": "14/10/2024", "first_open": 22, "app_remove": 2, "session_start": 38, "app_open": 18, "login": 25, "view_exercise": 25, "health_survey": 22, "view_roadmap": 5, "practice_with_video": 18, "practice_with_ai": 10, "chat_ai": 8, "show_popup": 28, "view_detail_popup": 15, "close_popup": 22},
+                        {"time": "21/10/2024", "first_open": 15, "app_remove": 5, "session_start": 28, "app_open": 22, "login": 25, "view_exercise": 28, "health_survey": 22, "view_roadmap": 12, "practice_with_video": 20, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 25, "view_detail_popup": 15, "close_popup": 20},
+                        {"time": "28/10/2024", "first_open": 20, "app_remove": 2, "session_start": 35, "app_open": 25, "login": 30, "view_exercise": 32, "health_survey": 28, "view_roadmap": 10, "practice_with_video": 22, "practice_with_ai": 17, "chat_ai": 14, "show_popup": 30, "view_detail_popup": 18, "close_popup": 25},
+                        {"time": "04/11/2024", "first_open": 25, "app_remove": 2, "session_start": 42, "app_open": 30, "login": 35, "view_exercise": 38, "health_survey": 32, "view_roadmap": 12, "practice_with_video": 25, "practice_with_ai": 20, "chat_ai": 16, "show_popup": 35, "view_detail_popup": 20, "close_popup": 28},
+                        {"time": "11/11/2024", "first_open": 28, "app_remove": 1, "session_start": 48, "app_open": 35, "login": 38, "view_exercise": 42, "health_survey": 35, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 38, "view_detail_popup": 22, "close_popup": 30},
+                        {"time": "18/11/2024", "first_open": 16, "app_remove": 4, "session_start": 30, "app_open": 20, "login": 26, "view_exercise": 30, "health_survey": 24, "view_roadmap": 9, "practice_with_video": 16, "practice_with_ai": 13, "chat_ai": 11, "show_popup": 24, "view_detail_popup": 14, "close_popup": 19}
                     ]
                 }
             ]
@@ -1059,7 +975,7 @@ else:
                     {
                         "country": "VN",
                         "data": [
-                            {"time": "11/08/2025 - 17/08/2025", "first_open": 35, "app_remove": 3, "session_start": 56, "app_open": 12, "login": 6, "view_exercise": 20, "health_survey": 12, "view_roadmap": 4, "practice_with_video": 10, "practice_with_ai": 4, "chat_ai": 10, "show_popup": 0, "view_detail_popup": 0, "close_popup": 0, "store_subscription": 3, "in_app_purchase": 1, "renew": 1, "revenue": 9000, "active_time": 505}
+                            {"time": "17/08/2025", "first_open": 35, "app_remove": 3, "session_start": 56, "app_open": 12, "login": 6, "view_exercise": 20, "health_survey": 12, "view_roadmap": 4, "practice_with_video": 10, "practice_with_ai": 4, "chat_ai": 10, "show_popup": 0, "view_detail_popup": 0, "close_popup": 0, "store_subscription": 3, "in_app_purchase": 1, "renew": 1, "revenue": 9000, "active_time": 505}
                         ]
                     }
                 ]
