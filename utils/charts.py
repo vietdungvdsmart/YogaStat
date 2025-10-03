@@ -60,27 +60,66 @@ class ChartGenerator:
         
         return fig
     
-    def create_practice_preferences_chart(self, data, language='en'):
-        """Create a donut chart showing practice preferences."""
-        labels = [get_text('video_practice', language), get_text('ai_practice', language)]
-        values = [
-            data.get('practice_with_video', 0),
-            data.get('practice_with_ai', 0)
-        ]
-        colors = [self.color_scheme['primary'], self.color_scheme['secondary']]
+    def create_engagement_score_radar(self, data, language='en'):
+        """Create a radar chart showing multi-dimensional engagement scores."""
+        # Calculate engagement scores (normalized to 0-100)
+        total_sessions = max(data.get('session_start', 1), 1)  # Avoid division by zero
         
-        fig = go.Figure(data=[
-            go.Pie(
-                labels=labels,
-                values=values,
-                hole=0.4,
-                marker_colors=colors,
-                hovertemplate=f'<b>%{{label}}</b><br>{get_text("sessions", language)}: %{{value}}<br>{get_text("percentage", language)}: %{{percent}}<extra></extra>'
-            )
-        ])
+        categories = [
+            get_text('login_engagement', language),
+            get_text('health_awareness', language),
+            get_text('content_exploration', language),
+            get_text('ai_interaction', language),
+            get_text('popup_responsiveness', language),
+            get_text('retention_strength', language)
+        ]
+        
+        # Calculate scores based on ratios
+        scores = [
+            min((data.get('login', 0) / total_sessions) * 100, 100),  # Login rate
+            min((data.get('health_survey', 0) / total_sessions) * 100, 100),  # Health survey completion
+            min(((data.get('view_exercise', 0) + data.get('view_roadmap', 0)) / (total_sessions * 2)) * 100, 100),  # Content exploration
+            min(((data.get('chat_ai', 0) + data.get('practice_with_ai', 0)) / (total_sessions * 2)) * 100, 100),  # AI interaction
+            min((data.get('view_detail_popup', 0) / max(data.get('show_popup', 1), 1)) * 100, 100),  # Popup engagement
+            min(((data.get('app_open', 0) - data.get('app_remove', 0)) / max(data.get('first_open', 1), 1)) * 100, 100)  # Retention
+        ]
+        
+        # Create radar chart
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatterpolar(
+            r=scores,
+            theta=categories,
+            fill='toself',
+            name=get_text('engagement_score', language),
+            fillcolor='rgba(79, 209, 199, 0.3)',
+            line=dict(color=self.color_scheme['primary'], width=2),
+            marker=dict(size=8, color=self.color_scheme['primary']),
+            hovertemplate='<b>%{theta}</b><br>Score: %{r:.1f}/100<extra></extra>'
+        ))
+        
+        # Add reference line (average expectation at 50%)
+        fig.add_trace(go.Scatterpolar(
+            r=[50] * len(categories),
+            theta=categories,
+            fill=None,
+            name=get_text('average_benchmark', language),
+            line=dict(color='gray', width=1, dash='dash'),
+            showlegend=True,
+            hoverinfo='skip'
+        ))
         
         fig.update_layout(
-            title=get_text('practice_session_preferences_title', language),
+            title=get_text('engagement_score_radar_title', language),
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100],
+                    tickmode='array',
+                    tickvals=[0, 25, 50, 75, 100],
+                    ticktext=['0', '25', '50', '75', '100']
+                )
+            ),
             showlegend=True,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',

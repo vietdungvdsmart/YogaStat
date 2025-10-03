@@ -559,10 +559,10 @@ def render_dashboard(webhook_data, country_name=""):
         st.plotly_chart(feature_funnel_chart, use_container_width=True, key=f"{chart_key_prefix}feature_funnel")
     
     with col2:
-        chart_title = get_text('practice_preferences', st.session_state.language) if not is_time_series else get_text('total_practice_distribution', st.session_state.language)
+        chart_title = get_text('engagement_quality', st.session_state.language) if not is_time_series else get_text('overall_engagement_score', st.session_state.language)
         st.subheader(chart_title)
-        practice_chart = chart_gen.create_practice_preferences_chart(aggregated_data, st.session_state.language)
-        st.plotly_chart(practice_chart, use_container_width=True, key=f"{chart_key_prefix}practice")
+        engagement_radar_chart = chart_gen.create_engagement_score_radar(aggregated_data, st.session_state.language)
+        st.plotly_chart(engagement_radar_chart, use_container_width=True, key=f"{chart_key_prefix}engagement_radar")
     
     # Feature Analysis
     col1, col2 = st.columns(2)
