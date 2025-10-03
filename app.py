@@ -132,6 +132,7 @@ if 'webhook_url' not in st.session_state:
 if 'filtered_data' not in st.session_state:
     st.session_state.filtered_data = None
 
+
 # Initialize multi-country accumulator session state
 if 'country_accumulator' not in st.session_state:
     st.session_state.country_accumulator = {
