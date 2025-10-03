@@ -24,6 +24,9 @@ Preferred communication style: Simple, everyday language.
   - `InsightsGenerator`: Generates actionable insights and recommendations
 - **Data Validation**: Comprehensive validation for webhook data including field presence and type checking
 - **Real-time Processing**: Direct processing of webhook data without persistent storage
+- **Multi-Country Accumulator**: Collects data from 3 sequential webhook calls (US, India, VN) with 60-second timeout
+- **Loading State**: Simple loading indicator without detailed progression display
+- **Timeout Handling**: Automatic termination and error display after 60 seconds if data incomplete
 
 ### Analytics Features
 - **KPI Calculations**: Automated calculation of retention rates, churn rates, engagement metrics, and conversion rates

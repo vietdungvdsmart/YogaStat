@@ -97,14 +97,21 @@ def add_country_data(country, data):
     return expected.issubset(received)
 
 def check_accumulator_timeout():
-    """Check if accumulator has timed out."""
+    """Check if accumulator has timed out and handle termination."""
     if not st.session_state.country_accumulator['collecting']:
         return False
     
     start_time = st.session_state.country_accumulator['start_time']
     timeout = st.session_state.country_accumulator['timeout_seconds']
+    elapsed = time.time() - start_time
     
-    return (time.time() - start_time) > timeout
+    if elapsed > timeout:
+        # Log timeout for debugging
+        print(f"[TIMEOUT] Data collection exceeded {timeout} seconds. Elapsed: {elapsed:.2f}s")
+        print(f"[TIMEOUT] Received countries: {list(st.session_state.country_accumulator['data'].keys())}")
+        print(f"[TIMEOUT] Expected countries: {st.session_state.country_accumulator['expected_countries']}")
+        return True
+    return False
 
 def reset_accumulator():
     """Reset the accumulator state."""
@@ -172,46 +179,35 @@ st.markdown(f"*{get_text('page_subtitle', st.session_state.language)}*")
 if st.session_state.country_accumulator['collecting']:
     # Check for timeout
     if check_accumulator_timeout():
-        st.error("⏰ Timeout: Not all countries received within 60 seconds. Resetting collection.")
-        reset_accumulator()
-        st.rerun()
+        # Timeout reached - show error and automatically reset
+        st.error("❌ **Timeout Error:** Data collection failed after 60 seconds")
+        st.warning("Not all countries were received. Please check your n8n workflow is sending data for all 3 countries.")
+        reset_accumulator()  # Automatically reset
+        if st.button("🔄 Try Again", key="reset_after_timeout", use_container_width=True):
+            st.rerun()
+        st.stop()  # Stop further processing
     else:
-        # Show progress
-        accumulated = st.session_state.country_accumulator['data']
-        received_countries = list(accumulated.keys())
-        expected_countries = st.session_state.country_accumulator['expected_countries']
+        # Show loading state (no detailed progress)
         start_time = st.session_state.country_accumulator['start_time']
         elapsed = int(time.time() - start_time)
         remaining_time = 60 - elapsed
         
-        st.info(f"🔄 **Collecting multi-country data:** {len(received_countries)}/{len(expected_countries)} countries received")
+        # Simple loading container
+        loading_container = st.container()
+        with loading_container:
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                # Loading spinner with message
+                with st.spinner("Loading data from webhook..."):
+                    st.empty()  # Placeholder for spinner animation
+            with col2:
+                # Just show time remaining
+                st.metric("⏱️", f"{remaining_time}s")
         
-        # Progress bar
-        progress = len(received_countries) / len(expected_countries)
-        st.progress(progress)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Received", ', '.join(received_countries) if received_countries else "None")
-        with col2:
-            missing = set(expected_countries) - set(received_countries)
-            st.metric("Still Waiting", ', '.join(missing) if missing else "None")
-        with col3:
-            st.metric("Time Remaining", f"{remaining_time}s")
-        
-        # Show refresh instruction instead of auto-refresh
-        if remaining_time > 0 and remaining_time % 10 == 0:
-            st.info("💡 Page will update automatically when new data arrives")
-        
-        # Manual controls
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔄 Reset Collection", key="reset_collection"):
-                reset_accumulator()
-                st.rerun()
-        with col2:
-            if st.button("📊 Check Status", key="check_status"):
-                st.info("Status checked - see accumulator progress above")
+        # Small cancel button
+        if st.button("Cancel", key="cancel_loading", help="Cancel data collection"):
+            reset_accumulator()
+            st.rerun()
         
         st.divider()
 
@@ -278,25 +274,12 @@ with col2:
                                     country = first_item['country']
                                     country_data = first_item['data']
                                     
-                                    # Add timestamp for debugging
-                                    import time
-                                    timestamp = time.strftime("%H:%M:%S", time.localtime())
-                                    st.info(f"⏰ {timestamp} - Detected single-country request: {country}")
-                                    
-                                    # Add to accumulator
+                                    # Add to accumulator (silently - no UI updates)
                                     all_received = add_country_data(country, country_data)
-                                    
-                                    # Show progress
-                                    accumulated = st.session_state.country_accumulator['data']
-                                    received_countries = list(accumulated.keys())
-                                    expected_countries = st.session_state.country_accumulator['expected_countries']
-                                    
-                                    st.success(f"✅ {timestamp} - Added {country} to accumulator")
-                                    st.info(f"🔄 Progress: {', '.join(received_countries)} ({len(received_countries)}/{len(expected_countries)})")
                                     
                                     if all_received:
                                         # All countries received - process now
-                                        st.success("🎉 All countries received! Processing data...")
+                                        st.success("✅ Data loaded successfully!")
                                         processed_data = process_accumulated_data()
                                         if processed_data:
                                             st.session_state.data = processed_data
@@ -304,15 +287,13 @@ with col2:
                                             reset_accumulator()
                                             st.success(get_text('data_fetched_success', st.session_state.language))
                                             st.balloons()  # Celebrate completion
-                                            # Don't call st.rerun() immediately to avoid interference
                                         else:
-                                            st.error("❌ Failed to process accumulated data")
+                                            st.error("❌ Failed to process data")
                                             reset_accumulator()
                                     else:
-                                        # Still waiting for more countries - DON'T rerun to avoid interference
-                                        remaining = set(expected_countries) - set(received_countries)
-                                        st.warning(f"⏳ Waiting for: {', '.join(remaining)}")
-                                        st.info("💡 Next webhook call will add to accumulator")
+                                        # Still waiting for more countries - don't show any details
+                                        # Loading state is already shown in the accumulator status section above
+                                        pass
                                 
                                 # Case 2: Complete multi-country format with explicit country field (3+ countries)
                                 elif len(data) >= 3 and all(isinstance(item, dict) and 'country' in item for item in data):
