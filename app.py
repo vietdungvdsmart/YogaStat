@@ -520,9 +520,9 @@ def render_dashboard(webhook_data, country_name=""):
             st.plotly_chart(flow_chart, use_container_width=True, key=f"{chart_key_prefix}flow_trends")
         
         with col2:
-            st.subheader(get_text('practice_trends', st.session_state.language))
-            practice_trends_chart = chart_gen.create_practice_trends_chart(filtered_periods, st.session_state.language)
-            st.plotly_chart(practice_trends_chart, use_container_width=True, key=f"{chart_key_prefix}practice_trends")
+            st.subheader(get_text('user_activity_comparison_title', st.session_state.language))
+            user_activity_chart = chart_gen.create_user_activity_comparison(filtered_periods, st.session_state.language)
+            st.plotly_chart(user_activity_chart, use_container_width=True, key=f"{chart_key_prefix}user_activity")
         
         st.divider()
         
@@ -560,10 +560,9 @@ def render_dashboard(webhook_data, country_name=""):
         st.plotly_chart(feature_funnel_chart, use_container_width=True, key=f"{chart_key_prefix}feature_funnel")
     
     with col2:
-        chart_title = get_text('engagement_quality', st.session_state.language) if not is_time_series else get_text('overall_engagement_score', st.session_state.language)
-        st.subheader(chart_title)
-        engagement_radar_chart = chart_gen.create_engagement_score_radar(aggregated_data, st.session_state.language)
-        st.plotly_chart(engagement_radar_chart, use_container_width=True, key=f"{chart_key_prefix}engagement_radar")
+        st.subheader(get_text('user_funnel_analysis_title', st.session_state.language))
+        funnel_chart = chart_gen.create_user_funnel_analysis(aggregated_data, st.session_state.language)
+        st.plotly_chart(funnel_chart, use_container_width=True, key=f"{chart_key_prefix}user_funnel")
     
     # Feature Analysis
     col1, col2 = st.columns(2)
@@ -574,9 +573,9 @@ def render_dashboard(webhook_data, country_name=""):
         st.plotly_chart(feature_chart, use_container_width=True, key=f"{chart_key_prefix}feature")
     
     with col2:
-        st.subheader(get_text('ai_engagement_metrics', st.session_state.language))
-        ai_chart = chart_gen.create_ai_engagement_chart(aggregated_data, st.session_state.language)
-        st.plotly_chart(ai_chart, use_container_width=True, key=f"{chart_key_prefix}ai")
+        st.subheader(get_text('churn_risk_indicator_title', st.session_state.language))
+        churn_risk_chart = chart_gen.create_churn_risk_indicator(aggregated_data, st.session_state.language)
+        st.plotly_chart(churn_risk_chart, use_container_width=True, key=f"{chart_key_prefix}churn_risk")
     
     # Popup Performance
     st.subheader(get_text('popup_performance_header', st.session_state.language))

@@ -94,6 +94,17 @@ TRANSLATIONS = {
         'average_benchmark': 'Average Benchmark',
         'ai_engagement_metrics': '🤖 AI Engagement Metrics',
         
+        # New chart titles and labels
+        'user_activity_comparison_title': 'User Activity Comparison',
+        'user_funnel_analysis_title': 'User Funnel Analysis',
+        'churn_risk_indicator_title': 'Churn Risk Indicator',
+        'new_users': 'New Users',
+        'active_sessions': 'Active Sessions',
+        'total_practice': 'Total Practice',
+        'risk_level_low': 'Low Risk',
+        'risk_level_medium': 'Medium Risk',
+        'risk_level_high': 'High Risk',
+        
         # Popup performance
         'popup_performance_header': '💬 Popup Performance Dashboard',
         'total_popups_shown': '👁️ Total Popups Shown',
@@ -307,6 +318,17 @@ TRANSLATIONS = {
         'retention_strength': 'Độ Giữ Chân',
         'average_benchmark': 'Chuẩn Trung Bình',
         'ai_engagement_metrics': '🤖 Chỉ Số Tương Tác AI',
+        
+        # New chart titles and labels
+        'user_activity_comparison_title': 'So Sánh Hoạt Động Người Dùng',
+        'user_funnel_analysis_title': 'Phân Tích Phễu Người Dùng',
+        'churn_risk_indicator_title': 'Chỉ Số Rủi Ro Rời Bỏ',
+        'new_users': 'Người Dùng Mới',
+        'active_sessions': 'Phiên Hoạt Động',
+        'total_practice': 'Tổng Luyện Tập',
+        'risk_level_low': 'Rủi Ro Thấp',
+        'risk_level_medium': 'Rủi Ro Trung Bình',
+        'risk_level_high': 'Rủi Ro Cao',
         
         # Popup performance
         'popup_performance_header': '💬 Hiệu Suất Popup',

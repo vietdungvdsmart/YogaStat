@@ -497,3 +497,250 @@ class ChartGenerator:
         )
         
         return fig
+    
+    def create_user_activity_comparison(self, time_series_data, language='en'):
+        """Create a line chart comparing user activity metrics over time."""
+        if not time_series_data:
+            # Handle single data point case (aggregated data)
+            return self._create_user_activity_comparison_single(time_series_data, language)
+        
+        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        new_users = [item.get('first_open', 0) for item in time_series_data]
+        active_sessions = [item.get('session_start', 0) for item in time_series_data]
+        total_practice = [(item.get('practice_with_video', 0) + item.get('practice_with_ai', 0)) 
+                         for item in time_series_data]
+        
+        fig = go.Figure()
+        
+        # New Users line
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=new_users,
+            mode='lines+markers',
+            name=get_text('new_users', language),
+            line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
+            marker=dict(size=10, color=self.color_scheme['primary']),
+            hovertemplate='<b>' + get_text('new_users', language) + '</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+        ))
+        
+        # Active Sessions line
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=active_sessions,
+            mode='lines+markers',
+            name=get_text('active_sessions', language),
+            line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
+            marker=dict(size=10, color=self.color_scheme['secondary']),
+            hovertemplate='<b>' + get_text('active_sessions', language) + '</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+        ))
+        
+        # Total Practice line
+        fig.add_trace(go.Scatter(
+            x=weeks,
+            y=total_practice,
+            mode='lines+markers',
+            name=get_text('total_practice', language),
+            line=dict(color=self.color_scheme['accent'], width=3, shape='spline'),
+            marker=dict(size=10, color=self.color_scheme['accent']),
+            hovertemplate='<b>' + get_text('total_practice', language) + '</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title=get_text('user_activity_comparison_title', language),
+            xaxis_title=get_text('week', language),
+            yaxis_title=get_text('count', language),
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            hovermode='x unified',
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
+        
+        return fig
+    
+    def _create_user_activity_comparison_single(self, data, language='en'):
+        """Create user activity comparison for single data point (aggregated data)."""
+        metrics = [
+            get_text('new_users', language),
+            get_text('active_sessions', language),
+            get_text('total_practice', language)
+        ]
+        
+        values = [
+            data.get('first_open', 0) if data else 0,
+            data.get('session_start', 0) if data else 0,
+            (data.get('practice_with_video', 0) + data.get('practice_with_ai', 0)) if data else 0
+        ]
+        
+        fig = go.Figure(data=[
+            go.Bar(
+                x=metrics,
+                y=values,
+                marker_color=[self.color_scheme['primary'], 
+                             self.color_scheme['secondary'],
+                             self.color_scheme['accent']],
+                text=values,
+                textposition='auto',
+                hovertemplate='<b>%{x}</b><br>Count: %{y}<extra></extra>'
+            )
+        ])
+        
+        fig.update_layout(
+            title=get_text('user_activity_comparison_title', language),
+            xaxis_title='Metrics',
+            yaxis_title=get_text('count', language),
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
+        
+        return fig
+    
+    def create_user_funnel_analysis(self, data, language='en'):
+        """Create a funnel chart showing user conversion through different stages."""
+        # Calculate funnel stages
+        stages = [
+            (get_text('view_exercise_stage', language), data.get('view_exercise', 0)),
+            (get_text('practice_video_stage', language), data.get('practice_with_video', 0)),
+            (get_text('practice_ai_stage', language), data.get('practice_with_ai', 0)),
+            (get_text('chat_ai_stage', language), data.get('chat_ai', 0))
+        ]
+        
+        # Calculate conversion rates
+        conversion_rates = []
+        for i, (stage_name, stage_value) in enumerate(stages):
+            if i == 0:
+                conversion_rates.append("100%")
+            else:
+                prev_value = stages[i-1][1]
+                if prev_value > 0:
+                    rate = (stage_value / prev_value) * 100
+                    conversion_rates.append(f"{rate:.1f}%")
+                else:
+                    conversion_rates.append("0%")
+        
+        # Create funnel visualization
+        fig = go.Figure(go.Funnel(
+            y=[stage[0] for stage in stages],
+            x=[stage[1] for stage in stages],
+            textposition="inside",
+            textinfo="value+percent initial",
+            opacity=0.85,
+            marker={
+                "color": [self.color_scheme['primary'], 
+                         self.color_scheme['secondary'],
+                         self.color_scheme['accent'],
+                         self.color_scheme['success']],
+                "line": {"width": 2, "color": "white"}
+            },
+            connector={"line": {"color": "rgb(63, 63, 63)", "width": 1}},
+            hovertemplate='<b>%{y}</b><br>' +
+                         get_text('users_count', language) + ': %{x}<br>' +
+                         get_text('conversion_rate', language) + ': %{percentPrevious}<br>' +
+                         get_text('conversion_from_start', language) + ': %{percentInitial}<br>' +
+                         '<extra></extra>'
+        ))
+        
+        # Add conversion rate annotations
+        for i, rate in enumerate(conversion_rates[1:], 1):
+            fig.add_annotation(
+                x=0.95,
+                y=i - 0.5,
+                text=f"↓ {rate}",
+                showarrow=False,
+                font=dict(size=12, color=self.color_scheme['text']),
+                xref="paper",
+                yref="y"
+            )
+        
+        fig.update_layout(
+            title=get_text('user_funnel_analysis_title', language),
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=12),
+            margin=dict(l=20, r=80, t=60, b=20)  # Extra right margin for conversion rate annotations
+        )
+        
+        return fig
+    
+    def create_churn_risk_indicator(self, data, language='en'):
+        """Create a gauge chart showing churn risk based on retention and churn metrics."""
+        # Calculate metrics
+        first_open = max(data.get('first_open', 1), 1)  # Avoid division by zero
+        app_remove = data.get('app_remove', 0)
+        app_open = data.get('app_open', 0)
+        
+        # Calculate churn rate (app removals / first opens)
+        churn_rate = (app_remove / first_open) * 100 if first_open > 0 else 0
+        
+        # Calculate retention rate (app opens - app removals) / first opens
+        retention_rate = ((app_open - app_remove) / first_open) * 100 if first_open > 0 else 0
+        retention_rate = max(0, min(100, retention_rate))  # Clamp to 0-100
+        
+        # Calculate risk score using the formula: (churn_rate * 2 + (100 - retention_rate)) / 3
+        risk_score = (churn_rate * 2 + (100 - retention_rate)) / 3
+        risk_score = max(0, min(100, risk_score))  # Clamp to 0-100
+        
+        # Determine risk level
+        if risk_score <= 33:
+            risk_level = get_text('risk_level_low', language)
+            risk_color = self.color_scheme['success']
+        elif risk_score <= 66:
+            risk_level = get_text('risk_level_medium', language)
+            risk_color = self.color_scheme['warning']
+        else:
+            risk_level = get_text('risk_level_high', language)
+            risk_color = self.color_scheme['error']
+        
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number+delta",
+            value = risk_score,
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': get_text('churn_risk_indicator_title', language)},
+            delta = {'reference': 50, 'decreasing': {'color': 'green'}, 'increasing': {'color': 'red'}},
+            gauge = {
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkgray"},
+                'bar': {'color': risk_color, 'thickness': 0.75},
+                'bgcolor': "white",
+                'borderwidth': 2,
+                'bordercolor': "gray",
+                'steps': [
+                    {'range': [0, 33], 'color': 'rgba(72, 187, 120, 0.2)'},  # Light green
+                    {'range': [33, 66], 'color': 'rgba(237, 137, 54, 0.2)'},  # Light yellow/orange
+                    {'range': [66, 100], 'color': 'rgba(245, 101, 101, 0.2)'}  # Light red
+                ],
+                'threshold': {
+                    'line': {'color': "black", 'width': 4},
+                    'thickness': 0.75,
+                    'value': risk_score
+                }
+            }
+        ))
+        
+        # Add annotations for additional context
+        fig.add_annotation(
+            text=f"<b>{risk_level}</b><br>Churn: {churn_rate:.1f}% | Retention: {retention_rate:.1f}%",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=-0.15,
+            showarrow=False,
+            font=dict(size=12),
+            align="center"
+        )
+        
+        fig.update_layout(
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=14)
+        )
+        
+        return fig
