@@ -39,7 +39,7 @@ TRANSLATIONS = {
         'no_weeks_match': '⚠️ No weeks match this date range',
         
         # KPI section
-        'key_performance_header': '📊 Key Performance',
+        'key_performance_header': '📊 Last Week Overview',
         'latest_week': '📅 Latest Week: {current} (vs Previous Week: {previous})',
         'total_new_users': '👥 Total New Users',
         'user_retention_rate': '🔄 User Retention Rate',
