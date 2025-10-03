@@ -253,7 +253,7 @@ TRANSLATIONS = {
         'no_weeks_match': '⚠️ Không có tuần nào khớp với khoảng thời gian này',
         
         # KPI section
-        'key_performance_header': '📊 Hiệu Suất Chính',
+        'key_performance_header': '📊 Tổng Quan Tuần Trước',
         'latest_week': '📅 Tuần Mới Nhất: {current} (so với Tuần Trước: {previous})',
         'total_new_users': '👥 Tổng Người Dùng Mới',
         'user_retention_rate': '🔄 Tỷ Lệ Giữ Chân Người Dùng',
