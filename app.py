@@ -679,7 +679,7 @@ def render_dashboard(webhook_data, country_name=""):
     st.divider()
     
     # Feature Performance Analysis Section
-    st.header(get_text('feature_performance_analysis_header', st.session_state.language))
+    st.header(get_text('feature_performance_header', st.session_state.language))
     
     adoption_data = processor.calculate_feature_adoption(aggregated_data)
     
