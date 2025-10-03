@@ -18,35 +18,44 @@ class ChartGenerator:
             'text': '#2D3748'
         }
     
-    def create_acquisition_churn_chart(self, data, language='en'):
-        """Create a chart showing user acquisition vs churn."""
-        categories = [get_text('new_users', language), get_text('app_removals', language), get_text('returning_users', language)]
-        values = [
-            data.get('first_open', 0),
-            data.get('app_remove', 0),
-            data.get('app_open', 0)
+    def create_feature_adoption_funnel(self, data, language='en'):
+        """Create a funnel chart showing feature adoption progression."""
+        # Calculate funnel stages - from viewing to practicing
+        stages = [
+            (get_text('view_exercise_stage', language), data.get('view_exercise', 0)),
+            (get_text('practice_video_stage', language), data.get('practice_with_video', 0)),
+            (get_text('practice_ai_stage', language), data.get('practice_with_ai', 0)),
+            (get_text('chat_ai_stage', language), data.get('chat_ai', 0))
         ]
-        colors = [self.color_scheme['success'], self.color_scheme['error'], self.color_scheme['primary']]
         
-        fig = go.Figure(data=[
-            go.Bar(
-                x=categories,
-                y=values,
-                marker_color=colors,
-                text=values,
-                textposition='auto',
-                hovertemplate='<b>%{x}</b><br>Count: %{y}<extra></extra>'
-            )
-        ])
+        # Create funnel visualization
+        fig = go.Figure(go.Funnel(
+            y=[stage[0] for stage in stages],
+            x=[stage[1] for stage in stages],
+            textposition="inside",
+            textinfo="value+percent initial",
+            opacity=0.85,
+            marker={
+                "color": [self.color_scheme['primary'], 
+                         self.color_scheme['secondary'],
+                         self.color_scheme['accent'],
+                         self.color_scheme['success']],
+                "line": {"width": 2, "color": "white"}
+            },
+            connector={"line": {"color": "rgb(63, 63, 63)", "width": 1}},
+            hovertemplate='<b>%{y}</b><br>' +
+                         get_text('users_count', language) + ': %{x}<br>' +
+                         get_text('conversion_from_start', language) + ': %{percentInitial}<br>' +
+                         '<extra></extra>'
+        ))
         
         fig.update_layout(
-            title=get_text('user_acquisition_vs_churn_title', language),
-            xaxis_title=get_text('user_category', language),
-            yaxis_title=get_text('count', language),
-            showlegend=False,
+            title=get_text('feature_adoption_funnel_title', language),
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=12),
+            margin=dict(l=20, r=20, t=60, b=20)
         )
         
         return fig

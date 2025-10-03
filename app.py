@@ -552,10 +552,11 @@ def render_dashboard(webhook_data, country_name=""):
     col1, col2 = st.columns(2)
     
     with col1:
-        chart_title = get_text('user_acquisition_vs_churn', st.session_state.language) if not is_time_series else get_text('overall_user_metrics', st.session_state.language)
+        # Feature Adoption Funnel (replaced acquisition vs churn chart)
+        chart_title = get_text('feature_adoption_analysis', st.session_state.language) if not is_time_series else get_text('overall_user_metrics', st.session_state.language)
         st.subheader(chart_title)
-        acquisition_chart = chart_gen.create_acquisition_churn_chart(aggregated_data, st.session_state.language)
-        st.plotly_chart(acquisition_chart, use_container_width=True, key=f"{chart_key_prefix}acquisition")
+        feature_funnel_chart = chart_gen.create_feature_adoption_funnel(aggregated_data, st.session_state.language)
+        st.plotly_chart(feature_funnel_chart, use_container_width=True, key=f"{chart_key_prefix}feature_funnel")
     
     with col2:
         chart_title = get_text('practice_preferences', st.session_state.language) if not is_time_series else get_text('total_practice_distribution', st.session_state.language)

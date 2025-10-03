@@ -73,6 +73,14 @@ TRANSLATIONS = {
         'practice_preferences': '🏃‍♀️ Practice Preferences',
         'total_practice_distribution': '🏃‍♀️ Total Practice Distribution',
         'feature_usage_analysis': '📱 Feature Usage Analysis',
+        'feature_adoption_analysis': '🎯 Feature Adoption Funnel',
+        'feature_adoption_funnel_title': 'Feature Adoption Journey',
+        'view_exercise_stage': 'View Exercise',
+        'practice_video_stage': 'Practice with Video',
+        'practice_ai_stage': 'Practice with AI',
+        'chat_ai_stage': 'Chat with AI',
+        'users_count': 'Users',
+        'conversion_from_start': 'Conversion from View Exercise',
         'ai_engagement_metrics': '🤖 AI Engagement Metrics',
         
         # Popup performance
@@ -268,6 +276,14 @@ TRANSLATIONS = {
         'practice_preferences': '🏃‍♀️ Sở Thích Luyện Tập',
         'total_practice_distribution': '🏃‍♀️ Phân Bố Luyện Tập Tổng Thể',
         'feature_usage_analysis': '📱 Phân Tích Sử Dụng Tính Năng',
+        'feature_adoption_analysis': '🎯 Phễu Chấp Nhận Tính Năng',
+        'feature_adoption_funnel_title': 'Hành Trình Chấp Nhận Tính Năng',
+        'view_exercise_stage': 'Xem Bài Tập',
+        'practice_video_stage': 'Tập Luyện Với Video',
+        'practice_ai_stage': 'Tập Luyện Với AI',
+        'chat_ai_stage': 'Trò Chuyện Với AI',
+        'users_count': 'Người Dùng',
+        'conversion_from_start': 'Tỷ Lệ Chuyển Đổi Từ Xem Bài Tập',
         'ai_engagement_metrics': '🤖 Chỉ Số Tương Tác AI',
         
         # Popup performance
