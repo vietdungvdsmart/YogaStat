@@ -331,6 +331,9 @@ with col2:
                                         st.rerun()
                                     else:
                                         st.error(get_text('invalid_data_format', st.session_state.language))
+                                        with st.expander("🔍 Debug: Show received data structure"):
+                                            st.json(data[:2] if len(data) > 2 else data)  # Show first 2 items only
+                                            st.info("Check if your data has 'time' field and required metrics fields")
                                 
                                 # Case 3: n8n array format (3 items, each is a country)
                                 elif len(data) == 3 and all(isinstance(item, dict) for item in data):
@@ -359,6 +362,9 @@ with col2:
                                         st.rerun()
                                     else:
                                         st.error(get_text('invalid_data_format', st.session_state.language))
+                                        with st.expander("🔍 Debug: Show received data structure"):
+                                            st.json(data[:2] if isinstance(data, list) and len(data) > 2 else data)
+                                            st.info("Your data format doesn't match expected format. Check the 'Expected Data Format' section below for the correct structure.")
                             else:
                                 # This might be single country data - use accumulator
                                 country = detect_country_from_data(data)
