@@ -39,13 +39,15 @@ TRANSLATIONS = {
         'no_weeks_match': '⚠️ No weeks match this date range',
         
         # KPI section
-        'key_performance_header': '📊 Last Week Overview',
+        'key_performance_header': '📊 Key Performance Indicators',
+        'last_week_overview_header': '📊 Last Week Overview (Last 7 Days)',
         'latest_week': '📅 Latest Week: {current} (vs Previous Week: {previous})',
         'total_new_users': '👥 Total New Users',
         'user_retention_rate': '🔄 User Retention Rate',
         'churn_rate': '📉 Churn Rate',
         'active_sessions': '🎯 Active Sessions',
         'engagement_rate': '💪 Engagement Rate',
+        'avg_engagement_time': '⏱️ Avg. Engagement Time',
         
         # Country analytics
         'analytics': 'Analytics',
@@ -171,6 +173,10 @@ TRANSLATIONS = {
         'popups_shown': 'Popups Shown',
         'popups_viewed': 'Popups Viewed',
         'interaction_rate': 'Interaction Rate',
+        'day': 'Day',
+        'date': 'Date',
+        'person': 'person',
+        'persons': 'persons',
         
         # Insights content
         'retention_excellent': 'Excellent user retention rate of {rate:.1%} - significantly higher than industry average',
@@ -264,13 +270,15 @@ TRANSLATIONS = {
         'no_weeks_match': '⚠️ Không có tuần nào khớp với khoảng thời gian này',
         
         # KPI section
-        'key_performance_header': '📊 Tổng Quan Tuần Trước',
+        'key_performance_header': '📊 Chỉ Số Hiệu Suất Chính',
+        'last_week_overview_header': '📊 Tổng Quan Tuần Trước (7 Ngày Qua)',
         'latest_week': '📅 Tuần Mới Nhất: {current} (so với Tuần Trước: {previous})',
         'total_new_users': '👥 Tổng Người Dùng Mới',
         'user_retention_rate': '🔄 Tỷ Lệ Giữ Chân Người Dùng',
         'churn_rate': '📉 Tỷ Lệ Rời Bỏ',
         'active_sessions': '🎯 Phiên Hoạt Động',
         'engagement_rate': '💪 Tỷ Lệ Tương Tác',
+        'avg_engagement_time': '⏱️ Thời Gian Tương Tác TB',
         
         # Country analytics
         'analytics': 'Phân Tích',
@@ -396,6 +404,10 @@ TRANSLATIONS = {
         'popups_shown': 'Popup Hiển Thị',
         'popups_viewed': 'Popup Được Xem',
         'interaction_rate': 'Tỷ Lệ Tương Tác',
+        'day': 'Ngày',
+        'date': 'Ngày Tháng',
+        'person': 'người',
+        'persons': 'người',
         
         # Feature Performance (changed from adoption)
         'feature_performance_header': '📊 Phân Tích Hiệu Suất Tính Năng',

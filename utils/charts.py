@@ -5,7 +5,27 @@ import pandas as pd
 from .translations import get_text
 
 class ChartGenerator:
-    """Generates interactive charts for the yoga app analytics dashboard."""
+    """Generates interactive charts for the yoga app analytics dashboard.
+    
+    Field Descriptions (for hover templates and labels):
+    - first_open: New user opens app for the first time (unit: person/persons)
+    - app_remove: User uninstalls app (unit: person/persons)
+    - session_start: A session starts (unit: person/persons)
+    - app_open: User opens app again (unit: person/persons)
+    - login: User logs in (unit: person/persons)
+    - view_exercise: User views yoga exercise (unit: person/persons)
+    - health_survey: User finishes health survey (unit: person/persons)
+    - view_roadmap: User views recommended roadmap (unit: person/persons)
+    - practice_with_video: User practices with video (unit: person/persons)
+    - practice_with_ai: User practices with AI (unit: person/persons)
+    - chat_ai: User chats with AI (unit: person/persons)
+    - show_popup: Popup shows to user (unit: person/persons)
+    - view_detail_popup: User clicks on popup (unit: person/persons)
+    - close_popup: User closes popup without clicking (unit: person/persons)
+    - store_subscription: User views store package (unit: person/persons)
+    - in_app_purchase: User places order (unit: person/persons)
+    - avg_engage_time: Average engagement time per user (unit: seconds)
+    """
     
     def __init__(self):
         self.color_scheme = {
@@ -17,6 +37,43 @@ class ChartGenerator:
             'error': '#F56565',
             'text': '#2D3748'
         }
+    
+    def get_time_granularity(self, time_series_data):
+        """Determine if data should be displayed as daily or weekly.
+        
+        Returns:
+            tuple: (is_daily: bool, x_axis_label: str, period_count: int)
+        """
+        if not time_series_data:
+            return (True, 'Day', 0)
+        
+        period_count = len(time_series_data)
+        
+        # If 14 or fewer periods, assume daily and show as daily
+        # If more than 14 periods, aggregate to weekly
+        is_daily = period_count <= 14
+        x_axis_label = 'Day' if is_daily else 'Week'
+        
+        return (is_daily, x_axis_label, period_count)
+    
+    def get_y_axis_label(self, metric_type='count', language='en'):
+        """Get appropriate y-axis label based on metric type.
+        
+        Args:
+            metric_type: Type of metric ('count', 'time', 'percentage')
+            language: Language code
+        
+        Returns:
+            str: Y-axis label
+        """
+        if metric_type == 'count':
+            return get_text('persons', language)
+        elif metric_type == 'time':
+            return 'Time (seconds)'
+        elif metric_type == 'percentage':
+            return 'Percentage (%)'
+        else:
+            return get_text('persons', language)
     
     def create_feature_adoption_funnel(self, data, language='en'):
         """Create a funnel chart showing feature adoption progression."""
@@ -331,12 +388,16 @@ class ChartGenerator:
         )
     
     def create_time_series_chart(self, time_series_data, language='en'):
-        """Create a comprehensive time series chart showing all metrics over time."""
+        """Create a comprehensive time series chart showing all metrics over time.
+        Adapts between daily and weekly views based on data range."""
         if not time_series_data:
             return go.Figure()
         
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
         # Extract time labels and metrics
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         
         fig = go.Figure()
         
@@ -376,21 +437,23 @@ class ChartGenerator:
             'Popups Closed': ([item.get('close_popup', 0) for item in time_series_data], metric_colors[13])
         }
         
+        y_axis_label = self.get_y_axis_label('count', language)
+        
         for metric_name, (values, color) in metrics.items():
             fig.add_trace(go.Scatter(
-                x=weeks,
+                x=time_periods,
                 y=values,
                 mode='lines+markers',
                 name=metric_name,
                 line=dict(color=color, width=3, shape='spline'),
                 marker=dict(size=8, color=color),
-                hovertemplate=f'<b>{metric_name}</b><br>Week: %{{x}}<br>Count: %{{y}}<extra></extra>'
+                hovertemplate=f'<b>{metric_name}</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
             ))
         
         fig.update_layout(
             title=get_text('metrics_trends_title', language),
-            xaxis_title=get_text('week', language),
-            yaxis_title="Count",
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=600,  # Increased height for better visibility with more metrics
             hovermode='x unified',
             plot_bgcolor='rgba(0,0,0,0)',
@@ -414,37 +477,42 @@ class ChartGenerator:
         if not time_series_data:
             return go.Figure()
         
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         new_users = [item.get('first_open', 0) for item in time_series_data]
         churn = [item.get('app_remove', 0) for item in time_series_data]
+        
+        y_axis_label = self.get_y_axis_label('count', language)
         
         fig = go.Figure()
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=new_users,
             mode='lines+markers',
             name=get_text('new_users', language),
             line=dict(color=self.color_scheme['success'], width=3, shape='spline'),
             marker=dict(size=8),
             fill='tonexty',
-            hovertemplate='<b>New Users</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate=f'<b>New Users</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=churn,
             mode='lines+markers',
             name=get_text('churn', language),
             line=dict(color=self.color_scheme['error'], width=3, shape='spline'),
             marker=dict(size=8),
-            hovertemplate='<b>Churn</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate=f'<b>Churn</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.update_layout(
             title=get_text('user_flow_trends_title', language),
-            xaxis_title="Time Period",
-            yaxis_title="Count",
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
@@ -458,38 +526,43 @@ class ChartGenerator:
         if not time_series_data:
             return go.Figure()
         
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         video_practice = [item.get('practice_with_video', 0) for item in time_series_data]
         ai_practice = [item.get('practice_with_ai', 0) for item in time_series_data]
+        
+        y_axis_label = self.get_y_axis_label('count', language)
         
         fig = go.Figure()
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=video_practice,
             mode='lines+markers',
             name=get_text('video_practice', language),
             line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
-            hovertemplate='<b>Video Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+            hovertemplate=f'<b>Video Practice</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=ai_practice,
             mode='lines+markers',
             name=get_text('ai_practice', language),
             line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
-            hovertemplate='<b>AI Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+            hovertemplate=f'<b>AI Practice</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.update_layout(
             title=get_text('practice_trends_title', language),
-            xaxis_title="Time Period",
-            yaxis_title="Practice Sessions",
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
@@ -504,51 +577,56 @@ class ChartGenerator:
             # Handle single data point case (aggregated data)
             return self._create_user_activity_comparison_single(time_series_data, language)
         
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         new_users = [item.get('first_open', 0) for item in time_series_data]
         active_sessions = [item.get('session_start', 0) for item in time_series_data]
         total_practice = [(item.get('practice_with_video', 0) + item.get('practice_with_ai', 0)) 
                          for item in time_series_data]
         
+        y_axis_label = self.get_y_axis_label('count', language)
+        
         fig = go.Figure()
         
         # New Users line
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=new_users,
             mode='lines+markers',
             name=get_text('new_users', language),
             line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
             marker=dict(size=10, color=self.color_scheme['primary']),
-            hovertemplate='<b>' + get_text('new_users', language) + '</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate='<b>' + get_text('new_users', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         # Active Sessions line
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=active_sessions,
             mode='lines+markers',
             name=get_text('active_sessions', language),
             line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
             marker=dict(size=10, color=self.color_scheme['secondary']),
-            hovertemplate='<b>' + get_text('active_sessions', language) + '</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate='<b>' + get_text('active_sessions', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         # Total Practice line
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=total_practice,
             mode='lines+markers',
             name=get_text('total_practice', language),
             line=dict(color=self.color_scheme['accent'], width=3, shape='spline'),
             marker=dict(size=10, color=self.color_scheme['accent']),
-            hovertemplate='<b>' + get_text('total_practice', language) + '</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+            hovertemplate='<b>' + get_text('total_practice', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.update_layout(
             title=get_text('user_activity_comparison_title', language),
-            xaxis_title=get_text('week', language),
-            yaxis_title=get_text('count', language),
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
