@@ -4,6 +4,14 @@
 
 This is a Streamlit-based analytics dashboard designed to visualize user engagement metrics for a yoga exercise app. The dashboard integrates with n8n webhooks to fetch real-time analytics data and provides comprehensive insights into user behavior, retention, and feature usage. The application focuses on helping app developers and product managers understand user engagement patterns and make data-driven decisions for app optimization.
 
+## Recent Changes
+
+**October 21, 2025:**
+- Fixed numeric time field conversion: Dashboard now handles both string and numeric time formats (e.g., "20250217" and 20250217)
+- Merged "Key Performance Indicators" and "Last Week Overview" sections into one unified section titled "Key Performance Indicators & Weekly Metrics" for cleaner UI
+- Added visual hierarchy with subheaders: "Top 5 KPIs" displays the main 5 metrics, followed by "All Metrics (Last 7 Days)" showing all 17 metrics
+- Improved layout spacing with visual separators for better readability
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -29,7 +37,9 @@ Preferred communication style: Simple, everyday language.
 - **Timeout Handling**: Automatic termination and error display after 60 seconds if data incomplete
 
 ### Analytics Features
+- **Unified KPI Section**: Combined display of top 5 KPIs and all 17 weekly metrics in one cohesive section
 - **KPI Calculations**: Automated calculation of retention rates, churn rates, engagement metrics, and conversion rates
+- **Last 7 Days Metrics**: Displays totals for all 17 metrics from the last 7 days of data with proper aggregation (avg_engage_time is averaged, all others are summed)
 - **Comparative Analysis**: User acquisition vs churn visualization
 - **Feature Usage Tracking**: Monitors adoption of video practice, AI features, and roadmap views
 - **Popup Performance**: Tracks popup effectiveness and conversion rates
@@ -52,8 +62,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Integration
 - **n8n Webhook**: Primary data source requiring webhook URL configuration
-- **JSON Data Format**: Expects structured data with 14 predefined metrics including user engagement, feature usage, and popup interactions
+- **JSON Data Format**: Expects structured data with 17 predefined metrics including user engagement, feature usage, and popup interactions
+- **Time Field Support**: Handles both string ("20250217") and numeric (20250217) formats for date fields
 - **Real-time Data**: No database dependency - processes data directly from webhook responses
+- **Multi-language Support**: Full support for English and Vietnamese throughout the interface
 
 ### Styling and UI
 - **Custom CSS**: External stylesheet for yoga-inspired theming
