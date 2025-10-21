@@ -1,11 +1,31 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import re
 
 class DataProcessor:
-    """Handles data processing, validation, and KPI calculations for yoga app analytics."""
+    """Handles data processing, validation, and KPI calculations for yoga app analytics.
+    
+    Field Descriptions (all metrics use unit 'person' except avg_engage_time):
+    - first_open: New user opens app for the first time
+    - app_remove: User uninstalls app
+    - session_start: A session starts
+    - app_open: User opens app again (returning user)
+    - login: User logs in
+    - view_exercise: User views the yoga exercise on the app
+    - health_survey: User finishes the app health survey
+    - view_roadmap: User views the app's recommended exercise roadmap
+    - practice_with_video: User practices with app's exercise video
+    - practice_with_ai: User practices using AI feature
+    - chat_ai: User chats with the AI in app
+    - show_popup: Popup shows to user
+    - view_detail_popup: User clicks on popup
+    - close_popup: User closes popup without clicking it
+    - store_subscription: User views package in the store
+    - in_app_purchase: User placing order (not real order yet)
+    - avg_engage_time: Average engagement time per user (in seconds)
+    """
     
     def __init__(self):
         self.required_fields = [
@@ -15,10 +35,17 @@ class DataProcessor:
             'show_popup', 'view_detail_popup', 'close_popup'
         ]
         
+        # Additional optional fields
+        self.optional_fields = [
+            'store_subscription', 'in_app_purchase', 'avg_engage_time'
+        ]
+        
         # Field normalization mapping
         self.field_mapping = {
             'in_app_purchasse': 'in_app_purchase',  # Fix typo in field name
-            'buy_package': 'in_app_purchase',      # Alternative field name
+            'buy_package': 'in_app_purchase',       # Alternative field name
+            'AvgEngagementTime': 'avg_engage_time',  # Normalize field name
+            'avgEngagementTime': 'avg_engage_time',  # Alternative format
         }
     
     def convert_date_format(self, date_str):
@@ -52,6 +79,94 @@ class DataProcessor:
         
         # If it doesn't match either format, return as-is
         return date_str
+    
+    def format_engagement_time(self, seconds):
+        """Format engagement time from seconds to readable format.
+        
+        Args:
+            seconds: Engagement time in seconds
+            
+        Returns:
+            Formatted string like "5m 30s" or "1h 20m"
+        """
+        if not seconds or seconds == 0:
+            return "0s"
+        
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        secs = int(seconds % 60)
+        
+        parts = []
+        if hours > 0:
+            parts.append(f"{hours}h")
+        if minutes > 0:
+            parts.append(f"{minutes}m")
+        if secs > 0 and hours == 0:  # Only show seconds if less than an hour
+            parts.append(f"{secs}s")
+        
+        return " ".join(parts) if parts else "0s"
+    
+    def aggregate_to_weekly(self, daily_data):
+        """Aggregate daily data into weekly periods (7-day periods).
+        
+        Args:
+            daily_data: List of daily data records
+            
+        Returns:
+            List of weekly aggregated data
+        """
+        if not daily_data:
+            return []
+        
+        weekly_data = []
+        current_week = []
+        week_start = None
+        
+        for i, day_record in enumerate(daily_data):
+            if len(current_week) == 0:
+                week_start = day_record.get('time', '')
+            
+            current_week.append(day_record)
+            
+            # When we have 7 days or it's the last record
+            if len(current_week) == 7 or i == len(daily_data) - 1:
+                # Aggregate the week
+                aggregated = {}
+                week_end = current_week[-1].get('time', '')
+                aggregated['time'] = f"{week_start} - {week_end}"
+                
+                # Sum numeric fields, average avg_engage_time
+                for field in self.required_fields + self.optional_fields:
+                    if field == 'time':
+                        continue
+                    elif field == 'avg_engage_time':
+                        # Average engagement time across the week
+                        values = [item.get(field, 0) for item in current_week if item.get(field, 0) > 0]
+                        aggregated[field] = sum(values) / len(values) if values else 0
+                    else:
+                        # Sum all other numeric fields
+                        aggregated[field] = sum(item.get(field, 0) for item in current_week)
+                
+                weekly_data.append(aggregated)
+                current_week = []
+        
+        return weekly_data
+    
+    def get_last_n_days(self, data_list, n=7):
+        """Get the last N days of data from the data list.
+        
+        Args:
+            data_list: List of data records
+            n: Number of days to retrieve (default 7)
+            
+        Returns:
+            List of last N days data
+        """
+        if not data_list or len(data_list) == 0:
+            return []
+        
+        # Return the last n records (or all if less than n)
+        return data_list[-n:] if len(data_list) >= n else data_list
     
     def validate_data(self, data):
         """Validate that the webhook data contains all required fields."""
@@ -102,18 +217,56 @@ class DataProcessor:
         aggregated = {}
         
         # Sum all numeric fields across time periods
-        for field in self.required_fields:
+        for field in self.required_fields + self.optional_fields:
             if field == 'time':
                 # Combine time periods
                 first_time = data_list[0].get('time', '')
                 last_time = data_list[-1].get('time', '')
                 aggregated['time'] = f"Total: {first_time.split(' - ')[0]} - {last_time.split(' - ')[-1]}"
+            elif field == 'avg_engage_time':
+                # Average engagement time across all periods
+                values = [item.get(field, 0) for item in data_list if item.get(field, 0) > 0]
+                aggregated[field] = sum(values) / len(values) if values else 0
             else:
                 # Sum numeric values
                 total = sum(item.get(field, 0) for item in data_list)
                 aggregated[field] = total
         
         return aggregated
+    
+    def calculate_day_over_day_kpis(self, data_list):
+        """Calculate KPIs comparing the two most recent days."""
+        if not data_list or len(data_list) < 2:
+            # If less than 2 days, return current day only
+            current_day = data_list[-1] if data_list else {}
+            return {
+                'current': self.calculate_kpis(current_day),
+                'previous': {},
+                'deltas': {}
+            }
+        
+        # Get the two most recent days
+        current_day = data_list[-1]
+        previous_day = data_list[-2]
+        
+        # Calculate KPIs for both days
+        current_kpis = self.calculate_kpis(current_day)
+        previous_kpis = self.calculate_kpis(previous_day)
+        
+        # Calculate percentage changes
+        deltas = {}
+        for key in current_kpis:
+            if key in previous_kpis and previous_kpis[key] > 0:
+                change = (current_kpis[key] - previous_kpis[key]) / previous_kpis[key]
+                deltas[key] = change
+            else:
+                deltas[key] = 0
+        
+        return {
+            'current': current_kpis,
+            'previous': previous_kpis,
+            'deltas': deltas
+        }
     
     def calculate_week_over_week_kpis(self, data_list):
         """Calculate KPIs comparing the two most recent weeks."""
@@ -158,7 +311,7 @@ class DataProcessor:
         processed['time_period'] = time_str
         
         # Convert all numeric fields
-        for field in self.required_fields:
+        for field in self.required_fields + self.optional_fields:
             if field != 'time':
                 processed[field] = float(data.get(field, 0))
         
@@ -202,6 +355,7 @@ class DataProcessor:
         kpis['total_logins'] = int(data.get('login', 0))
         kpis['practice_sessions'] = int(practice_sessions)
         kpis['ai_interactions'] = int(data.get('chat_ai', 0))
+        kpis['avg_engagement_time'] = data.get('avg_engage_time', 0)
         
         return kpis
     
@@ -311,11 +465,29 @@ class DataProcessor:
                         # Sum numeric fields across countries for same time period
                         for field, value in item.items():
                             if field != 'time' and isinstance(value, (int, float)):
-                                all_time_periods[time_key][field] = all_time_periods[time_key].get(field, 0) + value
+                                if field == 'avg_engage_time':
+                                    # For average engagement time, we need to average properly
+                                    # Store count to calculate weighted average
+                                    count_key = f'{field}_count'
+                                    if count_key not in all_time_periods[time_key]:
+                                        all_time_periods[time_key][count_key] = 1
+                                    all_time_periods[time_key][count_key] += 1
+                                    all_time_periods[time_key][field] = (
+                                        (all_time_periods[time_key].get(field, 0) * (all_time_periods[time_key][count_key] - 1) + value) 
+                                        / all_time_periods[time_key][count_key]
+                                    )
+                                else:
+                                    all_time_periods[time_key][field] = all_time_periods[time_key].get(field, 0) + value
         
         # Create "All Countries" aggregated data
         if all_time_periods:
             aggregated_periods = list(all_time_periods.values())
+            # Clean up count fields used for averaging
+            for period in aggregated_periods:
+                keys_to_remove = [k for k in period.keys() if k.endswith('_count')]
+                for k in keys_to_remove:
+                    del period[k]
+            
             countries_data['All Countries'] = {
                 'is_time_series': True,
                 'time_periods': len(aggregated_periods),
