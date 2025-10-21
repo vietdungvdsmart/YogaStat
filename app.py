@@ -558,25 +558,11 @@ def render_dashboard(webhook_data, country_name=""):
     # Show All Metrics section - Show total metrics for last 7 days
     # Always use daily data (not aggregated weekly) for this section
     if is_time_series and len(filtered_periods_daily) >= 7:
+        st.markdown("---")  # Visual separator
         st.subheader(get_text('all_metrics_subheader', st.session_state.language))
         
         # Get last 7 days of data from daily data
         last_7_days = processor.get_last_n_days(filtered_periods_daily, n=7)
-        
-        # Debug section to show raw data
-        with st.expander("🔍 Debug: Show Last 7 Days Raw Data"):
-            st.info(f"Total records in filtered_periods_daily: {len(filtered_periods_daily)}")
-            st.info(f"Last 7 days extracted: {len(last_7_days)} records")
-            for i, day in enumerate(last_7_days):
-                st.write(f"**Day {i+1}:** {day.get('time', 'N/A')}")
-                st.json({
-                    'time': day.get('time'),
-                    'first_open': day.get('first_open', 0),
-                    'app_remove': day.get('app_remove', 0),
-                    'session_start': day.get('session_start', 0),
-                    'practice_with_ai': day.get('practice_with_ai', 0),
-                    'in_app_purchase': day.get('in_app_purchase', 0)
-                })
         
         # Aggregate the 7 days
         last_week_total = {}
@@ -619,9 +605,10 @@ def render_dashboard(webhook_data, country_name=""):
             st.metric(label="💳 In-App Purchases", value=f"{int(last_week_total.get('in_app_purchase', 0)):,}")
             avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
             st.metric(label=get_text('avg_engagement_time', st.session_state.language), value=avg_time_formatted)
-        
+    
     elif is_time_series and len(filtered_periods_daily) > 0:
         # If less than 7 days, show what we have
+        st.markdown("---")  # Visual separator
         st.subheader(get_text('all_metrics_subheader', st.session_state.language))
         st.info(f"📊 Showing data for {len(filtered_periods_daily)} day(s). Need at least 7 days for full weekly overview.")
         
@@ -658,8 +645,9 @@ def render_dashboard(webhook_data, country_name=""):
         with col4:
             avg_time_formatted = processor.format_engagement_time(days_total.get('avg_engage_time', 0))
             st.metric(label=get_text('avg_engagement_time', st.session_state.language), value=avg_time_formatted)
-        
-        st.divider()
+    
+    # Add divider after the combined KPI section
+    st.divider()
     
     # Charts Section
     st.header(get_text('analytics_overview_header', st.session_state.language))
