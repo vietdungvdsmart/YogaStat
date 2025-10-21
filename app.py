@@ -461,15 +461,19 @@ def render_dashboard(webhook_data, country_name=""):
             st.warning("No data available for the selected date range")
             filtered_periods = []
         
-        # Adaptive aggregation: If more than 14 days, aggregate to weekly
+        # Store daily data for Last Week Overview (before aggregation)
+        filtered_periods_daily = filtered_periods.copy()
+        
+        # Adaptive aggregation: If more than 14 days, aggregate to weekly for charts
         if len(filtered_periods) > 14:
             st.info(f"📊 Data range > 14 days detected. Automatically aggregating {len(filtered_periods)} days into weekly periods for better visualization.")
             filtered_periods = processor.aggregate_to_weekly(filtered_periods)
-            st.success(f"✅ Aggregated to {len(filtered_periods)} weekly periods")
+            st.success(f"✅ Aggregated to {len(filtered_periods)} weekly periods for charts")
         
         st.divider()
     else:
         filtered_periods = all_periods
+        filtered_periods_daily = all_periods
     
     # Use filtered data for calculations
     aggregated_data = webhook_data.get('aggregated', {}) if not is_time_series else processor._aggregate_time_series_data(filtered_periods)
@@ -545,11 +549,12 @@ def render_dashboard(webhook_data, country_name=""):
     st.divider()
     
     # Last Week Overview Section - Show total metrics for last 7 days
-    if is_time_series and len(filtered_periods) >= 7:
+    # Always use daily data (not aggregated weekly) for this section
+    if is_time_series and len(filtered_periods_daily) >= 7:
         st.header(get_text('last_week_overview_header', st.session_state.language))
         
-        # Get last 7 days of data
-        last_7_days = processor.get_last_n_days(filtered_periods, n=7)
+        # Get last 7 days of data from daily data
+        last_7_days = processor.get_last_n_days(filtered_periods_daily, n=7)
         
         # Aggregate the 7 days
         last_week_total = {}
@@ -594,13 +599,13 @@ def render_dashboard(webhook_data, country_name=""):
             st.metric(label=get_text('avg_engagement_time', st.session_state.language), value=avg_time_formatted)
         
         st.divider()
-    elif is_time_series and len(filtered_periods) > 0:
+    elif is_time_series and len(filtered_periods_daily) > 0:
         # If less than 7 days, show what we have
         st.header(get_text('last_week_overview_header', st.session_state.language))
-        st.info(f"📊 Showing data for {len(filtered_periods)} day(s). Need at least 7 days for full weekly overview.")
+        st.info(f"📊 Showing data for {len(filtered_periods_daily)} day(s). Need at least 7 days for full weekly overview.")
         
-        # Aggregate available days
-        available_days = filtered_periods
+        # Aggregate available days from daily data
+        available_days = filtered_periods_daily
         days_total = {}
         for field in processor.required_fields + processor.optional_fields:
             if field == 'time':
