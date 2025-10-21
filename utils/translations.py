@@ -38,9 +38,10 @@ TRANSLATIONS = {
         'preview_weeks': '📊 Preview: {count} week(s) will be included',
         'no_weeks_match': '⚠️ No weeks match this date range',
         
-        # KPI section
-        'key_performance_header': '📊 Key Performance Indicators',
-        'last_week_overview_header': '📊 Last Week Overview (Last 7 Days)',
+        # KPI section (combined with Last Week Overview)
+        'key_performance_header': '📊 Key Performance Indicators & Weekly Metrics',
+        'kpi_overview_subheader': '🎯 Top 5 KPIs',
+        'all_metrics_subheader': '📋 All Metrics (Last 7 Days)',
         'latest_week': '📅 Latest Week: {current} (vs Previous Week: {previous})',
         'total_new_users': '👥 Total New Users',
         'user_retention_rate': '🔄 User Retention Rate',
@@ -269,9 +270,10 @@ TRANSLATIONS = {
         'preview_weeks': '📊 Xem trước: {count} tuần sẽ được bao gồm',
         'no_weeks_match': '⚠️ Không có tuần nào khớp với khoảng thời gian này',
         
-        # KPI section
-        'key_performance_header': '📊 Chỉ Số Hiệu Suất Chính',
-        'last_week_overview_header': '📊 Tổng Quan Tuần Trước (7 Ngày Qua)',
+        # KPI section (combined with Last Week Overview)
+        'key_performance_header': '📊 Chỉ Số Hiệu Suất Chính & Số Liệu Tuần',
+        'kpi_overview_subheader': '🎯 Top 5 KPI',
+        'all_metrics_subheader': '📋 Tất Cả Số Liệu (7 Ngày Qua)',
         'latest_week': '📅 Tuần Mới Nhất: {current} (so với Tuần Trước: {previous})',
         'total_new_users': '👥 Tổng Người Dùng Mới',
         'user_retention_rate': '🔄 Tỷ Lệ Giữ Chân Người Dùng',
