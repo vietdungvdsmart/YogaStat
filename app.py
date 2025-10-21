@@ -461,6 +461,12 @@ def render_dashboard(webhook_data, country_name=""):
             st.warning("No data available for the selected date range")
             filtered_periods = []
         
+        # Adaptive aggregation: If more than 14 days, aggregate to weekly
+        if len(filtered_periods) > 14:
+            st.info(f"📊 Data range > 14 days detected. Automatically aggregating {len(filtered_periods)} days into weekly periods for better visualization.")
+            filtered_periods = processor.aggregate_to_weekly(filtered_periods)
+            st.success(f"✅ Aggregated to {len(filtered_periods)} weekly periods")
+        
         st.divider()
     else:
         filtered_periods = all_periods
@@ -537,6 +543,97 @@ def render_dashboard(webhook_data, country_name=""):
         )
     
     st.divider()
+    
+    # Last Week Overview Section - Show total metrics for last 7 days
+    if is_time_series and len(filtered_periods) >= 7:
+        st.header(get_text('last_week_overview_header', st.session_state.language))
+        
+        # Get last 7 days of data
+        last_7_days = processor.get_last_n_days(filtered_periods, n=7)
+        
+        # Aggregate the 7 days
+        last_week_total = {}
+        for field in processor.required_fields + processor.optional_fields:
+            if field == 'time':
+                last_week_total[field] = f"{last_7_days[0].get('time', '')} - {last_7_days[-1].get('time', '')}"
+            elif field == 'avg_engage_time':
+                # Average engagement time
+                values = [day.get(field, 0) for day in last_7_days if day.get(field, 0) > 0]
+                last_week_total[field] = sum(values) / len(values) if values else 0
+            else:
+                # Sum all other fields
+                last_week_total[field] = sum(day.get(field, 0) for day in last_7_days)
+        
+        # Display all 17 metrics in a grid
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(label="👥 New Users (first_open)", value=f"{int(last_week_total.get('first_open', 0)):,}")
+            st.metric(label="🗑️ Uninstalls (app_remove)", value=f"{int(last_week_total.get('app_remove', 0)):,}")
+            st.metric(label="🎯 Sessions (session_start)", value=f"{int(last_week_total.get('session_start', 0)):,}")
+            st.metric(label="📱 App Opens (app_open)", value=f"{int(last_week_total.get('app_open', 0)):,}")
+            st.metric(label="🔐 Logins", value=f"{int(last_week_total.get('login', 0)):,}")
+        
+        with col2:
+            st.metric(label="👀 Exercise Views", value=f"{int(last_week_total.get('view_exercise', 0)):,}")
+            st.metric(label="📋 Health Surveys", value=f"{int(last_week_total.get('health_survey', 0)):,}")
+            st.metric(label="🗺️ Roadmap Views", value=f"{int(last_week_total.get('view_roadmap', 0)):,}")
+            st.metric(label="🎥 Video Practice", value=f"{int(last_week_total.get('practice_with_video', 0)):,}")
+            st.metric(label="🤖 AI Practice", value=f"{int(last_week_total.get('practice_with_ai', 0)):,}")
+        
+        with col3:
+            st.metric(label="💬 AI Chat", value=f"{int(last_week_total.get('chat_ai', 0)):,}")
+            st.metric(label="📢 Popups Shown", value=f"{int(last_week_total.get('show_popup', 0)):,}")
+            st.metric(label="🔍 Popup Details Viewed", value=f"{int(last_week_total.get('view_detail_popup', 0)):,}")
+            st.metric(label="❌ Popups Closed", value=f"{int(last_week_total.get('close_popup', 0)):,}")
+        
+        with col4:
+            st.metric(label="🛒 Store Views", value=f"{int(last_week_total.get('store_subscription', 0)):,}")
+            st.metric(label="💳 In-App Purchases", value=f"{int(last_week_total.get('in_app_purchase', 0)):,}")
+            avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
+            st.metric(label=get_text('avg_engagement_time', st.session_state.language), value=avg_time_formatted)
+        
+        st.divider()
+    elif is_time_series and len(filtered_periods) > 0:
+        # If less than 7 days, show what we have
+        st.header(get_text('last_week_overview_header', st.session_state.language))
+        st.info(f"📊 Showing data for {len(filtered_periods)} day(s). Need at least 7 days for full weekly overview.")
+        
+        # Aggregate available days
+        available_days = filtered_periods
+        days_total = {}
+        for field in processor.required_fields + processor.optional_fields:
+            if field == 'time':
+                days_total[field] = f"{available_days[0].get('time', '')} - {available_days[-1].get('time', '')}"
+            elif field == 'avg_engage_time':
+                values = [day.get(field, 0) for day in available_days if day.get(field, 0) > 0]
+                days_total[field] = sum(values) / len(values) if values else 0
+            else:
+                days_total[field] = sum(day.get(field, 0) for day in available_days)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(label="👥 New Users", value=f"{int(days_total.get('first_open', 0)):,}")
+            st.metric(label="🗑️ Uninstalls", value=f"{int(days_total.get('app_remove', 0)):,}")
+            st.metric(label="🎯 Sessions", value=f"{int(days_total.get('session_start', 0)):,}")
+            st.metric(label="📱 App Opens", value=f"{int(days_total.get('app_open', 0)):,}")
+        
+        with col2:
+            st.metric(label="👀 Exercise Views", value=f"{int(days_total.get('view_exercise', 0)):,}")
+            st.metric(label="🎥 Video Practice", value=f"{int(days_total.get('practice_with_video', 0)):,}")
+            st.metric(label="🤖 AI Practice", value=f"{int(days_total.get('practice_with_ai', 0)):,}")
+            st.metric(label="💬 AI Chat", value=f"{int(days_total.get('chat_ai', 0)):,}")
+        
+        with col3:
+            st.metric(label="📢 Popups Shown", value=f"{int(days_total.get('show_popup', 0)):,}")
+            st.metric(label="🔍 Popup Details", value=f"{int(days_total.get('view_detail_popup', 0)):,}")
+        
+        with col4:
+            avg_time_formatted = processor.format_engagement_time(days_total.get('avg_engage_time', 0))
+            st.metric(label=get_text('avg_engagement_time', st.session_state.language), value=avg_time_formatted)
+        
+        st.divider()
     
     # Charts Section
     st.header(get_text('analytics_overview_header', st.session_state.language))
