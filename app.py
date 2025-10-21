@@ -498,7 +498,7 @@ def render_dashboard(webhook_data, country_name=""):
         current_week_time = filtered_periods[-1].get('time', 'Current Week')
         previous_week_time = filtered_periods[-2].get('time', 'Previous Week')
         
-        # KPI Section
+        # Combined KPI & Weekly Metrics Section
         st.header(get_text('key_performance_header', st.session_state.language))
         st.info(get_text('latest_week', st.session_state.language, current=current_week_time, previous=previous_week_time))
     else:
@@ -506,8 +506,11 @@ def render_dashboard(webhook_data, country_name=""):
         key_performance_kpis = kpis
         key_performance_deltas = {}
         
-        # KPI Section
+        # Combined KPI & Weekly Metrics Section
         st.header(get_text('key_performance_header', st.session_state.language))
+    
+    # Subheader for Top 5 KPIs
+    st.subheader(get_text('kpi_overview_subheader', st.session_state.language))
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
@@ -552,15 +555,28 @@ def render_dashboard(webhook_data, country_name=""):
             delta=delta_val
         )
     
-    st.divider()
-    
-    # Last Week Overview Section - Show total metrics for last 7 days
+    # Show All Metrics section - Show total metrics for last 7 days
     # Always use daily data (not aggregated weekly) for this section
     if is_time_series and len(filtered_periods_daily) >= 7:
-        st.header(get_text('last_week_overview_header', st.session_state.language))
+        st.subheader(get_text('all_metrics_subheader', st.session_state.language))
         
         # Get last 7 days of data from daily data
         last_7_days = processor.get_last_n_days(filtered_periods_daily, n=7)
+        
+        # Debug section to show raw data
+        with st.expander("🔍 Debug: Show Last 7 Days Raw Data"):
+            st.info(f"Total records in filtered_periods_daily: {len(filtered_periods_daily)}")
+            st.info(f"Last 7 days extracted: {len(last_7_days)} records")
+            for i, day in enumerate(last_7_days):
+                st.write(f"**Day {i+1}:** {day.get('time', 'N/A')}")
+                st.json({
+                    'time': day.get('time'),
+                    'first_open': day.get('first_open', 0),
+                    'app_remove': day.get('app_remove', 0),
+                    'session_start': day.get('session_start', 0),
+                    'practice_with_ai': day.get('practice_with_ai', 0),
+                    'in_app_purchase': day.get('in_app_purchase', 0)
+                })
         
         # Aggregate the 7 days
         last_week_total = {}
@@ -604,10 +620,9 @@ def render_dashboard(webhook_data, country_name=""):
             avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
             st.metric(label=get_text('avg_engagement_time', st.session_state.language), value=avg_time_formatted)
         
-        st.divider()
     elif is_time_series and len(filtered_periods_daily) > 0:
         # If less than 7 days, show what we have
-        st.header(get_text('last_week_overview_header', st.session_state.language))
+        st.subheader(get_text('all_metrics_subheader', st.session_state.language))
         st.info(f"📊 Showing data for {len(filtered_periods_daily)} day(s). Need at least 7 days for full weekly overview.")
         
         # Aggregate available days from daily data
