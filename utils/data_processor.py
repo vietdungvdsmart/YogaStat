@@ -536,8 +536,14 @@ class DataProcessor:
             new_key = self.field_mapping.get(key, key)
             
             # Convert date format for time field
-            if new_key == 'time' and isinstance(value, str):
-                normalized[new_key] = self.convert_date_format(value)
+            if new_key == 'time':
+                # Handle both string and number formats
+                if isinstance(value, (int, float)):
+                    value = str(int(value))  # Convert number to string
+                if isinstance(value, str):
+                    normalized[new_key] = self.convert_date_format(value)
+                else:
+                    normalized[new_key] = value
             else:
                 normalized[new_key] = value
         return normalized
