@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import json
+import re
 
 class DataProcessor:
     """Handles data processing, validation, and KPI calculations for yoga app analytics."""
@@ -19,6 +20,38 @@ class DataProcessor:
             'in_app_purchasse': 'in_app_purchase',  # Fix typo in field name
             'buy_package': 'in_app_purchase',      # Alternative field name
         }
+    
+    def convert_date_format(self, date_str):
+        """Convert date from YYYYmmdd format to dd/mm/YYYY format.
+        
+        Args:
+            date_str: Date string in YYYYmmdd format
+            
+        Returns:
+            Date string in dd/mm/YYYY format
+        """
+        if not date_str or not isinstance(date_str, str):
+            return date_str
+        
+        # Check if it's already in dd/mm/YYYY format
+        if re.match(r'\d{2}/\d{2}/\d{4}', date_str):
+            return date_str
+        
+        # Check if it's in YYYYmmdd format (8 digits)
+        if re.match(r'^\d{8}$', date_str):
+            try:
+                # Parse YYYYmmdd format
+                year = date_str[:4]
+                month = date_str[4:6]
+                day = date_str[6:8]
+                
+                # Convert to dd/mm/YYYY format
+                return f"{day}/{month}/{year}"
+            except (ValueError, IndexError):
+                return date_str
+        
+        # If it doesn't match either format, return as-is
+        return date_str
     
     def validate_data(self, data):
         """Validate that the webhook data contains all required fields."""
@@ -329,7 +362,12 @@ class DataProcessor:
         for key, value in data.items():
             # Apply field mapping
             new_key = self.field_mapping.get(key, key)
-            normalized[new_key] = value
+            
+            # Convert date format for time field
+            if new_key == 'time' and isinstance(value, str):
+                normalized[new_key] = self.convert_date_format(value)
+            else:
+                normalized[new_key] = value
         return normalized
     
     def _validate_data_relaxed(self, data):
