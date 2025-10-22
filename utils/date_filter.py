@@ -21,7 +21,7 @@ class DateRangeFilter:
         'Custom': ('custom', 0)
     }
     
-    def __init__(self, key_prefix: str = "", data: List[Dict] = None):
+    def __init__(self, key_prefix: str = "", data: Optional[List[Dict]] = None):
         """Initialize the date range filter.
         
         Args:
@@ -243,3 +243,43 @@ class DateRangeFilter:
                 return start.strftime('%b %d, %Y')
             else:
                 return f"{start.strftime('%b %d')} - {end.strftime('%b %d, %Y')}"
+    
+    def render_comparison_controls(self):
+        """Render date range controls specifically for comparison tab.
+        
+        Returns:
+            Tuple of ((current_start, current_end), (compare_start, compare_end))
+        """
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("📅 Current Period")
+            current_filter = DateRangeFilter(key_prefix=f"{self.key_prefix}current_", data=self.data)
+            current_range = current_filter.render()
+        
+        with col2:
+            st.subheader("📅 Compare To")
+            compare_filter = DateRangeFilter(key_prefix=f"{self.key_prefix}compare_", data=self.data)
+            compare_range = compare_filter.render()
+        
+        return current_range, compare_range
+    
+    def get_granularity_selector(self):
+        """Render granularity selector for comparison.
+        
+        Returns:
+            Selected granularity ('day', 'week', 'month')
+        """
+        if f"{self.key_prefix}granularity" not in st.session_state:
+            st.session_state[f"{self.key_prefix}granularity"] = "week"
+        
+        st.subheader("📊 Compare By")
+        granularity = st.selectbox(
+            "Aggregation granularity:",
+            options=['Day', 'Week', 'Month'],
+            index=['day', 'week', 'month'].index(st.session_state[f"{self.key_prefix}granularity"]),
+            key=f"{self.key_prefix}granularity_selector"
+        )
+        
+        st.session_state[f"{self.key_prefix}granularity"] = granularity.lower()
+        return granularity.lower()

@@ -1028,11 +1028,144 @@ if st.session_state.data:
         
         st.divider()
         
-        # Render dashboard for selected country
-        if selected_country in countries_data:
-            render_dashboard(countries_data[selected_country], selected_country)
-        else:
-            st.error(f"❌ Không có dữ liệu cho {selected_display}")
+        # Create tabs for Analytics and Comparison
+        tab1, tab2 = st.tabs(["📊 Analytics", "📈 Comparison"])
+        
+        with tab1:
+            # Render dashboard for selected country
+            if selected_country in countries_data:
+                render_dashboard(countries_data[selected_country], selected_country)
+            else:
+                st.error(f"❌ Không có dữ liệu cho {selected_display}")
+        
+        with tab2:
+            st.header(f"📈 {get_text('period_comparison', st.session_state.language)}")
+            st.markdown(f"*{get_text('compare_by', st.session_state.language)} Day/Week/Month*")
+            
+            if selected_country in countries_data:
+                webhook_data = countries_data[selected_country]
+                all_periods = webhook_data.get('data', [])
+                
+                if all_periods and len(all_periods) > 0:
+                    from utils.date_filter import DateRangeFilter
+                    
+                    # Granularity selector
+                    main_filter = DateRangeFilter(key_prefix="comparison_main_", data=all_periods)
+                    granularity = main_filter.get_granularity_selector()
+                    
+                    st.markdown("---")
+                    
+                    # Date range controls
+                    date_filter = DateRangeFilter(key_prefix="comparison_", data=all_periods)
+                    current_range, compare_range = date_filter.render_comparison_controls()
+                    
+                    st.markdown("---")
+                    
+                    # Filter and aggregate data
+                    from utils.data_processor import DataProcessor
+                    from utils.charts import ChartGenerator
+                    
+                    processor = DataProcessor()
+                    chart_gen = ChartGenerator()
+                    
+                    # Filter data manually based on the returned date ranges
+                    current_start, current_end = current_range
+                    compare_start, compare_end = compare_range
+                    
+                    # Filter current period data
+                    current_filtered = []
+                    for item in all_periods:
+                        try:
+                            item_date = datetime.strptime(item.get('time', ''), '%d/%m/%Y').date()
+                            if current_start <= item_date <= current_end:
+                                current_filtered.append(item)
+                        except (ValueError, TypeError):
+                            continue
+                    
+                    # Filter comparison period data
+                    compare_filtered = []
+                    for item in all_periods:
+                        try:
+                            item_date = datetime.strptime(item.get('time', ''), '%d/%m/%Y').date()
+                            if compare_start <= item_date <= compare_end:
+                                compare_filtered.append(item)
+                        except (ValueError, TypeError):
+                            continue
+                    
+                    if current_filtered and compare_filtered:
+                        # Aggregate by granularity
+                        current_aggregated = processor.aggregate_by_granularity(current_filtered, granularity)
+                        compare_aggregated = processor.aggregate_by_granularity(compare_filtered, granularity)
+                        
+                        # Display charts
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.subheader(f"📊 {get_text('period_comparison', st.session_state.language)}")
+                            comparison_chart = chart_gen.create_period_comparison_chart(
+                                current_aggregated,
+                                compare_aggregated,
+                                granularity,
+                                st.session_state.language
+                            )
+                            st.plotly_chart(comparison_chart, use_container_width=True)
+                        
+                        with col2:
+                            st.subheader(f"📈 {get_text('trend_comparison', st.session_state.language)}")
+                            trend_chart = chart_gen.create_comparison_trend_chart(
+                                current_aggregated,
+                                compare_aggregated,
+                                granularity,
+                                st.session_state.language
+                            )
+                            st.plotly_chart(trend_chart, use_container_width=True)
+                        
+                        # Summary metrics
+                        st.subheader(f"📋 {get_text('comparison_summary', st.session_state.language)}")
+                        
+                        comparison_metrics = processor.calculate_period_comparison(current_aggregated, compare_aggregated)
+                        
+                        # Top 4 KPIs in columns
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            new_users = comparison_metrics.get('first_open', {})
+                            st.metric(
+                                "New Users",
+                                f"{new_users.get('current', 0):,.0f}",
+                                f"{new_users.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        with col2:
+                            sessions = comparison_metrics.get('session_start', {})
+                            st.metric(
+                                "Sessions",
+                                f"{sessions.get('current', 0):,.0f}",
+                                f"{sessions.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        with col3:
+                            practice = comparison_metrics.get('practice_with_video', {})
+                            st.metric(
+                                "Video Practice",
+                                f"{practice.get('current', 0):,.0f}",
+                                f"{practice.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        with col4:
+                            ai_practice = comparison_metrics.get('practice_with_ai', {})
+                            st.metric(
+                                "AI Practice",
+                                f"{ai_practice.get('current', 0):,.0f}",
+                                f"{ai_practice.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                    else:
+                        st.warning("⚠️ Please ensure both current and comparison periods have valid data.")
+                else:
+                    st.warning("⚠️ No data available for comparison. Please fetch data first.")
+            else:
+                st.error("❌ Selected country data not found.")
     
     else:
         # Legacy format - render single dashboard

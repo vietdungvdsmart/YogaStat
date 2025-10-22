@@ -230,7 +230,24 @@ TRANSLATIONS = {
         # Export buttons
         'export_kpis': '📈 Export KPIs (JSON)',
         'download_kpis': 'Download KPIs',
-        'export_insights_txt': '🧠 Export Insights (TXT)'
+        'export_insights_txt': '🧠 Export Insights (TXT)',
+        
+        # Comparison Tab
+        'comparison_tab_title': 'Period Comparison',
+        'compare_by': 'Compare by:',
+        'current_period': 'Current Period',
+        'compare_to': 'Compare To',
+        'generate_comparison': 'Generate Comparison Analysis',
+        'period_comparison': 'Period Comparison',
+        'trend_comparison': 'Trend Comparison',
+        'comparison_summary': 'Comparison Summary',
+        'detailed_metrics_comparison': 'Detailed Metrics Comparison',
+        'change_abs': 'Change (Absolute)',
+        'metrics': 'Metrics',
+        'period_index': 'Period Index',
+        'change_percent': 'Change %',
+        'current': 'Current',
+        'compare': 'Compare'
     },
     
     'vi': {
@@ -426,7 +443,24 @@ TRANSLATIONS = {
         # Export buttons
         'export_kpis': '📈 Xuất KPIs (JSON)',
         'download_kpis': 'Tải KPIs',
-        'export_insights_txt': '🧠 Xuất Thông Tin Chi Tiết (TXT)'
+        'export_insights_txt': '🧠 Xuất Thông Tin Chi Tiết (TXT)',
+        
+        # Comparison Tab
+        'comparison_tab_title': 'So Sánh Thời Kỳ',
+        'compare_by': 'So sánh theo:',
+        'current_period': 'Thời Kỳ Hiện Tại',
+        'compare_to': 'So Sánh Với',
+        'generate_comparison': 'Tạo Phân Tích So Sánh',
+        'period_comparison': 'So Sánh Thời Kỳ',
+        'trend_comparison': 'So Sánh Xu Hướng',
+        'comparison_summary': 'Tóm Tắt So Sánh',
+        'detailed_metrics_comparison': 'So Sánh Chi Tiết Các Chỉ Số',
+        'change_abs': 'Thay Đổi Tuyệt Đối',
+        'metrics': 'Chỉ Số',
+        'period_index': 'Chỉ Số Thời Kỳ',
+        'change_percent': 'Thay Đổi %',
+        'current': 'Hiện Tại',
+        'compare': 'So Sánh'
     }
 }
 

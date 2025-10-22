@@ -6,7 +6,30 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 
 ## Recent Changes
 
-**October 22, 2025:**
+**October 22, 2025 (Latest):**
+- Added new **Comparison Tab** feature for period-to-period analysis:
+  - Day/Week/Month granularity selection with Monday-Sunday week boundaries
+  - Dual date range controls (Current Period vs Compare To) with Google Analytics-style presets
+  - Period Comparison bar chart showing 8 key metrics with percentage change annotations
+  - Trend Comparison line chart showing both periods over time with smart x-axis labeling
+  - Summary metrics cards displaying top 4 KPIs with delta percentages
+  - Auto-update visualization when date ranges change
+  - Full multi-language support (English/Vietnamese)
+  - Integrated seamlessly with existing country selector
+- New aggregation methods in DataProcessor:
+  - `aggregate_to_weekly_monday_sunday()` for Monday-Sunday week aggregation
+  - `aggregate_to_monthly()` for calendar month aggregation
+  - `aggregate_by_granularity()` unified dispatcher for day/week/month
+  - `calculate_period_comparison()` for all 17 metrics comparison
+- New comparison chart methods in ChartGenerator:
+  - `create_period_comparison_chart()` with grouped bars and percentage annotations
+  - `create_comparison_trend_chart()` with both periods overlay
+  - Applied x-axis label fixes (rotation -45°, smart spacing, font 10px)
+- Enhanced DateRangeFilter with comparison capabilities:
+  - `render_comparison_controls()` for dual date pickers
+  - `get_granularity_selector()` for Day/Week/Month selection
+
+**October 22, 2025 (Earlier):**
 - Redesigned "All Metrics (Last 7 Days)" section with grouped categories for better visual organization:
   - User Activity: New Users, Sessions, App Opens, Logins, Uninstalls
   - Practice & Engagement: Exercise Views, Video Practice, AI Practice, AI Chat, Avg. Engagement

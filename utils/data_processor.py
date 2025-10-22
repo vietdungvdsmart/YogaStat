@@ -575,3 +575,160 @@ class DataProcessor:
                         return False
         
         return True
+    
+    def aggregate_to_weekly_monday_sunday(self, daily_data):
+        """Aggregate daily data into Monday-Sunday weeks.
+        
+        Args:
+            daily_data: List of daily data records
+            
+        Returns:
+            List of weekly aggregated data with Monday-Sunday boundaries
+        """
+        if not daily_data:
+            return []
+        
+        weekly_groups = {}
+        
+        for day_record in daily_data:
+            try:
+                date_str = day_record.get('time', '')
+                date_obj = datetime.strptime(date_str, '%d/%m/%Y').date()
+                
+                days_since_monday = date_obj.weekday()
+                monday = date_obj - timedelta(days=days_since_monday)
+                week_key = monday.strftime('%d/%m/%Y')
+                
+                if week_key not in weekly_groups:
+                    weekly_groups[week_key] = []
+                weekly_groups[week_key].append(day_record)
+                
+            except (ValueError, AttributeError):
+                continue
+        
+        weekly_data = []
+        for week_start, days in sorted(weekly_groups.items()):
+            week_end = (datetime.strptime(week_start, '%d/%m/%Y').date() + timedelta(days=6)).strftime('%d/%m/%Y')
+            
+            aggregated = {
+                'time': f"{week_start} - {week_end}",
+                'week_start': week_start,
+                'week_end': week_end
+            }
+            
+            for field in self.required_fields + self.optional_fields:
+                if field == 'time':
+                    continue
+                elif field == 'avg_engage_time':
+                    values = [item.get(field, 0) for item in days if item.get(field, 0) > 0]
+                    aggregated[field] = sum(values) / len(values) if values else 0
+                else:
+                    aggregated[field] = sum(item.get(field, 0) for item in days)
+            
+            weekly_data.append(aggregated)
+        
+        return weekly_data
+    
+    def aggregate_to_monthly(self, daily_data):
+        """Aggregate daily data into calendar months.
+        
+        Args:
+            daily_data: List of daily data records
+            
+        Returns:
+            List of monthly aggregated data
+        """
+        if not daily_data:
+            return []
+        
+        monthly_groups = {}
+        
+        for day_record in daily_data:
+            try:
+                date_str = day_record.get('time', '')
+                date_obj = datetime.strptime(date_str, '%d/%m/%Y').date()
+                month_key = date_obj.strftime('%m/%Y')
+                
+                if month_key not in monthly_groups:
+                    monthly_groups[month_key] = []
+                monthly_groups[month_key].append(day_record)
+                
+            except (ValueError, AttributeError):
+                continue
+        
+        monthly_data = []
+        for month_key, days in sorted(monthly_groups.items()):
+            aggregated = {
+                'time': month_key,
+                'month': month_key
+            }
+            
+            for field in self.required_fields + self.optional_fields:
+                if field == 'time':
+                    continue
+                elif field == 'avg_engage_time':
+                    values = [item.get(field, 0) for item in days if item.get(field, 0) > 0]
+                    aggregated[field] = sum(values) / len(values) if values else 0
+                else:
+                    aggregated[field] = sum(item.get(field, 0) for item in days)
+            
+            monthly_data.append(aggregated)
+        
+        return monthly_data
+    
+    def aggregate_by_granularity(self, daily_data, granularity):
+        """Aggregate daily data by specified granularity.
+        
+        Args:
+            daily_data: List of daily data records
+            granularity: 'day', 'week', or 'month'
+            
+        Returns:
+            Aggregated data based on granularity
+        """
+        if granularity == 'day':
+            return daily_data
+        elif granularity == 'week':
+            return self.aggregate_to_weekly_monday_sunday(daily_data)
+        elif granularity == 'month':
+            return self.aggregate_to_monthly(daily_data)
+        else:
+            return daily_data
+    
+    def calculate_period_comparison(self, current_data, compare_data):
+        """Calculate comparison metrics between two periods for all 17 metrics.
+        
+        Args:
+            current_data: Current period data (list of records)
+            compare_data: Comparison period data (list of records)
+            
+        Returns:
+            Dictionary with comparison metrics for each field
+        """
+        if not current_data or not compare_data:
+            return {}
+        
+        current_agg = self._aggregate_time_series_data(current_data)
+        compare_agg = self._aggregate_time_series_data(compare_data)
+        
+        comparison = {}
+        
+        all_metrics = [f for f in self.required_fields + self.optional_fields if f != 'time']
+        
+        for metric in all_metrics:
+            current_val = current_agg.get(metric, 0)
+            compare_val = compare_agg.get(metric, 0)
+            
+            if compare_val > 0:
+                change_pct = ((current_val - compare_val) / compare_val) * 100
+            else:
+                change_pct = 0 if current_val == 0 else 100
+            
+            comparison[metric] = {
+                'current': current_val,
+                'compare': compare_val,
+                'change_pct': change_pct,
+                'change_abs': current_val - compare_val
+            }
+        
+        return comparison
