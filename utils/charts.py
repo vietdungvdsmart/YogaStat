@@ -979,6 +979,93 @@ class ChartGenerator:
         
         return fig
     
+    def create_engagement_comparison_chart(self, current_data, compare_data, granularity, language='en'):
+        """Create an engagement time comparison chart between two periods.
+        
+        Args:
+            current_data: Current period data (list of records)
+            compare_data: Comparison period data (list of records)
+            granularity: 'day', 'week', or 'month'
+            language: Language code
+            
+        Returns:
+            Plotly figure with engagement comparison
+        """
+        if not current_data or not compare_data:
+            return go.Figure()
+        
+        # Extract engagement times
+        current_times = [item.get('time', '') for item in current_data]
+        compare_times = [item.get('time', '') for item in compare_data]
+        
+        current_engagement = [item.get('avg_engage_time', 0) / 60 for item in current_data]  # Convert to minutes
+        compare_engagement = [item.get('avg_engage_time', 0) / 60 for item in compare_data]
+        
+        fig = go.Figure()
+        
+        # Current period bars
+        fig.add_trace(go.Bar(
+            x=list(range(len(current_times))),
+            y=current_engagement,
+            name='Current Period',
+            marker_color=self.color_scheme['primary'],
+            customdata=current_times,
+            hovertemplate='<b>Current Period</b><br>Time: %{customdata}<br>Avg Engagement: %{y:.1f} min<extra></extra>',
+            opacity=0.8
+        ))
+        
+        # Compare period bars
+        fig.add_trace(go.Bar(
+            x=list(range(len(compare_times))),
+            y=compare_engagement,
+            name='Compare Period',
+            marker_color=self.color_scheme['secondary'],
+            customdata=compare_times,
+            hovertemplate='<b>Compare Period</b><br>Time: %{customdata}<br>Avg Engagement: %{y:.1f} min<extra></extra>',
+            opacity=0.6
+        ))
+        
+        # X-axis settings with smart label spacing
+        period_count = max(len(current_data), len(compare_data))
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
+        
+        fig.update_layout(
+            title='⏱️ Average Engagement Time Comparison' if language == 'en' else '⏱️ So Sánh Thời Gian Tương Tác Trung Bình',
+            xaxis_title='Period Index' if language == 'en' else 'Chỉ Số Thời Kỳ',
+            yaxis_title='Minutes' if language == 'en' else 'Phút',
+            height=500,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            barmode='group',
+            hovermode='x unified',
+            xaxis=dict(
+                tickmode='linear',
+                tick0=0,
+                dtick=dtick,
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            yaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)',
+                zeroline=True,
+                zerolinecolor='rgba(128,128,128,0.3)'
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
+        
+        return fig
+    
     def create_comparison_trend_chart(self, current_data, compare_data, granularity, language='en'):
         """Create a trend comparison line chart showing both periods over time.
         
