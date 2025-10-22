@@ -1055,9 +1055,9 @@ if st.session_state.data:
                     
                     st.markdown("---")
                     
-                    # Date range controls
+                    # Date range controls (UI adapts to granularity)
                     date_filter = DateRangeFilter(key_prefix="comparison_", data=all_periods)
-                    current_range, compare_range = date_filter.render_comparison_controls()
+                    current_range, compare_range = date_filter.render_comparison_controls(granularity)
                     
                     st.markdown("---")
                     

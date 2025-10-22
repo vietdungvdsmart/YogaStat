@@ -244,25 +244,128 @@ class DateRangeFilter:
             else:
                 return f"{start.strftime('%b %d')} - {end.strftime('%b %d, %Y')}"
     
-    def render_comparison_controls(self):
+    def render_comparison_controls(self, granularity: str = 'day'):
         """Render date range controls specifically for comparison tab.
+        
+        Args:
+            granularity: 'day', 'week', or 'month' - determines UI type
         
         Returns:
             Tuple of ((current_start, current_end), (compare_start, compare_end))
         """
         col1, col2 = st.columns(2)
         
-        with col1:
-            st.subheader("📅 Current Period")
-            current_filter = DateRangeFilter(key_prefix=f"{self.key_prefix}current_", data=self.data)
-            current_range = current_filter.render()
+        if granularity == 'day':
+            # Use date pickers for daily granularity
+            with col1:
+                st.subheader("📅 Current Period")
+                current_filter = DateRangeFilter(key_prefix=f"{self.key_prefix}current_", data=self.data)
+                current_range = current_filter.render()
+            
+            with col2:
+                st.subheader("📅 Compare To")
+                compare_filter = DateRangeFilter(key_prefix=f"{self.key_prefix}compare_", data=self.data)
+                compare_range = compare_filter.render()
+            
+            return current_range, compare_range
         
-        with col2:
-            st.subheader("📅 Compare To")
-            compare_filter = DateRangeFilter(key_prefix=f"{self.key_prefix}compare_", data=self.data)
-            compare_range = compare_filter.render()
+        elif granularity == 'week':
+            # Use dropdown for week selection
+            weeks = self.get_available_weeks()
+            
+            if not weeks:
+                st.error("No weekly data available")
+                today = date.today()
+                return (today, today), (today, today)
+            
+            week_labels = [w[0] for w in weeks]
+            
+            with col1:
+                st.subheader("📅 Current Period")
+                
+                # Initialize session state
+                current_key = f"{self.key_prefix}current_week"
+                if current_key not in st.session_state:
+                    st.session_state[current_key] = len(weeks) - 1  # Default to latest week
+                
+                current_idx = st.selectbox(
+                    "Select week:",
+                    options=range(len(weeks)),
+                    format_func=lambda i: week_labels[i],
+                    index=st.session_state[current_key],
+                    key=f"{current_key}_selector"
+                )
+                st.session_state[current_key] = current_idx
+                current_range = (weeks[current_idx][1], weeks[current_idx][2])
+            
+            with col2:
+                st.subheader("📅 Compare To")
+                
+                # Initialize session state
+                compare_key = f"{self.key_prefix}compare_week"
+                if compare_key not in st.session_state:
+                    st.session_state[compare_key] = max(0, len(weeks) - 2)  # Default to previous week
+                
+                compare_idx = st.selectbox(
+                    "Select week:",
+                    options=range(len(weeks)),
+                    format_func=lambda i: week_labels[i],
+                    index=st.session_state[compare_key],
+                    key=f"{compare_key}_selector"
+                )
+                st.session_state[compare_key] = compare_idx
+                compare_range = (weeks[compare_idx][1], weeks[compare_idx][2])
+            
+            return current_range, compare_range
         
-        return current_range, compare_range
+        else:  # month
+            # Use dropdown for month selection
+            months = self.get_available_months()
+            
+            if not months:
+                st.error("No monthly data available")
+                today = date.today()
+                return (today, today), (today, today)
+            
+            month_labels = [m[0] for m in months]
+            
+            with col1:
+                st.subheader("📅 Current Period")
+                
+                # Initialize session state
+                current_key = f"{self.key_prefix}current_month"
+                if current_key not in st.session_state:
+                    st.session_state[current_key] = len(months) - 1  # Default to latest month
+                
+                current_idx = st.selectbox(
+                    "Select month:",
+                    options=range(len(months)),
+                    format_func=lambda i: month_labels[i],
+                    index=st.session_state[current_key],
+                    key=f"{current_key}_selector"
+                )
+                st.session_state[current_key] = current_idx
+                current_range = (months[current_idx][1], months[current_idx][2])
+            
+            with col2:
+                st.subheader("📅 Compare To")
+                
+                # Initialize session state
+                compare_key = f"{self.key_prefix}compare_month"
+                if compare_key not in st.session_state:
+                    st.session_state[compare_key] = max(0, len(months) - 2)  # Default to previous month
+                
+                compare_idx = st.selectbox(
+                    "Select month:",
+                    options=range(len(months)),
+                    format_func=lambda i: month_labels[i],
+                    index=st.session_state[compare_key],
+                    key=f"{compare_key}_selector"
+                )
+                st.session_state[compare_key] = compare_idx
+                compare_range = (months[compare_idx][1], months[compare_idx][2])
+            
+            return current_range, compare_range
     
     def get_granularity_selector(self):
         """Render granularity selector for comparison.
@@ -283,3 +386,99 @@ class DateRangeFilter:
         
         st.session_state[f"{self.key_prefix}granularity"] = granularity.lower()
         return granularity.lower()
+    
+    def get_available_weeks(self) -> List[Tuple[str, date, date]]:
+        """Extract available weeks from data (Monday-Sunday boundaries).
+        
+        Returns:
+            List of tuples: (week_label, start_date, end_date)
+        """
+        if not self.data:
+            return []
+        
+        dates = []
+        for item in self.data:
+            try:
+                item_date = datetime.strptime(item['time'], '%d/%m/%Y').date()
+                dates.append(item_date)
+            except (ValueError, KeyError):
+                continue
+        
+        if not dates:
+            return []
+        
+        min_date = min(dates)
+        max_date = max(dates)
+        
+        # Find the Monday of the week containing min_date
+        days_since_monday = min_date.weekday()
+        current_monday = min_date - timedelta(days=days_since_monday)
+        
+        weeks = []
+        week_num = 1
+        
+        while current_monday <= max_date:
+            week_end = current_monday + timedelta(days=6)
+            
+            # Format: "Week 1: Jan 1 - Jan 7, 2025"
+            if current_monday.year == week_end.year:
+                week_label = f"Week {week_num}: {current_monday.strftime('%b %d')} - {week_end.strftime('%b %d, %Y')}"
+            else:
+                week_label = f"Week {week_num}: {current_monday.strftime('%b %d, %Y')} - {week_end.strftime('%b %d, %Y')}"
+            
+            weeks.append((week_label, current_monday, week_end))
+            current_monday += timedelta(days=7)
+            week_num += 1
+        
+        return weeks
+    
+    def get_available_months(self) -> List[Tuple[str, date, date]]:
+        """Extract available months from data.
+        
+        Returns:
+            List of tuples: (month_label, start_date, end_date)
+        """
+        if not self.data:
+            return []
+        
+        dates = []
+        for item in self.data:
+            try:
+                item_date = datetime.strptime(item['time'], '%d/%m/%Y').date()
+                dates.append(item_date)
+            except (ValueError, KeyError):
+                continue
+        
+        if not dates:
+            return []
+        
+        min_date = min(dates)
+        max_date = max(dates)
+        
+        # Get all unique months
+        months = set()
+        current_date = date(min_date.year, min_date.month, 1)
+        
+        while current_date <= max_date:
+            months.add((current_date.year, current_date.month))
+            # Move to next month
+            if current_date.month == 12:
+                current_date = date(current_date.year + 1, 1, 1)
+            else:
+                current_date = date(current_date.year, current_date.month + 1, 1)
+        
+        # Convert to list of tuples with labels and date ranges
+        month_list = []
+        for year, month in sorted(months):
+            month_start = date(year, month, 1)
+            # Get last day of month
+            if month == 12:
+                month_end = date(year, 12, 31)
+            else:
+                next_month = date(year, month + 1, 1)
+                month_end = next_month - timedelta(days=1)
+            
+            month_label = month_start.strftime('%B %Y')
+            month_list.append((month_label, month_start, month_end))
+        
+        return month_list
