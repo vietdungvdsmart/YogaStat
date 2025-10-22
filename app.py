@@ -577,78 +577,75 @@ def render_dashboard(webhook_data, country_name=""):
                 # Sum all other fields
                 last_week_total[field] = sum(day.get(field, 0) for day in last_7_days)
         
-        # Display metrics grouped by category with better visual design
+        # Display metrics grouped by category with containers and borders
         
         # User Activity Group
-        st.markdown("##### 👥 User Activity")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            st.metric("New Users", f"{int(last_week_total.get('first_open', 0)):,}")
-        with col2:
-            st.metric("Sessions", f"{int(last_week_total.get('session_start', 0)):,}")
-        with col3:
-            st.metric("App Opens", f"{int(last_week_total.get('app_open', 0)):,}")
-        with col4:
-            st.metric("Logins", f"{int(last_week_total.get('login', 0)):,}")
-        with col5:
-            st.metric("Uninstalls", f"{int(last_week_total.get('app_remove', 0)):,}")
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 👥 User Activity")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("New Users", f"{int(last_week_total.get('first_open', 0)):,}")
+            with col2:
+                st.metric("Sessions", f"{int(last_week_total.get('session_start', 0)):,}")
+            with col3:
+                st.metric("App Opens", f"{int(last_week_total.get('app_open', 0)):,}")
+            with col4:
+                st.metric("Logins", f"{int(last_week_total.get('login', 0)):,}")
+            with col5:
+                st.metric("Uninstalls", f"{int(last_week_total.get('app_remove', 0)):,}")
         
         # Practice & Engagement Group
-        st.markdown("##### 🏃‍♀️ Practice & Engagement")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            st.metric("Exercise Views", f"{int(last_week_total.get('view_exercise', 0)):,}")
-        with col2:
-            st.metric("Video Practice", f"{int(last_week_total.get('practice_with_video', 0)):,}")
-        with col3:
-            st.metric("AI Practice", f"{int(last_week_total.get('practice_with_ai', 0)):,}")
-        with col4:
-            st.metric("AI Chat", f"{int(last_week_total.get('chat_ai', 0)):,}")
-        with col5:
-            avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
-            st.metric("Avg. Engagement", avg_time_formatted)
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 🏃‍♀️ Practice & Engagement")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("Exercise Views", f"{int(last_week_total.get('view_exercise', 0)):,}")
+            with col2:
+                st.metric("Video Practice", f"{int(last_week_total.get('practice_with_video', 0)):,}")
+            with col3:
+                st.metric("AI Practice", f"{int(last_week_total.get('practice_with_ai', 0)):,}")
+            with col4:
+                st.metric("AI Chat", f"{int(last_week_total.get('chat_ai', 0)):,}")
+            with col5:
+                avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
+                st.metric("Avg. Engagement", avg_time_formatted)
         
         # Features & Content Group
-        st.markdown("##### 🎯 Features & Content")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Health Surveys", f"{int(last_week_total.get('health_survey', 0)):,}")
-        with col2:
-            st.metric("Roadmap Views", f"{int(last_week_total.get('view_roadmap', 0)):,}")
-        with col3:
-            st.metric("Store Views", f"{int(last_week_total.get('store_subscription', 0)):,}")
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 🎯 Features & Content")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Health Surveys", f"{int(last_week_total.get('health_survey', 0)):,}")
+            with col2:
+                st.metric("Roadmap Views", f"{int(last_week_total.get('view_roadmap', 0)):,}")
+            with col3:
+                st.metric("Store Views", f"{int(last_week_total.get('store_subscription', 0)):,}")
         
         # Popup Performance Group
-        st.markdown("##### 💬 Popup Performance")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Shown", f"{int(last_week_total.get('show_popup', 0)):,}")
-        with col2:
-            st.metric("Details Viewed", f"{int(last_week_total.get('view_detail_popup', 0)):,}")
-        with col3:
-            st.metric("Closed", f"{int(last_week_total.get('close_popup', 0)):,}")
-        with col4:
-            popup_ctr = (last_week_total.get('view_detail_popup', 0) / last_week_total.get('show_popup', 1)) * 100 if last_week_total.get('show_popup', 0) > 0 else 0
-            st.metric("CTR", f"{popup_ctr:.1f}%")
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 💬 Popup Performance")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Shown", f"{int(last_week_total.get('show_popup', 0)):,}")
+            with col2:
+                st.metric("Details Viewed", f"{int(last_week_total.get('view_detail_popup', 0)):,}")
+            with col3:
+                st.metric("Closed", f"{int(last_week_total.get('close_popup', 0)):,}")
+            with col4:
+                popup_ctr = (last_week_total.get('view_detail_popup', 0) / last_week_total.get('show_popup', 1)) * 100 if last_week_total.get('show_popup', 0) > 0 else 0
+                st.metric("CTR", f"{popup_ctr:.1f}%")
         
         # Monetization Group
-        st.markdown("##### 💰 Monetization")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("In-App Purchases", f"{int(last_week_total.get('in_app_purchase', 0)):,}")
-        with col2:
-            conversion_rate = (last_week_total.get('in_app_purchase', 0) / last_week_total.get('store_subscription', 1)) * 100 if last_week_total.get('store_subscription', 0) > 0 else 0
-            st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
-        with col3:
-            st.metric("Total Revenue Events", f"{int(last_week_total.get('in_app_purchase', 0) + last_week_total.get('store_subscription', 0)):,}")
+        with st.container(border=True):
+            st.markdown("##### 💰 Monetization")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("In-App Purchases", f"{int(last_week_total.get('in_app_purchase', 0)):,}")
+            with col2:
+                conversion_rate = (last_week_total.get('in_app_purchase', 0) / last_week_total.get('store_subscription', 1)) * 100 if last_week_total.get('store_subscription', 0) > 0 else 0
+                st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
+            with col3:
+                st.metric("Total Revenue Events", f"{int(last_week_total.get('in_app_purchase', 0) + last_week_total.get('store_subscription', 0)):,}")
     
     elif is_time_series and len(filtered_periods_daily) > 0:
         # If less than 7 days, show what we have with same beautiful design
@@ -669,75 +666,72 @@ def render_dashboard(webhook_data, country_name=""):
                 days_total[field] = sum(day.get(field, 0) for day in available_days)
         
         # User Activity Group
-        st.markdown("##### 👥 User Activity")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            st.metric("New Users", f"{int(days_total.get('first_open', 0)):,}")
-        with col2:
-            st.metric("Sessions", f"{int(days_total.get('session_start', 0)):,}")
-        with col3:
-            st.metric("App Opens", f"{int(days_total.get('app_open', 0)):,}")
-        with col4:
-            st.metric("Logins", f"{int(days_total.get('login', 0)):,}")
-        with col5:
-            st.metric("Uninstalls", f"{int(days_total.get('app_remove', 0)):,}")
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 👥 User Activity")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("New Users", f"{int(days_total.get('first_open', 0)):,}")
+            with col2:
+                st.metric("Sessions", f"{int(days_total.get('session_start', 0)):,}")
+            with col3:
+                st.metric("App Opens", f"{int(days_total.get('app_open', 0)):,}")
+            with col4:
+                st.metric("Logins", f"{int(days_total.get('login', 0)):,}")
+            with col5:
+                st.metric("Uninstalls", f"{int(days_total.get('app_remove', 0)):,}")
         
         # Practice & Engagement Group
-        st.markdown("##### 🏃‍♀️ Practice & Engagement")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            st.metric("Exercise Views", f"{int(days_total.get('view_exercise', 0)):,}")
-        with col2:
-            st.metric("Video Practice", f"{int(days_total.get('practice_with_video', 0)):,}")
-        with col3:
-            st.metric("AI Practice", f"{int(days_total.get('practice_with_ai', 0)):,}")
-        with col4:
-            st.metric("AI Chat", f"{int(days_total.get('chat_ai', 0)):,}")
-        with col5:
-            avg_time_formatted = processor.format_engagement_time(days_total.get('avg_engage_time', 0))
-            st.metric("Avg. Engagement", avg_time_formatted)
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 🏃‍♀️ Practice & Engagement")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("Exercise Views", f"{int(days_total.get('view_exercise', 0)):,}")
+            with col2:
+                st.metric("Video Practice", f"{int(days_total.get('practice_with_video', 0)):,}")
+            with col3:
+                st.metric("AI Practice", f"{int(days_total.get('practice_with_ai', 0)):,}")
+            with col4:
+                st.metric("AI Chat", f"{int(days_total.get('chat_ai', 0)):,}")
+            with col5:
+                avg_time_formatted = processor.format_engagement_time(days_total.get('avg_engage_time', 0))
+                st.metric("Avg. Engagement", avg_time_formatted)
         
         # Features & Content Group
-        st.markdown("##### 🎯 Features & Content")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Health Surveys", f"{int(days_total.get('health_survey', 0)):,}")
-        with col2:
-            st.metric("Roadmap Views", f"{int(days_total.get('view_roadmap', 0)):,}")
-        with col3:
-            st.metric("Store Views", f"{int(days_total.get('store_subscription', 0)):,}")
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 🎯 Features & Content")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Health Surveys", f"{int(days_total.get('health_survey', 0)):,}")
+            with col2:
+                st.metric("Roadmap Views", f"{int(days_total.get('view_roadmap', 0)):,}")
+            with col3:
+                st.metric("Store Views", f"{int(days_total.get('store_subscription', 0)):,}")
         
         # Popup Performance Group
-        st.markdown("##### 💬 Popup Performance")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Shown", f"{int(days_total.get('show_popup', 0)):,}")
-        with col2:
-            st.metric("Details Viewed", f"{int(days_total.get('view_detail_popup', 0)):,}")
-        with col3:
-            st.metric("Closed", f"{int(days_total.get('close_popup', 0)):,}")
-        with col4:
-            popup_ctr = (days_total.get('view_detail_popup', 0) / days_total.get('show_popup', 1)) * 100 if days_total.get('show_popup', 0) > 0 else 0
-            st.metric("CTR", f"{popup_ctr:.1f}%")
-        
-        st.markdown("")  # Spacing
+        with st.container(border=True):
+            st.markdown("##### 💬 Popup Performance")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Shown", f"{int(days_total.get('show_popup', 0)):,}")
+            with col2:
+                st.metric("Details Viewed", f"{int(days_total.get('view_detail_popup', 0)):,}")
+            with col3:
+                st.metric("Closed", f"{int(days_total.get('close_popup', 0)):,}")
+            with col4:
+                popup_ctr = (days_total.get('view_detail_popup', 0) / days_total.get('show_popup', 1)) * 100 if days_total.get('show_popup', 0) > 0 else 0
+                st.metric("CTR", f"{popup_ctr:.1f}%")
         
         # Monetization Group
-        st.markdown("##### 💰 Monetization")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("In-App Purchases", f"{int(days_total.get('in_app_purchase', 0)):,}")
-        with col2:
-            conversion_rate = (days_total.get('in_app_purchase', 0) / days_total.get('store_subscription', 1)) * 100 if days_total.get('store_subscription', 0) > 0 else 0
-            st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
-        with col3:
-            st.metric("Total Revenue Events", f"{int(days_total.get('in_app_purchase', 0) + days_total.get('store_subscription', 0)):,}")
+        with st.container(border=True):
+            st.markdown("##### 💰 Monetization")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("In-App Purchases", f"{int(days_total.get('in_app_purchase', 0)):,}")
+            with col2:
+                conversion_rate = (days_total.get('in_app_purchase', 0) / days_total.get('store_subscription', 1)) * 100 if days_total.get('store_subscription', 0) > 0 else 0
+                st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
+            with col3:
+                st.metric("Total Revenue Events", f"{int(days_total.get('in_app_purchase', 0) + days_total.get('store_subscription', 0)):,}")
     
     # Add divider after the combined KPI section
     st.divider()

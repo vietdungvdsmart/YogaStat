@@ -15,7 +15,7 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
   - Monetization: In-App Purchases, Conversion Rate, Total Revenue Events
 - Removed technical field names (first_open, app_remove, etc.) for cleaner user-friendly labels
 - Added calculated metrics: Popup CTR and Conversion Rate for better insights
-- Improved spacing between metric groups for better readability
+- Added bordered containers for each metric group for better visual separation and readability
 
 **October 21, 2025:**
 - Fixed numeric time field conversion: Dashboard now handles both string and numeric time formats (e.g., "20250217" and 20250217)
