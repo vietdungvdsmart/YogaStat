@@ -6,11 +6,21 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 
 ## Recent Changes
 
+**October 22, 2025:**
+- Redesigned "All Metrics (Last 7 Days)" section with grouped categories for better visual organization:
+  - User Activity: New Users, Sessions, App Opens, Logins, Uninstalls
+  - Practice & Engagement: Exercise Views, Video Practice, AI Practice, AI Chat, Avg. Engagement
+  - Features & Content: Health Surveys, Roadmap Views, Store Views
+  - Popup Performance: Shown, Details Viewed, Closed, CTR (calculated metric)
+  - Monetization: In-App Purchases, Conversion Rate, Total Revenue Events
+- Removed technical field names (first_open, app_remove, etc.) for cleaner user-friendly labels
+- Added calculated metrics: Popup CTR and Conversion Rate for better insights
+- Improved spacing between metric groups for better readability
+
 **October 21, 2025:**
 - Fixed numeric time field conversion: Dashboard now handles both string and numeric time formats (e.g., "20250217" and 20250217)
 - Merged "Key Performance Indicators" and "Last Week Overview" sections into one unified section titled "Key Performance Indicators & Weekly Metrics" for cleaner UI
 - Added visual hierarchy with subheaders: "Top 5 KPIs" displays the main 5 metrics, followed by "All Metrics (Last 7 Days)" showing all 17 metrics
-- Improved layout spacing with visual separators for better readability
 
 ## User Preferences
 
