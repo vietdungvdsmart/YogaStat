@@ -1,7 +1,12 @@
 [server]
 headless = true
-address = "0.0.0.0"
 port = 5000
+address = "0.0.0.0"
+fileWatcherType = "auto"
+runOnSave = false
+
+[client]
+showErrorDetails = true
 
 [theme]
 primaryColor = "#4FD1C7"

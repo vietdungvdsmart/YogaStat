@@ -6,7 +6,21 @@ from .translations import get_text
 
 class ChartGenerator:
     """Generates interactive charts for the yoga app analytics dashboard."""
-    
+    # Ghi chú (VI): Danh sách hàm sinh biểu đồ và ý nghĩa
+    # - create_feature_adoption_funnel: Biểu đồ phễu thể hiện mức độ sử dụng tính năng (xem bài tập → luyện video → luyện AI → chat AI)
+    # - create_user_funnel_analysis: Biểu đồ phễu phân tích chuyển đổi người dùng theo các bước sử dụng tính năng
+    # - create_time_series_chart: Biểu đồ chuỗi thời gian cho tất cả metric theo từng tuần
+    # - create_user_flow_trends_chart: Biểu đồ xu hướng người dùng mới vs rời bỏ theo thời gian
+    # - create_practice_trends_chart: Biểu đồ xu hướng luyện tập (video vs AI) theo thời gian
+    # - create_user_activity_comparison: So sánh hoạt động người dùng theo thời gian (người dùng mới, phiên hoạt động, tổng buổi luyện tập)
+    # - _create_user_activity_comparison_single: Phiên bản cột cho dữ liệu gộp 1 kỳ (không phải chuỗi thời gian)
+    # - create_feature_usage_chart: Biểu đồ thanh ngang về mức độ sử dụng các tính năng chính
+    # - create_ai_engagement_chart: Đồng hồ đo (gauge) thể hiện mức độ tương tác với AI
+    # - create_popup_performance_chart: Biểu đồ phễu hiệu suất popup (hiển thị → xem chi tiết → đóng)
+    # - create_engagement_score_radar: Radar điểm tương tác đa chiều (login, survey, nội dung, AI, popup, giữ chân)
+    # - create_user_journey_sankey: Sơ đồ Sankey mô tả hành trình người dùng qua các bước
+    # - create_churn_risk_indicator: Đồng hồ đo rủi ro rời bỏ dựa trên churn/retention
+
     def __init__(self):
         self.color_scheme = {
             'primary': '#4FD1C7',
