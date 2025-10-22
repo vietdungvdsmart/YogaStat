@@ -7,19 +7,24 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 ## Recent Changes
 
 **October 22, 2025 (Latest):**
-- Enhanced **Comparison Tab** with adaptive UI for period selection:
+- Enhanced **Comparison Tab** with adaptive UI and detailed metrics comparison:
   - **Day Granularity**: Google Analytics-style date pickers with presets (Today, Last 7/30 days, etc.)
   - **Week Granularity**: Dropdown menus showing available weeks with Monday-Sunday boundaries (e.g., "Week 1: Jan 1 - Jan 7, 2025")
   - **Month Granularity**: Dropdown menus showing available months (e.g., "February 2025", "March 2025")
   - Intelligent UI that adapts based on selected granularity for better UX
   - Auto-populates available options from actual data
   - Full multi-language support (English/Vietnamese) for all dropdown labels
-- Comparison Tab core features:
-  - Period Comparison bar chart showing 8 key metrics with percentage change annotations
-  - Trend Comparison line chart showing both periods over time with smart x-axis labeling
-  - Summary metrics cards displaying top 4 KPIs with delta percentages
-  - Auto-update visualization when date ranges change
-  - Integrated seamlessly with existing country selector
+- Comparison Tab visualization features:
+  - Period Comparison bar chart showing 8 key metrics with percentage change annotations (full width)
+  - Top 4 KPI summary cards with delta percentages
+  - **Detailed Metrics Comparison Table** grouped by 5 categories with all 17 metrics:
+    - 👥 User Activity: New Users, Sessions, App Opens, Logins, Uninstalls
+    - 🏃‍♀️ Practice & Engagement: Exercise Views, Video Practice, AI Practice, AI Chat, Avg. Engagement
+    - 🎯 Features & Content: Health Surveys, Roadmap Views, Store Views
+    - 💬 Popup Performance: Shown, Details Viewed, Closed, CTR (calculated)
+    - 💰 Monetization: In-App Purchases, Conversion Rate (calculated), Revenue Events
+  - Each metric shows current value and % change from comparison period
+  - Auto-update when date ranges or granularity change
 - New aggregation methods in DataProcessor:
   - `aggregate_to_weekly_monday_sunday()` for Monday-Sunday week aggregation
   - `aggregate_to_monthly()` for calendar month aggregation
