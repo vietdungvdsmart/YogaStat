@@ -247,7 +247,9 @@ TRANSLATIONS = {
         'period_index': 'Period Index',
         'change_percent': 'Change %',
         'current': 'Current',
-        'compare': 'Compare'
+        'compare': 'Compare',
+        'select_week': 'Select week:',
+        'select_month': 'Select month:'
     },
     
     'vi': {
@@ -460,7 +462,9 @@ TRANSLATIONS = {
         'period_index': 'Chỉ Số Thời Kỳ',
         'change_percent': 'Thay Đổi %',
         'current': 'Hiện Tại',
-        'compare': 'So Sánh'
+        'compare': 'So Sánh',
+        'select_week': 'Chọn tuần:',
+        'select_month': 'Chọn tháng:'
     }
 }
 

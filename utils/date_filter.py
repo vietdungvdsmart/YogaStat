@@ -2,6 +2,7 @@
 import streamlit as st
 from datetime import datetime, timedelta, date
 from typing import Optional, Tuple, List, Dict
+from utils.translations import get_text
 
 class DateRangeFilter:
     """Date range filter with presets and custom range selection."""
@@ -288,8 +289,9 @@ class DateRangeFilter:
                 if current_key not in st.session_state:
                     st.session_state[current_key] = len(weeks) - 1  # Default to latest week
                 
+                lang = st.session_state.get('language', 'en')
                 current_idx = st.selectbox(
-                    "Select week:",
+                    get_text('select_week', lang),
                     options=range(len(weeks)),
                     format_func=lambda i: week_labels[i],
                     index=st.session_state[current_key],
@@ -307,7 +309,7 @@ class DateRangeFilter:
                     st.session_state[compare_key] = max(0, len(weeks) - 2)  # Default to previous week
                 
                 compare_idx = st.selectbox(
-                    "Select week:",
+                    get_text('select_week', lang),
                     options=range(len(weeks)),
                     format_func=lambda i: week_labels[i],
                     index=st.session_state[compare_key],
@@ -337,8 +339,9 @@ class DateRangeFilter:
                 if current_key not in st.session_state:
                     st.session_state[current_key] = len(months) - 1  # Default to latest month
                 
+                lang = st.session_state.get('language', 'en')
                 current_idx = st.selectbox(
-                    "Select month:",
+                    get_text('select_month', lang),
                     options=range(len(months)),
                     format_func=lambda i: month_labels[i],
                     index=st.session_state[current_key],
@@ -356,7 +359,7 @@ class DateRangeFilter:
                     st.session_state[compare_key] = max(0, len(months) - 2)  # Default to previous month
                 
                 compare_idx = st.selectbox(
-                    "Select month:",
+                    get_text('select_month', lang),
                     options=range(len(months)),
                     format_func=lambda i: month_labels[i],
                     index=st.session_state[compare_key],
