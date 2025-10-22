@@ -7,6 +7,14 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 ## Recent Changes
 
 **October 22, 2025 (Latest):**
+- Replaced duplicate User Funnel Analysis chart with **Average Engagement Time Trends** chart:
+  - Shows engagement time trends over time periods (line chart)
+  - Displays time in minutes for better readability
+  - Includes average engagement time reference line
+  - Uses smart x-axis labeling with rotation and spacing
+  - Helps identify engagement patterns and user retention quality
+
+**October 22, 2025 (Earlier):**
 - Enhanced **Comparison Tab** with adaptive UI and detailed metrics comparison:
   - **Day Granularity**: Google Analytics-style date pickers with presets (Today, Last 7/30 days, etc.)
   - **Week Granularity**: Dropdown menus showing available weeks with Monday-Sunday boundaries (e.g., "Week 1: Jan 1 - Jan 7, 2025")
