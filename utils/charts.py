@@ -450,6 +450,15 @@ class ChartGenerator:
                 hovertemplate=f'<b>{metric_name}</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
             ))
         
+        # Calculate tick interval to avoid label overlap
+        # Show fewer labels for larger datasets
+        if period_count > 30:
+            dtick = 7  # Show every 7th label for very large datasets
+        elif period_count > 14:
+            dtick = 3  # Show every 3rd label
+        else:
+            dtick = 1  # Show all labels for small datasets
+        
         fig.update_layout(
             title=get_text('metrics_trends_title', language),
             xaxis_title=get_text(time_label.lower(), language),
@@ -467,6 +476,11 @@ class ChartGenerator:
                 bgcolor='rgba(255,255,255,0.8)',
                 bordercolor='rgba(0,0,0,0.2)',
                 borderwidth=1
+            ),
+            xaxis=dict(
+                tickangle=-45,  # Rotate labels 45 degrees
+                dtick=dtick,  # Show every nth tick
+                tickfont=dict(size=10)
             )
         )
         
@@ -509,6 +523,14 @@ class ChartGenerator:
             hovertemplate=f'<b>Churn</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
+        # Calculate tick interval to avoid label overlap
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
+        
         fig.update_layout(
             title=get_text('user_flow_trends_title', language),
             xaxis_title=get_text(time_label.lower(), language),
@@ -516,7 +538,12 @@ class ChartGenerator:
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
+            )
         )
         
         return fig
@@ -559,6 +586,14 @@ class ChartGenerator:
             hovertemplate=f'<b>AI Practice</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
+        # Calculate tick interval to avoid label overlap
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
+        
         fig.update_layout(
             title=get_text('practice_trends_title', language),
             xaxis_title=get_text(time_label.lower(), language),
@@ -566,7 +601,12 @@ class ChartGenerator:
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
+            )
         )
         
         return fig
@@ -623,6 +663,14 @@ class ChartGenerator:
             hovertemplate='<b>' + get_text('total_practice', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
+        # Calculate tick interval to avoid label overlap
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
+        
         fig.update_layout(
             title=get_text('user_activity_comparison_title', language),
             xaxis_title=get_text(time_label.lower(), language),
@@ -637,6 +685,11 @@ class ChartGenerator:
                 y=1.02,
                 xanchor="right",
                 x=1
+            ),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
             )
         )
         

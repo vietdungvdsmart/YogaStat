@@ -16,6 +16,10 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 - Removed technical field names (first_open, app_remove, etc.) for cleaner user-friendly labels
 - Added calculated metrics: Popup CTR and Conversion Rate for better insights
 - Added bordered containers for each metric group for better visual separation and readability
+- Fixed x-axis label overlap in all time-series charts:
+  - Rotated labels -45 degrees for better readability
+  - Implemented smart label spacing: shows every nth label based on data size (1-14 days: all labels, 15-30 days: every 3rd, >30 days: every 7th)
+  - Reduced font size to 10px for cleaner appearance
 
 **October 21, 2025:**
 - Fixed numeric time field conversion: Dashboard now handles both string and numeric time formats (e.g., "20250217" and 20250217)
