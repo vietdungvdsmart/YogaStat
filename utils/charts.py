@@ -733,6 +733,84 @@ class ChartGenerator:
         
         return fig
     
+    def create_engagement_time_trends(self, time_series_data, language='en'):
+        """Create a line chart showing average engagement time trends over time."""
+        if not time_series_data:
+            return go.Figure()
+        
+        # Prepare data
+        periods = [period.get('time', '') for period in time_series_data]
+        engagement_times = [period.get('avg_engage_time', 0) for period in time_series_data]
+        
+        # Convert seconds to minutes for better readability
+        engagement_minutes = [time / 60 for time in engagement_times]
+        
+        # Determine granularity
+        is_daily, x_axis_label, period_count = self.get_time_granularity(time_series_data)
+        
+        # Calculate smart label spacing
+        if period_count <= 14:
+            tickvals = list(range(len(periods)))
+            ticktext = periods
+        elif period_count <= 30:
+            # Show every 3rd label
+            tickvals = list(range(0, len(periods), 3))
+            ticktext = [periods[i] for i in tickvals]
+        else:
+            # Show every 7th label
+            tickvals = list(range(0, len(periods), 7))
+            ticktext = [periods[i] for i in tickvals]
+        
+        # Create figure
+        fig = go.Figure()
+        
+        # Add engagement time line
+        fig.add_trace(go.Scatter(
+            x=list(range(len(periods))),
+            y=engagement_minutes,
+            mode='lines+markers',
+            name='Avg. Engagement Time',
+            line=dict(color=self.color_scheme['primary'], width=3),
+            marker=dict(size=8, color=self.color_scheme['primary']),
+            hovertemplate='<b>%{text}</b><br>' +
+                         'Engagement: %{y:.1f} min<br>' +
+                         '<extra></extra>',
+            text=periods
+        ))
+        
+        # Add average line
+        avg_engagement = sum(engagement_minutes) / len(engagement_minutes) if engagement_minutes else 0
+        fig.add_hline(
+            y=avg_engagement,
+            line_dash="dash",
+            line_color=self.color_scheme['warning'],
+            annotation_text=f"Average: {avg_engagement:.1f} min",
+            annotation_position="right"
+        )
+        
+        fig.update_layout(
+            title='⏱️ Average Engagement Time Trends',
+            xaxis_title=x_axis_label,
+            yaxis_title='Time (minutes)',
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            hovermode='x unified',
+            xaxis=dict(
+                tickmode='array',
+                tickvals=tickvals,
+                ticktext=ticktext,
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            yaxis=dict(
+                gridcolor='rgba(200,200,200,0.2)'
+            ),
+            font=dict(family='Arial, sans-serif')
+        )
+        
+        return fig
+    
     def create_user_funnel_analysis(self, data, language='en'):
         """Create a funnel chart showing user conversion through different stages."""
         # Calculate funnel stages

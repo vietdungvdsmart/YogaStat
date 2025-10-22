@@ -799,9 +799,9 @@ def render_dashboard(webhook_data, country_name=""):
         st.plotly_chart(feature_funnel_chart, use_container_width=True, key=f"{chart_key_prefix}feature_funnel")
     
     with col2:
-        st.subheader(get_text('user_funnel_analysis_title', st.session_state.language))
-        funnel_chart = chart_gen.create_user_funnel_analysis(aggregated_data, st.session_state.language)
-        st.plotly_chart(funnel_chart, use_container_width=True, key=f"{chart_key_prefix}user_funnel")
+        st.subheader("⏱️ Average Engagement Time Trends")
+        engagement_chart = chart_gen.create_engagement_time_trends(filtered_periods, st.session_state.language)
+        st.plotly_chart(engagement_chart, use_container_width=True, key=f"{chart_key_prefix}engagement_trends")
     
     # Feature Analysis
     col1, col2 = st.columns(2)
