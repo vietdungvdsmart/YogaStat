@@ -1,0 +1,723 @@
+# Detailed Implementation Plan: Comparison Tab with Day/Week/Month Analysis
+
+## Overview
+Add a dedicated "Comparison" tab to the Yoga App Analytics Dashboard that allows users to compare data across different time periods (day-to-day, week-to-week, month-to-month) with proper Monday-Sunday week boundaries.
+
+## 1. Enhanced DataProcessor (`utils/data_processor.py`)
+
+### Add new aggregation methods:
+
+```python
+def aggregate_to_weekly_monday_sunday(self, daily_data):
+    """Aggregate daily data into Monday-Sunday weeks.
+    
+    Args:
+        daily_data: List of daily data records
+        
+    Returns:
+        List of weekly aggregated data with Monday-Sunday boundaries
+    """
+    if not daily_data:
+        return []
+    
+    # Group by week (Monday = 0, Sunday = 6)
+    weekly_groups = {}
+    
+    for day_record in daily_data:
+        try:
+            date_str = day_record.get('time', '')
+            date_obj = datetime.strptime(date_str, '%d/%m/%Y').date()
+            
+            # Find Monday of this week
+            days_since_monday = date_obj.weekday()  # Monday = 0
+            monday = date_obj - timedelta(days=days_since_monday)
+            week_key = monday.strftime('%d/%m/%Y')
+            
+            if week_key not in weekly_groups:
+                weekly_groups[week_key] = []
+            weekly_groups[week_key].append(day_record)
+            
+        except ValueError:
+            continue
+    
+    # Aggregate each week
+    weekly_data = []
+    for week_start, days in sorted(weekly_groups.items()):
+        week_end = (datetime.strptime(week_start, '%d/%m/%Y').date() + timedelta(days=6)).strftime('%d/%m/%Y')
+        
+        aggregated = {
+            'time': f"{week_start} - {week_end}",
+            'week_start': week_start,
+            'week_end': week_end
+        }
+        
+        # Sum numeric fields, average engagement time
+        for field in self.required_fields + self.optional_fields:
+            if field == 'time':
+                continue
+            elif field == 'avg_engage_time':
+                values = [item.get(field, 0) for item in days if item.get(field, 0) > 0]
+                aggregated[field] = sum(values) / len(values) if values else 0
+            else:
+                aggregated[field] = sum(item.get(field, 0) for item in days)
+        
+        weekly_data.append(aggregated)
+    
+    return weekly_data
+
+def aggregate_to_monthly(self, daily_data):
+    """Aggregate daily data into calendar months.
+    
+    Args:
+        daily_data: List of daily data records
+        
+    Returns:
+        List of monthly aggregated data
+    """
+    if not daily_data:
+        return []
+    
+    monthly_groups = {}
+    
+    for day_record in daily_data:
+        try:
+            date_str = day_record.get('time', '')
+            date_obj = datetime.strptime(date_str, '%d/%m/%Y').date()
+            month_key = date_obj.strftime('%m/%Y')  # MM/YYYY format
+            
+            if month_key not in monthly_groups:
+                monthly_groups[month_key] = []
+            monthly_groups[month_key].append(day_record)
+            
+        except ValueError:
+            continue
+    
+    # Aggregate each month
+    monthly_data = []
+    for month_key, days in sorted(monthly_groups.items()):
+        aggregated = {
+            'time': month_key,
+            'month': month_key
+        }
+        
+        # Sum numeric fields, average engagement time
+        for field in self.required_fields + self.optional_fields:
+            if field == 'time':
+                continue
+            elif field == 'avg_engage_time':
+                values = [item.get(field, 0) for item in days if item.get(field, 0) > 0]
+                aggregated[field] = sum(values) / len(values) if values else 0
+            else:
+                aggregated[field] = sum(item.get(field, 0) for item in days)
+        
+        monthly_data.append(aggregated)
+    
+    return monthly_data
+
+def aggregate_by_granularity(self, daily_data, granularity):
+    """Aggregate daily data by specified granularity.
+    
+    Args:
+        daily_data: List of daily data records
+        granularity: 'day', 'week', or 'month'
+        
+    Returns:
+        Aggregated data based on granularity
+    """
+    if granularity == 'day':
+        return daily_data
+    elif granularity == 'week':
+        return self.aggregate_to_weekly_monday_sunday(daily_data)
+    elif granularity == 'month':
+        return self.aggregate_to_monthly(daily_data)
+    else:
+        return daily_data
+
+def calculate_period_comparison(self, current_data, compare_data):
+    """Calculate comparison metrics between two periods.
+    
+    Args:
+        current_data: Current period data
+        compare_data: Comparison period data
+        
+    Returns:
+        Dictionary with comparison metrics
+    """
+    if not current_data or not compare_data:
+        return {}
+    
+    # Aggregate both periods
+    current_agg = self._aggregate_time_series_data(current_data)
+    compare_agg = self._aggregate_time_series_data(compare_data)
+    
+    comparison = {}
+    
+    # Calculate changes for key metrics
+    key_metrics = ['first_open', 'session_start', 'app_open', 'practice_with_video', 'practice_with_ai', 'chat_ai']
+    
+    for metric in key_metrics:
+        current_val = current_agg.get(metric, 0)
+        compare_val = compare_agg.get(metric, 0)
+        
+        if compare_val > 0:
+            change_pct = ((current_val - compare_val) / compare_val) * 100
+        else:
+            change_pct = 0
+        
+        comparison[metric] = {
+            'current': current_val,
+            'compare': compare_val,
+            'change_pct': change_pct,
+            'change_abs': current_val - compare_val
+        }
+    
+    return comparison
+```
+
+## 2. Enhanced Charts (`utils/charts.py`)
+
+### Add comparison chart methods:
+
+```python
+def create_period_comparison_chart(self, current_data, compare_data, granularity, language='en'):
+    """Create a comprehensive period comparison chart.
+    
+    Args:
+        current_data: Current period data
+        compare_data: Comparison period data  
+        granularity: 'day', 'week', or 'month'
+        language: Language code
+        
+    Returns:
+        Plotly figure with comparison visualization
+    """
+    if not current_data or not compare_data:
+        return go.Figure()
+    
+    # Prepare data for comparison
+    metrics = {
+        'New Users': 'first_open',
+        'Sessions': 'session_start', 
+        'App Opens': 'app_open',
+        'Video Practice': 'practice_with_video',
+        'AI Practice': 'practice_with_ai',
+        'AI Chat': 'chat_ai'
+    }
+    
+    current_values = []
+    compare_values = []
+    changes = []
+    
+    for metric_name, metric_key in metrics.items():
+        current_val = sum(item.get(metric_key, 0) for item in current_data)
+        compare_val = sum(item.get(metric_key, 0) for item in compare_data)
+        
+        current_values.append(current_val)
+        compare_values.append(compare_val)
+        
+        if compare_val > 0:
+            change = ((current_val - compare_val) / compare_val) * 100
+        else:
+            change = 0
+        changes.append(change)
+    
+    # Create grouped bar chart
+    fig = go.Figure()
+    
+    fig.add_trace(go.Bar(
+        name='Current Period',
+        x=list(metrics.keys()),
+        y=current_values,
+        marker_color=self.color_scheme['primary'],
+        hovertemplate='<b>%{x}</b><br>Current: %{y}<extra></extra>'
+    ))
+    
+    fig.add_trace(go.Bar(
+        name='Compare Period',
+        x=list(metrics.keys()),
+        y=compare_values,
+        marker_color=self.color_scheme['secondary'],
+        hovertemplate='<b>%{x}</b><br>Compare: %{y}<extra></extra>'
+    ))
+    
+    # Add percentage change annotations
+    for i, (metric, change) in enumerate(zip(metrics.keys(), changes)):
+        max_val = max(current_values[i], compare_values[i])
+        fig.add_annotation(
+            x=metric,
+            y=max_val + (max_val * 0.05),
+            text=f"{change:+.1f}%",
+            showarrow=False,
+            font=dict(
+                color='red' if change < 0 else 'green', 
+                size=12,
+                family="Arial Black"
+            ),
+            bgcolor='rgba(255,255,255,0.8)',
+            bordercolor='rgba(0,0,0,0.2)',
+            borderwidth=1
+        )
+    
+    fig.update_layout(
+        title=f"{granularity.title()} Comparison Analysis",
+        xaxis_title="Metrics",
+        yaxis_title=get_text('count', language),
+        barmode='group',
+        height=500,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    
+    return fig
+
+def create_comparison_trend_chart(self, current_data, compare_data, granularity, language='en'):
+    """Create a trend comparison chart showing both periods over time.
+    
+    Args:
+        current_data: Current period data
+        compare_data: Comparison period data
+        granularity: 'day', 'week', or 'month'
+        language: Language code
+        
+    Returns:
+        Plotly figure with trend comparison
+    """
+    if not current_data or not compare_data:
+        return go.Figure()
+    
+    # Prepare time series data
+    current_times = [item.get('time', '') for item in current_data]
+    compare_times = [item.get('time', '') for item in compare_data]
+    
+    # Key metrics to show
+    metrics = {
+        'New Users': 'first_open',
+        'Sessions': 'session_start',
+        'Practice Sessions': 'practice_with_video'
+    }
+    
+    fig = go.Figure()
+    
+    # Add current period traces
+    for metric_name, metric_key in metrics.items():
+        current_values = [item.get(metric_key, 0) for item in current_data]
+        
+        fig.add_trace(go.Scatter(
+            x=current_times,
+            y=current_values,
+            mode='lines+markers',
+            name=f'Current - {metric_name}',
+            line=dict(color=self.color_scheme['primary'], width=3),
+            marker=dict(size=8),
+            hovertemplate=f'<b>Current {metric_name}</b><br>Time: %{{x}}<br>Value: %{{y}}<extra></extra>'
+        ))
+    
+    # Add compare period traces
+    for metric_name, metric_key in metrics.items():
+        compare_values = [item.get(metric_key, 0) for item in compare_data]
+        
+        fig.add_trace(go.Scatter(
+            x=compare_times,
+            y=compare_values,
+            mode='lines+markers',
+            name=f'Compare - {metric_name}',
+            line=dict(color=self.color_scheme['secondary'], width=3, dash='dash'),
+            marker=dict(size=8),
+            hovertemplate=f'<b>Compare {metric_name}</b><br>Time: %{{x}}<br>Value: %{{y}}<extra></extra>'
+        ))
+    
+    fig.update_layout(
+        title=f"{granularity.title()} Trend Comparison",
+        xaxis_title="Time Period",
+        yaxis_title=get_text('count', language),
+        height=500,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        hovermode='x unified'
+    )
+    
+    return fig
+```
+
+## 3. Enhanced DateRangeFilter (`utils/date_filter.py`)
+
+### Add comparison-specific methods:
+
+```python
+def render_comparison_controls(self, key_prefix="comparison_"):
+    """Render date range controls specifically for comparison tab.
+    
+    Args:
+        key_prefix: Prefix for session state keys
+        
+    Returns:
+        Tuple of (current_range, compare_range)
+    """
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("📅 Current Period")
+        current_filter = DateRangeFilter(key_prefix=f"{key_prefix}current_", data=self.data)
+        current_range = current_filter.render()
+    
+    with col2:
+        st.subheader("📅 Compare To")
+        compare_filter = DateRangeFilter(key_prefix=f"{key_prefix}compare_", data=self.data)
+        compare_range = compare_filter.render()
+    
+    return current_range, compare_range
+
+def get_granularity_selector(self, key_prefix="comparison_"):
+    """Render granularity selector for comparison.
+    
+    Args:
+        key_prefix: Prefix for session state keys
+        
+    Returns:
+        Selected granularity ('day', 'week', 'month')
+    """
+    if f"{key_prefix}granularity" not in st.session_state:
+        st.session_state[f"{key_prefix}granularity"] = "week"
+    
+    granularity = st.selectbox(
+        "Compare by:",
+        options=['Day', 'Week', 'Month'],
+        index=['Day', 'Week', 'Month'].index(st.session_state[f"{key_prefix}granularity"].title()),
+        key=f"{key_prefix}granularity_selector"
+    )
+    
+    st.session_state[f"{key_prefix}granularity"] = granularity.lower()
+    return granularity.lower()
+```
+
+## 4. New Comparison Tab in Main App (`app.py`)
+
+### Add the comparison tab after the existing analytics tab:
+
+```python
+# In the main dashboard section, replace the existing tab structure with:
+
+if st.session_state.data:
+    countries_data = st.session_state.data
+    
+    # Check if we have country-based data (new format)
+    if isinstance(countries_data, dict) and any(key in ['US', 'India', 'VN', 'All Countries'] for key in countries_data.keys()):
+        # Create tabs
+        tab1, tab2 = st.tabs(["📊 Analytics", "📈 Comparison"])
+        
+        with tab1:
+            # Your existing analytics code here (keep everything as is)
+            available_countries = [key for key in countries_data.keys() if key != 'All Countries']
+            available_countries.sort()
+            
+            # Create dropdown options with Vietnamese labels
+            country_options = {}
+            for country in available_countries:
+                if country == 'US':
+                    country_options["🇺🇸 USA"] = country
+                elif country == 'India':
+                    country_options["🇮🇳 Ấn Độ"] = country
+                elif country == 'VN':
+                    country_options["🇻🇳 Việt Nam"] = country
+                else:
+                    country_options[f"🌍 {country}"] = country
+            
+            # Add "All Countries" option if it exists
+            if 'All Countries' in countries_data:
+                country_options["🌎 Tổng Hợp"] = 'All Countries'
+            
+            # Initialize session state for country selection
+            if 'selected_country' not in st.session_state:
+                st.session_state.selected_country = list(country_options.values())[0]
+            
+            # Country selector dropdown
+            st.subheader("🌍 Chọn Quốc Gia/Khu Vực")
+            selected_display = st.selectbox(
+                "Xem analytics cho:",
+                options=list(country_options.keys()),
+                index=list(country_options.values()).index(st.session_state.selected_country),
+                key="country_selector"
+            )
+            
+            # Update selected country
+            selected_country = country_options[selected_display]
+            st.session_state.selected_country = selected_country
+            
+            st.divider()
+            
+            # Render dashboard for selected country
+            if selected_country in countries_data:
+                render_dashboard(countries_data[selected_country], selected_country)
+            else:
+                st.error(f"❌ Không có dữ liệu cho {selected_display}")
+        
+        with tab2:
+            st.header("📈 Period Comparison Analysis")
+            st.markdown("*Compare performance across different time periods*")
+            
+            # Country selector for comparison
+            comparison_country_options = {}
+            for country in available_countries:
+                if country == 'US':
+                    comparison_country_options["🇺🇸 USA"] = country
+                elif country == 'India':
+                    comparison_country_options["🇮🇳 Ấn Độ"] = country
+                elif country == 'VN':
+                    comparison_country_options["🇻🇳 Việt Nam"] = country
+                else:
+                    comparison_country_options[f"🌍 {country}"] = country
+            
+            if 'All Countries' in countries_data:
+                comparison_country_options["🌎 Tổng Hợp"] = 'All Countries'
+            
+            # Initialize comparison country selection
+            if 'comparison_selected_country' not in st.session_state:
+                st.session_state.comparison_selected_country = list(comparison_country_options.values())[0]
+            
+            selected_comparison_display = st.selectbox(
+                "Select Country for Comparison:",
+                options=list(comparison_country_options.keys()),
+                index=list(comparison_country_options.values()).index(st.session_state.comparison_selected_country),
+                key="comparison_country_selector"
+            )
+            
+            selected_comparison_country = comparison_country_options[selected_comparison_display]
+            st.session_state.comparison_selected_country = selected_comparison_country
+            
+            st.divider()
+            
+            if selected_comparison_country in countries_data:
+                webhook_data = countries_data[selected_comparison_country]
+                all_periods = webhook_data.get('data', [])
+                
+                if all_periods:
+                    # Create comparison controls
+                    from utils.date_filter import DateRangeFilter
+                    
+                    # Granularity selector
+                    granularity_filter = DateRangeFilter(data=all_periods)
+                    granularity = granularity_filter.get_granularity_selector()
+                    
+                    st.markdown("---")
+                    
+                    # Date range selectors
+                    current_range, compare_range = granularity_filter.render_comparison_controls()
+                    
+                    st.markdown("---")
+                    
+                    # Generate comparison button
+                    if st.button("🔄 Generate Comparison Analysis", type="primary", use_container_width=True):
+                        # Filter data for both periods
+                        current_filter = DateRangeFilter(key_prefix="comparison_current_", data=all_periods)
+                        compare_filter = DateRangeFilter(key_prefix="comparison_compare_", data=all_periods)
+                        
+                        current_filtered = current_filter.filter_data(all_periods)
+                        compare_filtered = compare_filter.filter_data(all_periods)
+                        
+                        if current_filtered and compare_filtered:
+                            # Aggregate data by granularity
+                            processor = DataProcessor()
+                            current_aggregated = processor.aggregate_by_granularity(current_filtered, granularity)
+                            compare_aggregated = processor.aggregate_by_granularity(compare_filtered, granularity)
+                            
+                            # Create comparison charts
+                            chart_gen = ChartGenerator()
+                            
+                            # Main comparison chart
+                            st.subheader("📊 Period Comparison")
+                            comparison_chart = chart_gen.create_period_comparison_chart(
+                                current_aggregated, 
+                                compare_aggregated, 
+                                granularity, 
+                                st.session_state.language
+                            )
+                            st.plotly_chart(comparison_chart, use_container_width=True)
+                            
+                            # Trend comparison chart
+                            st.subheader("📈 Trend Comparison")
+                            trend_chart = chart_gen.create_comparison_trend_chart(
+                                current_aggregated,
+                                compare_aggregated,
+                                granularity,
+                                st.session_state.language
+                            )
+                            st.plotly_chart(trend_chart, use_container_width=True)
+                            
+                            # Summary metrics
+                            st.subheader("📋 Comparison Summary")
+                            
+                            comparison_metrics = processor.calculate_period_comparison(current_aggregated, compare_aggregated)
+                            
+                            # Display key metrics in columns
+                            col1, col2, col3, col4 = st.columns(4)
+                            
+                            with col1:
+                                new_users = comparison_metrics.get('first_open', {})
+                                st.metric(
+                                    "New Users",
+                                    f"{new_users.get('current', 0):,}",
+                                    f"{new_users.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                sessions = comparison_metrics.get('session_start', {})
+                                st.metric(
+                                    "Sessions",
+                                    f"{sessions.get('current', 0):,}",
+                                    f"{sessions.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                practice = comparison_metrics.get('practice_with_video', {})
+                                st.metric(
+                                    "Video Practice",
+                                    f"{practice.get('current', 0):,}",
+                                    f"{practice.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                ai_practice = comparison_metrics.get('practice_with_ai', {})
+                                st.metric(
+                                    "AI Practice",
+                                    f"{ai_practice.get('current', 0):,}",
+                                    f"{ai_practice.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            # Detailed comparison table
+                            st.subheader("📋 Detailed Metrics Comparison")
+                            
+                            comparison_df = pd.DataFrame([
+                                {
+                                    'Metric': 'New Users',
+                                    'Current Period': comparison_metrics.get('first_open', {}).get('current', 0),
+                                    'Compare Period': comparison_metrics.get('first_open', {}).get('compare', 0),
+                                    'Change %': f"{comparison_metrics.get('first_open', {}).get('change_pct', 0):+.1f}%",
+                                    'Change Abs': comparison_metrics.get('first_open', {}).get('change_abs', 0)
+                                },
+                                {
+                                    'Metric': 'Sessions',
+                                    'Current Period': comparison_metrics.get('session_start', {}).get('current', 0),
+                                    'Compare Period': comparison_metrics.get('session_start', {}).get('compare', 0),
+                                    'Change %': f"{comparison_metrics.get('session_start', {}).get('change_pct', 0):+.1f}%",
+                                    'Change Abs': comparison_metrics.get('session_start', {}).get('change_abs', 0)
+                                },
+                                {
+                                    'Metric': 'App Opens',
+                                    'Current Period': comparison_metrics.get('app_open', {}).get('current', 0),
+                                    'Compare Period': comparison_metrics.get('app_open', {}).get('compare', 0),
+                                    'Change %': f"{comparison_metrics.get('app_open', {}).get('change_pct', 0):+.1f}%",
+                                    'Change Abs': comparison_metrics.get('app_open', {}).get('change_abs', 0)
+                                },
+                                {
+                                    'Metric': 'Video Practice',
+                                    'Current Period': comparison_metrics.get('practice_with_video', {}).get('current', 0),
+                                    'Compare Period': comparison_metrics.get('practice_with_video', {}).get('compare', 0),
+                                    'Change %': f"{comparison_metrics.get('practice_with_video', {}).get('change_pct', 0):+.1f}%",
+                                    'Change Abs': comparison_metrics.get('practice_with_video', {}).get('change_abs', 0)
+                                },
+                                {
+                                    'Metric': 'AI Practice',
+                                    'Current Period': comparison_metrics.get('practice_with_ai', {}).get('current', 0),
+                                    'Compare Period': comparison_metrics.get('practice_with_ai', {}).get('compare', 0),
+                                    'Change %': f"{comparison_metrics.get('practice_with_ai', {}).get('change_pct', 0):+.1f}%",
+                                    'Change Abs': comparison_metrics.get('practice_with_ai', {}).get('change_abs', 0)
+                                },
+                                {
+                                    'Metric': 'AI Chat',
+                                    'Current Period': comparison_metrics.get('chat_ai', {}).get('current', 0),
+                                    'Compare Period': comparison_metrics.get('chat_ai', {}).get('compare', 0),
+                                    'Change %': f"{comparison_metrics.get('chat_ai', {}).get('change_pct', 0):+.1f}%",
+                                    'Change Abs': comparison_metrics.get('chat_ai', {}).get('change_abs', 0)
+                                }
+                            ])
+                            
+                            st.dataframe(comparison_df, use_container_width=True)
+                            
+                        else:
+                            st.warning("⚠️ Please select valid date ranges for both current and comparison periods.")
+                else:
+                    st.warning("⚠️ No data available for comparison")
+            else:
+                st.error("❌ Selected country not found")
+    
+    else:
+        # Legacy format - render single dashboard (keep existing code)
+        render_dashboard(st.session_state.data)
+```
+
+## 5. Translation Updates (`utils/translations.py`)
+
+### Add new translation keys:
+
+```python
+# Add these to the translations dictionary:
+
+'comparison_tab_title': {
+    'en': 'Period Comparison',
+    'vi': 'So Sánh Thời Kỳ'
+},
+'compare_by': {
+    'en': 'Compare by:',
+    'vi': 'So sánh theo:'
+},
+'current_period': {
+    'en': 'Current Period',
+    'vi': 'Thời Kỳ Hiện Tại'
+},
+'compare_to': {
+    'en': 'Compare To',
+    'vi': 'So Sánh Với'
+},
+'generate_comparison': {
+    'en': 'Generate Comparison Analysis',
+    'vi': 'Tạo Phân Tích So Sánh'
+},
+'period_comparison': {
+    'en': 'Period Comparison',
+    'vi': 'So Sánh Thời Kỳ'
+},
+'trend_comparison': {
+    'en': 'Trend Comparison',
+    'vi': 'So Sánh Xu Hướng'
+},
+'comparison_summary': {
+    'en': 'Comparison Summary',
+    'vi': 'Tóm Tắt So Sánh'
+},
+'detailed_metrics_comparison': {
+    'en': 'Detailed Metrics Comparison',
+    'vi': 'So Sánh Chi Tiết Các Chỉ Số'
+},
+'change_abs': {
+    'en': 'Change Abs',
+    'vi': 'Thay Đổi Tuyệt Đối'
+}
+```
+
+## Implementation Order:
+
+1. **First**: Update `utils/data_processor.py` with new aggregation methods
+2. **Second**: Update `utils/charts.py` with comparison chart methods  
+3. **Third**: Update `utils/date_filter.py` with comparison controls
+4. **Fourth**: Update `utils/translations.py` with new translation keys
+5. **Fifth**: Update `app.py` with the new comparison tab structure
+
+## Key Features:
+
+- ✅ Monday-Sunday week boundaries
+- ✅ Day/Week/Month granularity selection
+- ✅ Side-by-side period comparison
+- ✅ Trend comparison charts
+- ✅ Detailed metrics table with percentage changes
+- ✅ Multi-country support
+- ✅ Vietnamese language support
+- ✅ Clean tab separation from existing analytics
+
+This plan provides a comprehensive comparison system that integrates seamlessly with your existing dashboard while maintaining the Monday-Sunday week structure you requested.
