@@ -7,14 +7,18 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 ## Recent Changes
 
 **October 22, 2025 (Latest):**
-- Added new **Comparison Tab** feature for period-to-period analysis:
-  - Day/Week/Month granularity selection with Monday-Sunday week boundaries
-  - Dual date range controls (Current Period vs Compare To) with Google Analytics-style presets
+- Enhanced **Comparison Tab** with adaptive UI for period selection:
+  - **Day Granularity**: Google Analytics-style date pickers with presets (Today, Last 7/30 days, etc.)
+  - **Week Granularity**: Dropdown menus showing available weeks with Monday-Sunday boundaries (e.g., "Week 1: Jan 1 - Jan 7, 2025")
+  - **Month Granularity**: Dropdown menus showing available months (e.g., "February 2025", "March 2025")
+  - Intelligent UI that adapts based on selected granularity for better UX
+  - Auto-populates available options from actual data
+  - Full multi-language support (English/Vietnamese) for all dropdown labels
+- Comparison Tab core features:
   - Period Comparison bar chart showing 8 key metrics with percentage change annotations
   - Trend Comparison line chart showing both periods over time with smart x-axis labeling
   - Summary metrics cards displaying top 4 KPIs with delta percentages
   - Auto-update visualization when date ranges change
-  - Full multi-language support (English/Vietnamese)
   - Integrated seamlessly with existing country selector
 - New aggregation methods in DataProcessor:
   - `aggregate_to_weekly_monday_sunday()` for Monday-Sunday week aggregation
@@ -25,9 +29,12 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
   - `create_period_comparison_chart()` with grouped bars and percentage annotations
   - `create_comparison_trend_chart()` with both periods overlay
   - Applied x-axis label fixes (rotation -45°, smart spacing, font 10px)
-- Enhanced DateRangeFilter with comparison capabilities:
-  - `render_comparison_controls()` for dual date pickers
+- Enhanced DateRangeFilter with adaptive comparison UI:
+  - `render_comparison_controls(granularity)` with adaptive UI (date pickers for Day, dropdowns for Week/Month)
+  - `get_available_weeks()` extracts available weeks with Monday-Sunday boundaries
+  - `get_available_months()` extracts available months from data
   - `get_granularity_selector()` for Day/Week/Month selection
+  - Smart defaults: latest period for current, previous period for comparison
 
 **October 22, 2025 (Earlier):**
 - Redesigned "All Metrics (Last 7 Days)" section with grouped categories for better visual organization:
