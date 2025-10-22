@@ -1149,15 +1149,214 @@ if st.session_state.data:
                         
                         st.markdown("---")
                         
-                        # Engagement Comparison Chart
-                        st.subheader("⏱️ Average Engagement Time Comparison" if st.session_state.language == 'en' else "⏱️ So Sánh Thời Gian Tương Tác Trung Bình")
-                        engagement_chart = chart_gen.create_engagement_comparison_chart(
-                            current_aggregated,
-                            compare_aggregated,
-                            granularity,
-                            st.session_state.language
-                        )
-                        st.plotly_chart(engagement_chart, use_container_width=True)
+                        # Detailed Metrics Comparison Table (grouped by categories)
+                        st.subheader(f"📊 {get_text('detailed_metrics_comparison', st.session_state.language)}")
+                        
+                        # User Activity Group
+                        with st.container(border=True):
+                            st.markdown("##### 👥 User Activity")
+                            col1, col2, col3, col4, col5 = st.columns(5)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('first_open', {})
+                                st.metric(
+                                    "New Users",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('session_start', {})
+                                st.metric(
+                                    "Sessions",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('app_open', {})
+                                st.metric(
+                                    "App Opens",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                metric_data = comparison_metrics.get('login', {})
+                                st.metric(
+                                    "Logins",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col5:
+                                metric_data = comparison_metrics.get('app_remove', {})
+                                st.metric(
+                                    "Uninstalls",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%",
+                                    delta_color="inverse"
+                                )
+                        
+                        # Practice & Engagement Group
+                        with st.container(border=True):
+                            st.markdown("##### 🏃‍♀️ Practice & Engagement")
+                            col1, col2, col3, col4, col5 = st.columns(5)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('view_exercise', {})
+                                st.metric(
+                                    "Exercise Views",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('practice_with_video', {})
+                                st.metric(
+                                    "Video Practice",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('practice_with_ai', {})
+                                st.metric(
+                                    "AI Practice",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                metric_data = comparison_metrics.get('chat_ai', {})
+                                st.metric(
+                                    "AI Chat",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col5:
+                                metric_data = comparison_metrics.get('avg_engage_time', {})
+                                current_time_formatted = processor.format_engagement_time(metric_data.get('current', 0))
+                                st.metric(
+                                    "Avg. Engagement",
+                                    current_time_formatted,
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                        
+                        # Features & Content Group
+                        with st.container(border=True):
+                            st.markdown("##### 🎯 Features & Content")
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('health_survey', {})
+                                st.metric(
+                                    "Health Surveys",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('view_roadmap', {})
+                                st.metric(
+                                    "Roadmap Views",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('store_subscription', {})
+                                st.metric(
+                                    "Store Views",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                        
+                        # Popup Performance Group
+                        with st.container(border=True):
+                            st.markdown("##### 💬 Popup Performance")
+                            col1, col2, col3, col4 = st.columns(4)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('show_popup', {})
+                                st.metric(
+                                    "Shown",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('view_detail_popup', {})
+                                st.metric(
+                                    "Details Viewed",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('close_popup', {})
+                                st.metric(
+                                    "Closed",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                # Calculate CTR for current and compare periods
+                                show_current = comparison_metrics.get('show_popup', {}).get('current', 0)
+                                view_current = comparison_metrics.get('view_detail_popup', {}).get('current', 0)
+                                ctr_current = (view_current / show_current * 100) if show_current > 0 else 0
+                                
+                                show_compare = comparison_metrics.get('show_popup', {}).get('compare', 0)
+                                view_compare = comparison_metrics.get('view_detail_popup', {}).get('compare', 0)
+                                ctr_compare = (view_compare / show_compare * 100) if show_compare > 0 else 0
+                                
+                                ctr_change = ctr_current - ctr_compare
+                                st.metric(
+                                    "CTR",
+                                    f"{ctr_current:.1f}%",
+                                    f"{ctr_change:+.1f}pp"
+                                )
+                        
+                        # Monetization Group
+                        with st.container(border=True):
+                            st.markdown("##### 💰 Monetization")
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('in_app_purchase', {})
+                                st.metric(
+                                    "In-App Purchases",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                # Calculate Conversion Rate for current and compare periods
+                                purchases_current = comparison_metrics.get('in_app_purchase', {}).get('current', 0)
+                                users_current = comparison_metrics.get('first_open', {}).get('current', 0)
+                                conv_current = (purchases_current / users_current * 100) if users_current > 0 else 0
+                                
+                                purchases_compare = comparison_metrics.get('in_app_purchase', {}).get('compare', 0)
+                                users_compare = comparison_metrics.get('first_open', {}).get('compare', 0)
+                                conv_compare = (purchases_compare / users_compare * 100) if users_compare > 0 else 0
+                                
+                                conv_change = conv_current - conv_compare
+                                st.metric(
+                                    "Conversion Rate",
+                                    f"{conv_current:.2f}%",
+                                    f"{conv_change:+.2f}pp"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('total_revenue_events', {})
+                                st.metric(
+                                    "Revenue Events",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                        
                     else:
                         st.warning("⚠️ Please ensure both current and comparison periods have valid data.")
                 else:

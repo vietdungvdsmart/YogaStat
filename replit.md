@@ -17,7 +17,13 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
 - Comparison Tab visualization features:
   - Period Comparison bar chart showing 8 key metrics with percentage change annotations (full width)
   - Top 4 KPI summary cards with delta percentages
-  - **Average Engagement Time Comparison Chart**: Grouped bar chart comparing engagement time (in minutes) between current and compare periods across all time points
+  - **Detailed Metrics Comparison Table** grouped by 5 categories with all 17 metrics:
+    - 👥 User Activity: New Users, Sessions, App Opens, Logins, Uninstalls
+    - 🏃‍♀️ Practice & Engagement: Exercise Views, Video Practice, AI Practice, AI Chat, Avg. Engagement
+    - 🎯 Features & Content: Health Surveys, Roadmap Views, Store Views
+    - 💬 Popup Performance: Shown, Details Viewed, Closed, CTR (calculated)
+    - 💰 Monetization: In-App Purchases, Conversion Rate (calculated), Revenue Events
+  - Each metric shows current value and % change from comparison period
   - Auto-update when date ranges or granularity change
 - New aggregation methods in DataProcessor:
   - `aggregate_to_weekly_monday_sunday()` for Monday-Sunday week aggregation
@@ -26,7 +32,7 @@ This is a Streamlit-based analytics dashboard designed to visualize user engagem
   - `calculate_period_comparison()` for all 17 metrics comparison
 - New comparison chart methods in ChartGenerator:
   - `create_period_comparison_chart()` with grouped bars and percentage annotations
-  - `create_engagement_comparison_chart()` focused on avg engagement time comparison with grouped bars
+  - `create_comparison_trend_chart()` with both periods overlay
   - Applied x-axis label fixes (rotation -45°, smart spacing, font 10px)
 - Enhanced DateRangeFilter with adaptive comparison UI:
   - `render_comparison_controls(granularity)` with adaptive UI (date pickers for Day, dropdowns for Week/Month)
