@@ -100,7 +100,46 @@ Preferred communication style: Simple, everyday language.
 - **Comparative Analysis**: User acquisition vs churn visualization
 - **Feature Usage Tracking**: Monitors adoption of video practice, AI features, and roadmap views
 - **Popup Performance**: Tracks popup effectiveness and conversion rates
-- **Insight Generation**: Automated recommendations based on predefined benchmarks and thresholds
+- **Insight Generation**: Automated recommendations based on industry benchmarks (updated October 2025)
+
+### Industry Benchmarks & Data Sources
+The InsightsGenerator uses research-backed benchmarks from leading mobile analytics firms:
+
+**Retention & Churn (AppsFlyer, Business of Apps, Adjust 2024-2025):**
+- Retention Rate Excellent: 47.5% (90-day retention, top performers)
+- Retention Rate Good: 12% (Day 7 retention, industry average)
+- Retention Rate Average: 3% (Day 30 retention, industry average)
+- Churn Rate Excellent: 13% monthly (best-in-class, e.g., Headspace)
+- Churn Rate Warning: 18% monthly (industry average)
+- Churn Rate Critical: 25%+ monthly (needs immediate action)
+
+**Engagement Time (Statista, Business of Apps 2024):**
+- Excellent: 600+ seconds (10+ minutes, top apps)
+- Good: 450 seconds (7.5 minutes, industry average)
+- Minimum: 300 seconds (5 minutes baseline)
+
+**Engagement Rate (DAU/MAU):**
+- Good: 25% (healthy engagement)
+- Minimum: 20% (baseline)
+
+**AI Adoption (2025 Consumer Trends):**
+- Target: 49% daily usage (2025 benchmark)
+- Minimum: 20% adoption baseline
+
+**Popup Performance:**
+- Good CTR: 15%
+- Minimum CTR: 5%
+
+**Practice Completion:**
+- Good: 70%+ (boosts LTV by 43% per research)
+- Minimum: 50%
+
+**Key Research Insights Applied:**
+- Users active daily in Week 1 are 80% more likely to stay for 6 months
+- Social features boost retention by +30%
+- Down Dog app: flexible weekly goals increased 90-day retention by +20%
+- iOS retention rates are 46% higher than Android
+- Session timing matters: morning sessions <5 min, evening sessions ~12 min
 
 ### Design Patterns
 - **Class-based Architecture**: Utility classes provide reusable functionality and maintain separation of concerns
