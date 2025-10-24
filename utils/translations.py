@@ -123,6 +123,39 @@ TRANSLATIONS = {
         'recommendations_header': '🚀 Recommendations',
         'key_insights_header': '🎯 Key Insights',
         
+        # All Metrics (Last 7 Days) section labels
+        'user_activity_group': '👥 User Activity',
+        'new_users_metric': 'New Users',
+        'sessions_metric': 'Sessions',
+        'app_opens_metric': 'App Opens',
+        'logins_metric': 'Logins',
+        'uninstalls_metric': 'Uninstalls',
+        
+        'practice_engagement_group': '🏃‍♀️ Practice & Engagement',
+        'exercise_views_metric': 'Exercise Views',
+        'video_practice_metric': 'Video Practice',
+        'ai_practice_metric': 'AI Practice',
+        'ai_chat_metric': 'AI Chat',
+        'avg_engagement_metric': 'Avg. Engagement',
+        
+        'features_content_group': '🎯 Features & Content',
+        'health_surveys_metric': 'Health Surveys',
+        'roadmap_views_metric': 'Roadmap Views',
+        'store_views_metric': 'Store Views',
+        
+        'popup_performance_group': '💬 Popup Performance',
+        'shown_metric': 'Shown',
+        'details_viewed_metric': 'Details Viewed',
+        'closed_metric': 'Closed',
+        'ctr_metric': 'CTR',
+        
+        'monetization_group': '💰 Monetization',
+        'in_app_purchases_metric': 'In-App Purchases',
+        'conversion_rate_metric': 'Conversion Rate',
+        'total_revenue_events_metric': 'Total Revenue Events',
+        
+        'showing_n_days_info': '📊 Showing data for {days} day(s). Need at least 7 days for full weekly overview.',
+        
         # Feature adoption (now changed to performance)
         'feature_adoption_header': '📊 Feature Performance Analysis',
         'most_used_features': '**🏆 Most Used Features:**',
@@ -373,6 +406,39 @@ TRANSLATIONS = {
         'this_week_insights_subtitle': '*Dựa trên 2 tuần gần nhất*',
         'recommendations_header': '🚀 Khuyến Nghị',
         'key_insights_header': '🎯 Thông Tin Chính',
+        
+        # All Metrics (Last 7 Days) section labels
+        'user_activity_group': '👥 Hoạt Động Người Dùng',
+        'new_users_metric': 'Người Dùng Mới',
+        'sessions_metric': 'Phiên',
+        'app_opens_metric': 'Mở Ứng Dụng',
+        'logins_metric': 'Đăng Nhập',
+        'uninstalls_metric': 'Gỡ Cài Đặt',
+        
+        'practice_engagement_group': '🏃‍♀️ Luyện Tập & Tương Tác',
+        'exercise_views_metric': 'Lượt Xem Bài Tập',
+        'video_practice_metric': 'Luyện Tập Video',
+        'ai_practice_metric': 'Luyện Tập AI',
+        'ai_chat_metric': 'Chat AI',
+        'avg_engagement_metric': 'Tương Tác TB',
+        
+        'features_content_group': '🎯 Tính Năng & Nội Dung',
+        'health_surveys_metric': 'Khảo Sát Sức Khỏe',
+        'roadmap_views_metric': 'Lượt Xem Lộ Trình',
+        'store_views_metric': 'Lượt Xem Cửa Hàng',
+        
+        'popup_performance_group': '💬 Hiệu Suất Popup',
+        'shown_metric': 'Hiển Thị',
+        'details_viewed_metric': 'Xem Chi Tiết',
+        'closed_metric': 'Đóng',
+        'ctr_metric': 'CTR',
+        
+        'monetization_group': '💰 Kiếm Tiền',
+        'in_app_purchases_metric': 'Mua Trong Ứng Dụng',
+        'conversion_rate_metric': 'Tỷ Lệ Chuyển Đổi',
+        'total_revenue_events_metric': 'Tổng Sự Kiện Doanh Thu',
+        
+        'showing_n_days_info': '📊 Hiển thị dữ liệu cho {days} ngày. Cần ít nhất 7 ngày để có tổng quan đầy đủ theo tuần.',
         
         # Feature adoption (now changed to performance)
         'feature_adoption_header': '📊 Phân Tích Hiệu Suất Tính Năng',

@@ -581,77 +581,77 @@ def render_dashboard(webhook_data, country_name=""):
         
         # User Activity Group
         with st.container(border=True):
-            st.markdown("##### 👥 User Activity")
+            st.markdown(f"##### {get_text('user_activity_group', st.session_state.language)}")
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
-                st.metric("New Users", f"{int(last_week_total.get('first_open', 0)):,}")
+                st.metric(get_text('new_users_metric', st.session_state.language), f"{int(last_week_total.get('first_open', 0)):,}")
             with col2:
-                st.metric("Sessions", f"{int(last_week_total.get('session_start', 0)):,}")
+                st.metric(get_text('sessions_metric', st.session_state.language), f"{int(last_week_total.get('session_start', 0)):,}")
             with col3:
-                st.metric("App Opens", f"{int(last_week_total.get('app_open', 0)):,}")
+                st.metric(get_text('app_opens_metric', st.session_state.language), f"{int(last_week_total.get('app_open', 0)):,}")
             with col4:
-                st.metric("Logins", f"{int(last_week_total.get('login', 0)):,}")
+                st.metric(get_text('logins_metric', st.session_state.language), f"{int(last_week_total.get('login', 0)):,}")
             with col5:
-                st.metric("Uninstalls", f"{int(last_week_total.get('app_remove', 0)):,}")
+                st.metric(get_text('uninstalls_metric', st.session_state.language), f"{int(last_week_total.get('app_remove', 0)):,}")
         
         # Practice & Engagement Group
         with st.container(border=True):
-            st.markdown("##### 🏃‍♀️ Practice & Engagement")
+            st.markdown(f"##### {get_text('practice_engagement_group', st.session_state.language)}")
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
-                st.metric("Exercise Views", f"{int(last_week_total.get('view_exercise', 0)):,}")
+                st.metric(get_text('exercise_views_metric', st.session_state.language), f"{int(last_week_total.get('view_exercise', 0)):,}")
             with col2:
-                st.metric("Video Practice", f"{int(last_week_total.get('practice_with_video', 0)):,}")
+                st.metric(get_text('video_practice_metric', st.session_state.language), f"{int(last_week_total.get('practice_with_video', 0)):,}")
             with col3:
-                st.metric("AI Practice", f"{int(last_week_total.get('practice_with_ai', 0)):,}")
+                st.metric(get_text('ai_practice_metric', st.session_state.language), f"{int(last_week_total.get('practice_with_ai', 0)):,}")
             with col4:
-                st.metric("AI Chat", f"{int(last_week_total.get('chat_ai', 0)):,}")
+                st.metric(get_text('ai_chat_metric', st.session_state.language), f"{int(last_week_total.get('chat_ai', 0)):,}")
             with col5:
                 avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
-                st.metric("Avg. Engagement", avg_time_formatted)
+                st.metric(get_text('avg_engagement_metric', st.session_state.language), avg_time_formatted)
         
         # Features & Content Group
         with st.container(border=True):
-            st.markdown("##### 🎯 Features & Content")
+            st.markdown(f"##### {get_text('features_content_group', st.session_state.language)}")
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Health Surveys", f"{int(last_week_total.get('health_survey', 0)):,}")
+                st.metric(get_text('health_surveys_metric', st.session_state.language), f"{int(last_week_total.get('health_survey', 0)):,}")
             with col2:
-                st.metric("Roadmap Views", f"{int(last_week_total.get('view_roadmap', 0)):,}")
+                st.metric(get_text('roadmap_views_metric', st.session_state.language), f"{int(last_week_total.get('view_roadmap', 0)):,}")
             with col3:
-                st.metric("Store Views", f"{int(last_week_total.get('store_subscription', 0)):,}")
+                st.metric(get_text('store_views_metric', st.session_state.language), f"{int(last_week_total.get('store_subscription', 0)):,}")
         
         # Popup Performance Group
         with st.container(border=True):
-            st.markdown("##### 💬 Popup Performance")
+            st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Shown", f"{int(last_week_total.get('show_popup', 0)):,}")
+                st.metric(get_text('shown_metric', st.session_state.language), f"{int(last_week_total.get('show_popup', 0)):,}")
             with col2:
-                st.metric("Details Viewed", f"{int(last_week_total.get('view_detail_popup', 0)):,}")
+                st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(last_week_total.get('view_detail_popup', 0)):,}")
             with col3:
-                st.metric("Closed", f"{int(last_week_total.get('close_popup', 0)):,}")
+                st.metric(get_text('closed_metric', st.session_state.language), f"{int(last_week_total.get('close_popup', 0)):,}")
             with col4:
                 popup_ctr = (last_week_total.get('view_detail_popup', 0) / last_week_total.get('show_popup', 1)) * 100 if last_week_total.get('show_popup', 0) > 0 else 0
-                st.metric("CTR", f"{popup_ctr:.1f}%")
+                st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
         
         # Monetization Group
         with st.container(border=True):
-            st.markdown("##### 💰 Monetization")
+            st.markdown(f"##### {get_text('monetization_group', st.session_state.language)}")
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("In-App Purchases", f"{int(last_week_total.get('in_app_purchase', 0)):,}")
+                st.metric(get_text('in_app_purchases_metric', st.session_state.language), f"{int(last_week_total.get('in_app_purchase', 0)):,}")
             with col2:
                 conversion_rate = (last_week_total.get('in_app_purchase', 0) / last_week_total.get('store_subscription', 1)) * 100 if last_week_total.get('store_subscription', 0) > 0 else 0
-                st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
+                st.metric(get_text('conversion_rate_metric', st.session_state.language), f"{conversion_rate:.1f}%")
             with col3:
-                st.metric("Total Revenue Events", f"{int(last_week_total.get('in_app_purchase', 0) + last_week_total.get('store_subscription', 0)):,}")
+                st.metric(get_text('total_revenue_events_metric', st.session_state.language), f"{int(last_week_total.get('in_app_purchase', 0) + last_week_total.get('store_subscription', 0)):,}")
     
     elif is_time_series and len(filtered_periods_daily) > 0:
         # If less than 7 days, show what we have with same beautiful design
         st.markdown("---")  # Visual separator
         st.subheader(get_text('all_metrics_subheader', st.session_state.language))
-        st.info(f"📊 Showing data for {len(filtered_periods_daily)} day(s). Need at least 7 days for full weekly overview.")
+        st.info(get_text('showing_n_days_info', st.session_state.language).format(days=len(filtered_periods_daily)))
         
         # Aggregate available days from daily data
         available_days = filtered_periods_daily
@@ -667,71 +667,71 @@ def render_dashboard(webhook_data, country_name=""):
         
         # User Activity Group
         with st.container(border=True):
-            st.markdown("##### 👥 User Activity")
+            st.markdown(f"##### {get_text('user_activity_group', st.session_state.language)}")
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
-                st.metric("New Users", f"{int(days_total.get('first_open', 0)):,}")
+                st.metric(get_text('new_users_metric', st.session_state.language), f"{int(days_total.get('first_open', 0)):,}")
             with col2:
-                st.metric("Sessions", f"{int(days_total.get('session_start', 0)):,}")
+                st.metric(get_text('sessions_metric', st.session_state.language), f"{int(days_total.get('session_start', 0)):,}")
             with col3:
-                st.metric("App Opens", f"{int(days_total.get('app_open', 0)):,}")
+                st.metric(get_text('app_opens_metric', st.session_state.language), f"{int(days_total.get('app_open', 0)):,}")
             with col4:
-                st.metric("Logins", f"{int(days_total.get('login', 0)):,}")
+                st.metric(get_text('logins_metric', st.session_state.language), f"{int(days_total.get('login', 0)):,}")
             with col5:
-                st.metric("Uninstalls", f"{int(days_total.get('app_remove', 0)):,}")
+                st.metric(get_text('uninstalls_metric', st.session_state.language), f"{int(days_total.get('app_remove', 0)):,}")
         
         # Practice & Engagement Group
         with st.container(border=True):
-            st.markdown("##### 🏃‍♀️ Practice & Engagement")
+            st.markdown(f"##### {get_text('practice_engagement_group', st.session_state.language)}")
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
-                st.metric("Exercise Views", f"{int(days_total.get('view_exercise', 0)):,}")
+                st.metric(get_text('exercise_views_metric', st.session_state.language), f"{int(days_total.get('view_exercise', 0)):,}")
             with col2:
-                st.metric("Video Practice", f"{int(days_total.get('practice_with_video', 0)):,}")
+                st.metric(get_text('video_practice_metric', st.session_state.language), f"{int(days_total.get('practice_with_video', 0)):,}")
             with col3:
-                st.metric("AI Practice", f"{int(days_total.get('practice_with_ai', 0)):,}")
+                st.metric(get_text('ai_practice_metric', st.session_state.language), f"{int(days_total.get('practice_with_ai', 0)):,}")
             with col4:
-                st.metric("AI Chat", f"{int(days_total.get('chat_ai', 0)):,}")
+                st.metric(get_text('ai_chat_metric', st.session_state.language), f"{int(days_total.get('chat_ai', 0)):,}")
             with col5:
                 avg_time_formatted = processor.format_engagement_time(days_total.get('avg_engage_time', 0))
-                st.metric("Avg. Engagement", avg_time_formatted)
+                st.metric(get_text('avg_engagement_metric', st.session_state.language), avg_time_formatted)
         
         # Features & Content Group
         with st.container(border=True):
-            st.markdown("##### 🎯 Features & Content")
+            st.markdown(f"##### {get_text('features_content_group', st.session_state.language)}")
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Health Surveys", f"{int(days_total.get('health_survey', 0)):,}")
+                st.metric(get_text('health_surveys_metric', st.session_state.language), f"{int(days_total.get('health_survey', 0)):,}")
             with col2:
-                st.metric("Roadmap Views", f"{int(days_total.get('view_roadmap', 0)):,}")
+                st.metric(get_text('roadmap_views_metric', st.session_state.language), f"{int(days_total.get('view_roadmap', 0)):,}")
             with col3:
-                st.metric("Store Views", f"{int(days_total.get('store_subscription', 0)):,}")
+                st.metric(get_text('store_views_metric', st.session_state.language), f"{int(days_total.get('store_subscription', 0)):,}")
         
         # Popup Performance Group
         with st.container(border=True):
-            st.markdown("##### 💬 Popup Performance")
+            st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Shown", f"{int(days_total.get('show_popup', 0)):,}")
+                st.metric(get_text('shown_metric', st.session_state.language), f"{int(days_total.get('show_popup', 0)):,}")
             with col2:
-                st.metric("Details Viewed", f"{int(days_total.get('view_detail_popup', 0)):,}")
+                st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(days_total.get('view_detail_popup', 0)):,}")
             with col3:
-                st.metric("Closed", f"{int(days_total.get('close_popup', 0)):,}")
+                st.metric(get_text('closed_metric', st.session_state.language), f"{int(days_total.get('close_popup', 0)):,}")
             with col4:
                 popup_ctr = (days_total.get('view_detail_popup', 0) / days_total.get('show_popup', 1)) * 100 if days_total.get('show_popup', 0) > 0 else 0
-                st.metric("CTR", f"{popup_ctr:.1f}%")
+                st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
         
         # Monetization Group
         with st.container(border=True):
-            st.markdown("##### 💰 Monetization")
+            st.markdown(f"##### {get_text('monetization_group', st.session_state.language)}")
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("In-App Purchases", f"{int(days_total.get('in_app_purchase', 0)):,}")
+                st.metric(get_text('in_app_purchases_metric', st.session_state.language), f"{int(days_total.get('in_app_purchase', 0)):,}")
             with col2:
                 conversion_rate = (days_total.get('in_app_purchase', 0) / days_total.get('store_subscription', 1)) * 100 if days_total.get('store_subscription', 0) > 0 else 0
-                st.metric("Conversion Rate", f"{conversion_rate:.1f}%")
+                st.metric(get_text('conversion_rate_metric', st.session_state.language), f"{conversion_rate:.1f}%")
             with col3:
-                st.metric("Total Revenue Events", f"{int(days_total.get('in_app_purchase', 0) + days_total.get('store_subscription', 0)):,}")
+                st.metric(get_text('total_revenue_events_metric', st.session_state.language), f"{int(days_total.get('in_app_purchase', 0) + days_total.get('store_subscription', 0)):,}")
     
     # Add divider after the combined KPI section
     st.divider()
@@ -888,16 +888,6 @@ def render_dashboard(webhook_data, country_name=""):
                     st.error(f"⚠️ {insight}")
                 else:  # neutral
                     st.info(f"💡 {insight}")
-        
-        # Recommendations section (unified)
-        st.subheader(get_text('recommendations_header', st.session_state.language))
-        # Combine and deduplicate recommendations from both overall and recent insights
-        all_recommendations = set()
-        all_recommendations.update(split_insights['overall'].get('recommendations', []))
-        all_recommendations.update(split_insights['this_week'].get('recommendations', []))
-        
-        for recommendation in sorted(all_recommendations):
-            st.info(f"💡 {recommendation}")
     
     else:
         # Single period or no time series - use basic insights
@@ -909,10 +899,6 @@ def render_dashboard(webhook_data, country_name=""):
                 st.error(f"⚠️ {insight}")
             else:  # neutral
                 st.info(f"💡 {insight}")
-        
-        st.subheader(get_text('recommendations_header', st.session_state.language))
-        for recommendation in insights.get('recommendations', []):
-            st.info(f"💡 {recommendation}")
     
     st.divider()
     
