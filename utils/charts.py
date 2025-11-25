@@ -5,28 +5,22 @@ import pandas as pd
 from .translations import get_text
 
 class ChartGenerator:
-    """Generates interactive charts for the yoga app analytics dashboard.
-    
-    Field Descriptions (for hover templates and labels):
-    - first_open: New user opens app for the first time (unit: person/persons)
-    - app_remove: User uninstalls app (unit: person/persons)
-    - session_start: A session starts (unit: person/persons)
-    - app_open: User opens app again (unit: person/persons)
-    - login: User logs in (unit: person/persons)
-    - view_exercise: User views yoga exercise (unit: person/persons)
-    - health_survey: User finishes health survey (unit: person/persons)
-    - view_roadmap: User views recommended roadmap (unit: person/persons)
-    - practice_with_video: User practices with video (unit: person/persons)
-    - practice_with_ai: User practices with AI (unit: person/persons)
-    - chat_ai: User chats with AI (unit: person/persons)
-    - show_popup: Popup shows to user (unit: person/persons)
-    - view_detail_popup: User clicks on popup (unit: person/persons)
-    - close_popup: User closes popup without clicking (unit: person/persons)
-    - store_subscription: User views store package (unit: person/persons)
-    - in_app_purchase: User places order (unit: person/persons)
-    - avg_engage_time: Average engagement time per user (unit: seconds)
-    """
-    
+    """Generates interactive charts for the yoga app analytics dashboard."""
+    # Ghi chú (VI): Danh sách hàm sinh biểu đồ và ý nghĩa
+    # - create_feature_adoption_funnel: Biểu đồ phễu thể hiện mức độ sử dụng tính năng (xem bài tập → luyện video → luyện AI → chat AI)
+    # - create_user_funnel_analysis: Biểu đồ phễu phân tích chuyển đổi người dùng theo các bước sử dụng tính năng
+    # - create_time_series_chart: Biểu đồ chuỗi thời gian cho tất cả metric theo từng tuần
+    # - create_user_flow_trends_chart: Biểu đồ xu hướng người dùng mới vs rời bỏ theo thời gian
+    # - create_practice_trends_chart: Biểu đồ xu hướng luyện tập (video vs AI) theo thời gian
+    # - create_user_activity_comparison: So sánh hoạt động người dùng theo thời gian (người dùng mới, phiên hoạt động, tổng buổi luyện tập)
+    # - _create_user_activity_comparison_single: Phiên bản cột cho dữ liệu gộp 1 kỳ (không phải chuỗi thời gian)
+    # - create_feature_usage_chart: Biểu đồ thanh ngang về mức độ sử dụng các tính năng chính
+    # - create_ai_engagement_chart: Đồng hồ đo (gauge) thể hiện mức độ tương tác với AI
+    # - create_popup_performance_chart: Biểu đồ phễu hiệu suất popup (hiển thị → xem chi tiết → đóng)
+    # - create_engagement_score_radar: Radar điểm tương tác đa chiều (login, survey, nội dung, AI, popup, giữ chân)
+    # - create_user_journey_sankey: Sơ đồ Sankey mô tả hành trình người dùng qua các bước
+    # - create_churn_risk_indicator: Đồng hồ đo rủi ro rời bỏ dựa trên churn/retention
+
     def __init__(self):
         self.color_scheme = {
             'primary': '#4FD1C7',
