@@ -32,6 +32,43 @@ class ChartGenerator:
             'text': '#2D3748'
         }
     
+    def get_time_granularity(self, time_series_data):
+        """Determine if data should be displayed as daily or weekly.
+        
+        Returns:
+            tuple: (is_daily: bool, x_axis_label: str, period_count: int)
+        """
+        if not time_series_data:
+            return (True, 'Day', 0)
+        
+        period_count = len(time_series_data)
+        
+        # If 14 or fewer periods, assume daily and show as daily
+        # If more than 14 periods, aggregate to weekly
+        is_daily = period_count <= 14
+        x_axis_label = 'Day' if is_daily else 'Week'
+        
+        return (is_daily, x_axis_label, period_count)
+    
+    def get_y_axis_label(self, metric_type='count', language='en'):
+        """Get appropriate y-axis label based on metric type.
+        
+        Args:
+            metric_type: Type of metric ('count', 'time', 'percentage')
+            language: Language code
+        
+        Returns:
+            str: Y-axis label
+        """
+        if metric_type == 'count':
+            return get_text('persons', language)
+        elif metric_type == 'time':
+            return 'Time (seconds)'
+        elif metric_type == 'percentage':
+            return 'Percentage (%)'
+        else:
+            return get_text('persons', language)
+    
     def create_feature_adoption_funnel(self, data, language='en'):
         """Create a funnel chart showing feature adoption progression."""
         # Calculate funnel stages - from viewing to practicing
@@ -345,12 +382,16 @@ class ChartGenerator:
         )
     
     def create_time_series_chart(self, time_series_data, language='en'):
-        """Create a comprehensive time series chart showing all metrics over time."""
+        """Create a comprehensive time series chart showing all metrics over time.
+        Adapts between daily and weekly views based on data range."""
         if not time_series_data:
             return go.Figure()
         
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
         # Extract time labels and metrics
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         
         fig = go.Figure()
         
@@ -390,21 +431,32 @@ class ChartGenerator:
             'Popups Closed': ([item.get('close_popup', 0) for item in time_series_data], metric_colors[13])
         }
         
+        y_axis_label = self.get_y_axis_label('count', language)
+        
         for metric_name, (values, color) in metrics.items():
             fig.add_trace(go.Scatter(
-                x=weeks,
+                x=time_periods,
                 y=values,
                 mode='lines+markers',
                 name=metric_name,
                 line=dict(color=color, width=3, shape='spline'),
                 marker=dict(size=8, color=color),
-                hovertemplate=f'<b>{metric_name}</b><br>Week: %{{x}}<br>Count: %{{y}}<extra></extra>'
+                hovertemplate=f'<b>{metric_name}</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
             ))
+        
+        # Calculate tick interval to avoid label overlap
+        # Show fewer labels for larger datasets
+        if period_count > 30:
+            dtick = 7  # Show every 7th label for very large datasets
+        elif period_count > 14:
+            dtick = 3  # Show every 3rd label
+        else:
+            dtick = 1  # Show all labels for small datasets
         
         fig.update_layout(
             title=get_text('metrics_trends_title', language),
-            xaxis_title=get_text('week', language),
-            yaxis_title="Count",
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=600,  # Increased height for better visibility with more metrics
             hovermode='x unified',
             plot_bgcolor='rgba(0,0,0,0)',
@@ -418,6 +470,11 @@ class ChartGenerator:
                 bgcolor='rgba(255,255,255,0.8)',
                 bordercolor='rgba(0,0,0,0.2)',
                 borderwidth=1
+            ),
+            xaxis=dict(
+                tickangle=-45,  # Rotate labels 45 degrees
+                dtick=dtick,  # Show every nth tick
+                tickfont=dict(size=10)
             )
         )
         
@@ -428,41 +485,59 @@ class ChartGenerator:
         if not time_series_data:
             return go.Figure()
         
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         new_users = [item.get('first_open', 0) for item in time_series_data]
         churn = [item.get('app_remove', 0) for item in time_series_data]
+        
+        y_axis_label = self.get_y_axis_label('count', language)
         
         fig = go.Figure()
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=new_users,
             mode='lines+markers',
             name=get_text('new_users', language),
             line=dict(color=self.color_scheme['success'], width=3, shape='spline'),
             marker=dict(size=8),
             fill='tonexty',
-            hovertemplate='<b>New Users</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate=f'<b>New Users</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=churn,
             mode='lines+markers',
             name=get_text('churn', language),
             line=dict(color=self.color_scheme['error'], width=3, shape='spline'),
             marker=dict(size=8),
-            hovertemplate='<b>Churn</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate=f'<b>Churn</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
+        
+        # Calculate tick interval to avoid label overlap
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
         
         fig.update_layout(
             title=get_text('user_flow_trends_title', language),
-            xaxis_title="Time Period",
-            yaxis_title="Count",
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
+            )
         )
         
         return fig
@@ -472,42 +547,60 @@ class ChartGenerator:
         if not time_series_data:
             return go.Figure()
         
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         video_practice = [item.get('practice_with_video', 0) for item in time_series_data]
         ai_practice = [item.get('practice_with_ai', 0) for item in time_series_data]
+        
+        y_axis_label = self.get_y_axis_label('count', language)
         
         fig = go.Figure()
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=video_practice,
             mode='lines+markers',
             name=get_text('video_practice', language),
             line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
-            hovertemplate='<b>Video Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+            hovertemplate=f'<b>Video Practice</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=ai_practice,
             mode='lines+markers',
             name=get_text('ai_practice', language),
             line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
             marker=dict(size=8),
             stackgroup='one',
-            hovertemplate='<b>AI Practice</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+            hovertemplate=f'<b>AI Practice</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
+        
+        # Calculate tick interval to avoid label overlap
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
         
         fig.update_layout(
             title=get_text('practice_trends_title', language),
-            xaxis_title="Time Period",
-            yaxis_title="Practice Sessions",
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
+            )
         )
         
         return fig
@@ -518,51 +611,64 @@ class ChartGenerator:
             # Handle single data point case (aggregated data)
             return self._create_user_activity_comparison_single(time_series_data, language)
         
-        weeks = [item.get('time', f'Week {i+1}') for i, item in enumerate(time_series_data)]
+        # Determine granularity (daily vs weekly)
+        is_daily, time_label, period_count = self.get_time_granularity(time_series_data)
+        
+        time_periods = [item.get('time', f'{time_label} {i+1}') for i, item in enumerate(time_series_data)]
         new_users = [item.get('first_open', 0) for item in time_series_data]
         active_sessions = [item.get('session_start', 0) for item in time_series_data]
         total_practice = [(item.get('practice_with_video', 0) + item.get('practice_with_ai', 0)) 
                          for item in time_series_data]
         
+        y_axis_label = self.get_y_axis_label('count', language)
+        
         fig = go.Figure()
         
         # New Users line
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=new_users,
             mode='lines+markers',
             name=get_text('new_users', language),
             line=dict(color=self.color_scheme['primary'], width=3, shape='spline'),
             marker=dict(size=10, color=self.color_scheme['primary']),
-            hovertemplate='<b>' + get_text('new_users', language) + '</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate='<b>' + get_text('new_users', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         # Active Sessions line
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=active_sessions,
             mode='lines+markers',
             name=get_text('active_sessions', language),
             line=dict(color=self.color_scheme['secondary'], width=3, shape='spline'),
             marker=dict(size=10, color=self.color_scheme['secondary']),
-            hovertemplate='<b>' + get_text('active_sessions', language) + '</b><br>Week: %{x}<br>Count: %{y}<extra></extra>'
+            hovertemplate='<b>' + get_text('active_sessions', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
         
         # Total Practice line
         fig.add_trace(go.Scatter(
-            x=weeks,
+            x=time_periods,
             y=total_practice,
             mode='lines+markers',
             name=get_text('total_practice', language),
             line=dict(color=self.color_scheme['accent'], width=3, shape='spline'),
             marker=dict(size=10, color=self.color_scheme['accent']),
-            hovertemplate='<b>' + get_text('total_practice', language) + '</b><br>Week: %{x}<br>Sessions: %{y}<extra></extra>'
+            hovertemplate='<b>' + get_text('total_practice', language) + f'</b><br>{time_label}: %{{x}}<br>{y_axis_label}: %{{y}}<extra></extra>'
         ))
+        
+        # Calculate tick interval to avoid label overlap
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
         
         fig.update_layout(
             title=get_text('user_activity_comparison_title', language),
-            xaxis_title=get_text('week', language),
-            yaxis_title=get_text('count', language),
+            xaxis_title=get_text(time_label.lower(), language),
+            yaxis_title=y_axis_label,
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
@@ -573,6 +679,11 @@ class ChartGenerator:
                 y=1.02,
                 xanchor="right",
                 x=1
+            ),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
             )
         )
         
@@ -612,6 +723,84 @@ class ChartGenerator:
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)'
+        )
+        
+        return fig
+    
+    def create_engagement_time_trends(self, time_series_data, language='en'):
+        """Create a line chart showing average engagement time trends over time."""
+        if not time_series_data:
+            return go.Figure()
+        
+        # Prepare data
+        periods = [period.get('time', '') for period in time_series_data]
+        engagement_times = [period.get('avg_engage_time', 0) for period in time_series_data]
+        
+        # Convert seconds to minutes for better readability
+        engagement_minutes = [time / 60 for time in engagement_times]
+        
+        # Determine granularity
+        is_daily, x_axis_label, period_count = self.get_time_granularity(time_series_data)
+        
+        # Calculate smart label spacing
+        if period_count <= 14:
+            tickvals = list(range(len(periods)))
+            ticktext = periods
+        elif period_count <= 30:
+            # Show every 3rd label
+            tickvals = list(range(0, len(periods), 3))
+            ticktext = [periods[i] for i in tickvals]
+        else:
+            # Show every 7th label
+            tickvals = list(range(0, len(periods), 7))
+            ticktext = [periods[i] for i in tickvals]
+        
+        # Create figure
+        fig = go.Figure()
+        
+        # Add engagement time line
+        fig.add_trace(go.Scatter(
+            x=list(range(len(periods))),
+            y=engagement_minutes,
+            mode='lines+markers',
+            name='Avg. Engagement Time',
+            line=dict(color=self.color_scheme['primary'], width=3),
+            marker=dict(size=8, color=self.color_scheme['primary']),
+            hovertemplate='<b>%{text}</b><br>' +
+                         'Engagement: %{y:.1f} min<br>' +
+                         '<extra></extra>',
+            text=periods
+        ))
+        
+        # Add average line
+        avg_engagement = sum(engagement_minutes) / len(engagement_minutes) if engagement_minutes else 0
+        fig.add_hline(
+            y=avg_engagement,
+            line_dash="dash",
+            line_color=self.color_scheme['warning'],
+            annotation_text=f"Average: {avg_engagement:.1f} min",
+            annotation_position="right"
+        )
+        
+        fig.update_layout(
+            title='⏱️ Average Engagement Time Trends',
+            xaxis_title=x_axis_label,
+            yaxis_title='Time (minutes)',
+            height=400,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            hovermode='x unified',
+            xaxis=dict(
+                tickmode='array',
+                tickvals=tickvals,
+                ticktext=ticktext,
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            yaxis=dict(
+                gridcolor='rgba(200,200,200,0.2)'
+            ),
+            font=dict(family='Arial, sans-serif')
         )
         
         return fig
@@ -755,6 +944,199 @@ class ChartGenerator:
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font=dict(size=14)
+        )
+        
+        return fig
+    
+    def create_period_comparison_chart(self, current_data, compare_data, granularity, language='en'):
+        """Create a comprehensive period comparison bar chart.
+        
+        Args:
+            current_data: Current period data (list of records)
+            compare_data: Comparison period data (list of records)
+            granularity: 'day', 'week', or 'month'
+            language: Language code
+            
+        Returns:
+            Plotly figure with grouped bar comparison
+        """
+        if not current_data or not compare_data:
+            return go.Figure()
+        
+        metrics = {
+            'New Users': 'first_open',
+            'Sessions': 'session_start',
+            'App Opens': 'app_open',
+            'Video Practice': 'practice_with_video',
+            'AI Practice': 'practice_with_ai',
+            'AI Chat': 'chat_ai',
+            'Exercise Views': 'view_exercise',
+            'Health Surveys': 'health_survey'
+        }
+        
+        current_values = []
+        compare_values = []
+        changes = []
+        
+        for metric_name, metric_key in metrics.items():
+            current_val = sum(item.get(metric_key, 0) for item in current_data)
+            compare_val = sum(item.get(metric_key, 0) for item in compare_data)
+            
+            current_values.append(current_val)
+            compare_values.append(compare_val)
+            
+            if compare_val > 0:
+                change = ((current_val - compare_val) / compare_val) * 100
+            else:
+                change = 0 if current_val == 0 else 100
+            changes.append(change)
+        
+        fig = go.Figure()
+        
+        fig.add_trace(go.Bar(
+            name=get_text('current_period', language) if language == 'en' else 'Thời Kỳ Hiện Tại',
+            x=list(metrics.keys()),
+            y=current_values,
+            marker_color=self.color_scheme['primary'],
+            hovertemplate='<b>%{x}</b><br>Current: %{y:,}<extra></extra>'
+        ))
+        
+        fig.add_trace(go.Bar(
+            name=get_text('compare_to', language) if language == 'en' else 'So Sánh Với',
+            x=list(metrics.keys()),
+            y=compare_values,
+            marker_color=self.color_scheme['secondary'],
+            hovertemplate='<b>%{x}</b><br>Compare: %{y:,}<extra></extra>'
+        ))
+        
+        for i, (metric, change) in enumerate(zip(metrics.keys(), changes)):
+            max_val = max(current_values[i], compare_values[i])
+            fig.add_annotation(
+                x=metric,
+                y=max_val + (max_val * 0.05),
+                text=f"{change:+.1f}%",
+                showarrow=False,
+                font=dict(
+                    color=self.color_scheme['error'] if change < 0 else self.color_scheme['success'],
+                    size=11,
+                    family="Arial Black"
+                ),
+                bgcolor='rgba(255,255,255,0.8)',
+                bordercolor='rgba(0,0,0,0.2)',
+                borderwidth=1
+            )
+        
+        y_axis_label = self.get_y_axis_label('count', language)
+        
+        fig.update_layout(
+            title=f"{granularity.title()} {get_text('period_comparison', language) if language == 'en' else 'So Sánh Thời Kỳ'}",
+            xaxis_title=get_text('metrics', language) if language == 'en' else 'Chỉ Số',
+            yaxis_title=y_axis_label,
+            barmode='group',
+            height=500,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            xaxis=dict(
+                tickangle=-45,
+                tickfont=dict(size=10)
+            )
+        )
+        
+        return fig
+    
+    def create_comparison_trend_chart(self, current_data, compare_data, granularity, language='en'):
+        """Create a trend comparison line chart showing both periods over time.
+        
+        Args:
+            current_data: Current period data (list of records)
+            compare_data: Comparison period data (list of records)
+            granularity: 'day', 'week', or 'month'
+            language: Language code
+            
+        Returns:
+            Plotly figure with trend comparison
+        """
+        if not current_data or not compare_data:
+            return go.Figure()
+        
+        current_times = [item.get('time', '') for item in current_data]
+        compare_times = [item.get('time', '') for item in compare_data]
+        
+        metrics = {
+            'New Users': 'first_open',
+            'Sessions': 'session_start',
+            'Practice Sessions': 'practice_with_video'
+        }
+        
+        fig = go.Figure()
+        
+        colors = [self.color_scheme['primary'], self.color_scheme['accent'], self.color_scheme['success']]
+        
+        for idx, (metric_name, metric_key) in enumerate(metrics.items()):
+            current_values = [item.get(metric_key, 0) for item in current_data]
+            
+            fig.add_trace(go.Scatter(
+                x=list(range(len(current_times))),
+                y=current_values,
+                mode='lines+markers',
+                name=f'Current - {metric_name}',
+                line=dict(color=colors[idx], width=3),
+                marker=dict(size=8),
+                customdata=current_times,
+                hovertemplate=f'<b>Current {metric_name}</b><br>Time: %{{customdata}}<br>Value: %{{y:,}}<extra></extra>'
+            ))
+        
+        for idx, (metric_name, metric_key) in enumerate(metrics.items()):
+            compare_values = [item.get(metric_key, 0) for item in compare_data]
+            
+            fig.add_trace(go.Scatter(
+                x=list(range(len(compare_times))),
+                y=compare_values,
+                mode='lines+markers',
+                name=f'Compare - {metric_name}',
+                line=dict(color=colors[idx], width=3, dash='dash'),
+                marker=dict(size=8, symbol='diamond'),
+                customdata=compare_times,
+                hovertemplate=f'<b>Compare {metric_name}</b><br>Time: %{{customdata}}<br>Value: %{{y:,}}<extra></extra>'
+            ))
+        
+        period_count = max(len(current_data), len(compare_data))
+        if period_count > 30:
+            dtick = 7
+        elif period_count > 14:
+            dtick = 3
+        else:
+            dtick = 1
+        
+        y_axis_label = self.get_y_axis_label('count', language)
+        
+        fig.update_layout(
+            title=f"{granularity.title()} {get_text('trend_comparison', language) if language == 'en' else 'So Sánh Xu Hướng'}",
+            xaxis_title=get_text('period_index', language) if language == 'en' else 'Chỉ Số Thời Kỳ',
+            yaxis_title=y_axis_label,
+            height=500,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            hovermode='x unified',
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02
+            ),
+            xaxis=dict(
+                tickangle=-45,
+                dtick=dtick,
+                tickfont=dict(size=10)
+            )
         )
         
         return fig

@@ -331,6 +331,9 @@ with col2:
                                         st.rerun()
                                     else:
                                         st.error(get_text('invalid_data_format', st.session_state.language))
+                                        with st.expander("🔍 Debug: Show received data structure"):
+                                            st.json(data[:2] if len(data) > 2 else data)  # Show first 2 items only
+                                            st.info("Check if your data has 'time' field and required metrics fields")
                                 
                                 # Case 3: n8n array format (3 items, each is a country)
                                 elif len(data) == 3 and all(isinstance(item, dict) for item in data):
@@ -359,6 +362,9 @@ with col2:
                                         st.rerun()
                                     else:
                                         st.error(get_text('invalid_data_format', st.session_state.language))
+                                        with st.expander("🔍 Debug: Show received data structure"):
+                                            st.json(data[:2] if isinstance(data, list) and len(data) > 2 else data)
+                                            st.info("Your data format doesn't match expected format. Check the 'Expected Data Format' section below for the correct structure.")
                             else:
                                 # This might be single country data - use accumulator
                                 country = detect_country_from_data(data)
@@ -461,9 +467,19 @@ def render_dashboard(webhook_data, country_name=""):
             st.warning("No data available for the selected date range")
             filtered_periods = []
         
+        # Store daily data for Last Week Overview (before aggregation)
+        filtered_periods_daily = filtered_periods.copy()
+        
+        # Adaptive aggregation: If more than 14 days, aggregate to weekly for charts
+        if len(filtered_periods) > 14:
+            st.info(f"📊 Data range > 14 days detected. Automatically aggregating {len(filtered_periods)} days into weekly periods for better visualization.")
+            filtered_periods = processor.aggregate_to_weekly(filtered_periods)
+            st.success(f"✅ Aggregated to {len(filtered_periods)} weekly periods for charts")
+        
         st.divider()
     else:
         filtered_periods = all_periods
+        filtered_periods_daily = all_periods
     
     # Use filtered data for calculations
     aggregated_data = webhook_data.get('aggregated', {}) if not is_time_series else processor._aggregate_time_series_data(filtered_periods)
@@ -482,7 +498,7 @@ def render_dashboard(webhook_data, country_name=""):
         current_week_time = filtered_periods[-1].get('time', 'Current Week')
         previous_week_time = filtered_periods[-2].get('time', 'Previous Week')
         
-        # KPI Section
+        # Combined KPI & Weekly Metrics Section
         st.header(get_text('key_performance_header', st.session_state.language))
         st.info(get_text('latest_week', st.session_state.language, current=current_week_time, previous=previous_week_time))
     else:
@@ -490,8 +506,11 @@ def render_dashboard(webhook_data, country_name=""):
         key_performance_kpis = kpis
         key_performance_deltas = {}
         
-        # KPI Section
+        # Combined KPI & Weekly Metrics Section
         st.header(get_text('key_performance_header', st.session_state.language))
+    
+    # Subheader for Top 5 KPIs
+    st.subheader(get_text('kpi_overview_subheader', st.session_state.language))
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
@@ -536,6 +555,185 @@ def render_dashboard(webhook_data, country_name=""):
             delta=delta_val
         )
     
+    # Show All Metrics section - Show total metrics for last 7 days
+    # Always use daily data (not aggregated weekly) for this section
+    if is_time_series and len(filtered_periods_daily) >= 7:
+        st.markdown("---")  # Visual separator
+        st.subheader(get_text('all_metrics_subheader', st.session_state.language))
+        
+        # Get last 7 days of data from daily data
+        last_7_days = processor.get_last_n_days(filtered_periods_daily, n=7)
+        
+        # Aggregate the 7 days
+        last_week_total = {}
+        for field in processor.required_fields + processor.optional_fields:
+            if field == 'time':
+                last_week_total[field] = f"{last_7_days[0].get('time', '')} - {last_7_days[-1].get('time', '')}"
+            elif field == 'avg_engage_time':
+                # Average engagement time
+                values = [day.get(field, 0) for day in last_7_days if day.get(field, 0) > 0]
+                last_week_total[field] = sum(values) / len(values) if values else 0
+            else:
+                # Sum all other fields
+                last_week_total[field] = sum(day.get(field, 0) for day in last_7_days)
+        
+        # Display metrics grouped by category with containers and borders
+        
+        # User Activity Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('user_activity_group', st.session_state.language)}")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric(get_text('new_users_metric', st.session_state.language), f"{int(last_week_total.get('first_open', 0)):,}")
+            with col2:
+                st.metric(get_text('sessions_metric', st.session_state.language), f"{int(last_week_total.get('session_start', 0)):,}")
+            with col3:
+                st.metric(get_text('app_opens_metric', st.session_state.language), f"{int(last_week_total.get('app_open', 0)):,}")
+            with col4:
+                st.metric(get_text('logins_metric', st.session_state.language), f"{int(last_week_total.get('login', 0)):,}")
+            with col5:
+                st.metric(get_text('uninstalls_metric', st.session_state.language), f"{int(last_week_total.get('app_remove', 0)):,}")
+        
+        # Practice & Engagement Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('practice_engagement_group', st.session_state.language)}")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric(get_text('exercise_views_metric', st.session_state.language), f"{int(last_week_total.get('view_exercise', 0)):,}")
+            with col2:
+                st.metric(get_text('video_practice_metric', st.session_state.language), f"{int(last_week_total.get('practice_with_video', 0)):,}")
+            with col3:
+                st.metric(get_text('ai_practice_metric', st.session_state.language), f"{int(last_week_total.get('practice_with_ai', 0)):,}")
+            with col4:
+                st.metric(get_text('ai_chat_metric', st.session_state.language), f"{int(last_week_total.get('chat_ai', 0)):,}")
+            with col5:
+                avg_time_formatted = processor.format_engagement_time(last_week_total.get('avg_engage_time', 0))
+                st.metric(get_text('avg_engagement_metric', st.session_state.language), avg_time_formatted)
+        
+        # Features & Content Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('features_content_group', st.session_state.language)}")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(get_text('health_surveys_metric', st.session_state.language), f"{int(last_week_total.get('health_survey', 0)):,}")
+            with col2:
+                st.metric(get_text('roadmap_views_metric', st.session_state.language), f"{int(last_week_total.get('view_roadmap', 0)):,}")
+            with col3:
+                st.metric(get_text('store_views_metric', st.session_state.language), f"{int(last_week_total.get('store_subscription', 0)):,}")
+        
+        # Popup Performance Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric(get_text('shown_metric', st.session_state.language), f"{int(last_week_total.get('show_popup', 0)):,}")
+            with col2:
+                st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(last_week_total.get('view_detail_popup', 0)):,}")
+            with col3:
+                st.metric(get_text('closed_metric', st.session_state.language), f"{int(last_week_total.get('close_popup', 0)):,}")
+            with col4:
+                popup_ctr = (last_week_total.get('view_detail_popup', 0) / last_week_total.get('show_popup', 1)) * 100 if last_week_total.get('show_popup', 0) > 0 else 0
+                st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
+        
+        # Monetization Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('monetization_group', st.session_state.language)}")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(get_text('in_app_purchases_metric', st.session_state.language), f"{int(last_week_total.get('in_app_purchase', 0)):,}")
+            with col2:
+                conversion_rate = (last_week_total.get('in_app_purchase', 0) / last_week_total.get('store_subscription', 1)) * 100 if last_week_total.get('store_subscription', 0) > 0 else 0
+                st.metric(get_text('conversion_rate_metric', st.session_state.language), f"{conversion_rate:.1f}%")
+            with col3:
+                st.metric(get_text('total_revenue_events_metric', st.session_state.language), f"{int(last_week_total.get('in_app_purchase', 0) + last_week_total.get('store_subscription', 0)):,}")
+    
+    elif is_time_series and len(filtered_periods_daily) > 0:
+        # If less than 7 days, show what we have with same beautiful design
+        st.markdown("---")  # Visual separator
+        st.subheader(get_text('all_metrics_subheader', st.session_state.language))
+        st.info(get_text('showing_n_days_info', st.session_state.language).format(days=len(filtered_periods_daily)))
+        
+        # Aggregate available days from daily data
+        available_days = filtered_periods_daily
+        days_total = {}
+        for field in processor.required_fields + processor.optional_fields:
+            if field == 'time':
+                days_total[field] = f"{available_days[0].get('time', '')} - {available_days[-1].get('time', '')}"
+            elif field == 'avg_engage_time':
+                values = [day.get(field, 0) for day in available_days if day.get(field, 0) > 0]
+                days_total[field] = sum(values) / len(values) if values else 0
+            else:
+                days_total[field] = sum(day.get(field, 0) for day in available_days)
+        
+        # User Activity Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('user_activity_group', st.session_state.language)}")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric(get_text('new_users_metric', st.session_state.language), f"{int(days_total.get('first_open', 0)):,}")
+            with col2:
+                st.metric(get_text('sessions_metric', st.session_state.language), f"{int(days_total.get('session_start', 0)):,}")
+            with col3:
+                st.metric(get_text('app_opens_metric', st.session_state.language), f"{int(days_total.get('app_open', 0)):,}")
+            with col4:
+                st.metric(get_text('logins_metric', st.session_state.language), f"{int(days_total.get('login', 0)):,}")
+            with col5:
+                st.metric(get_text('uninstalls_metric', st.session_state.language), f"{int(days_total.get('app_remove', 0)):,}")
+        
+        # Practice & Engagement Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('practice_engagement_group', st.session_state.language)}")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric(get_text('exercise_views_metric', st.session_state.language), f"{int(days_total.get('view_exercise', 0)):,}")
+            with col2:
+                st.metric(get_text('video_practice_metric', st.session_state.language), f"{int(days_total.get('practice_with_video', 0)):,}")
+            with col3:
+                st.metric(get_text('ai_practice_metric', st.session_state.language), f"{int(days_total.get('practice_with_ai', 0)):,}")
+            with col4:
+                st.metric(get_text('ai_chat_metric', st.session_state.language), f"{int(days_total.get('chat_ai', 0)):,}")
+            with col5:
+                avg_time_formatted = processor.format_engagement_time(days_total.get('avg_engage_time', 0))
+                st.metric(get_text('avg_engagement_metric', st.session_state.language), avg_time_formatted)
+        
+        # Features & Content Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('features_content_group', st.session_state.language)}")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(get_text('health_surveys_metric', st.session_state.language), f"{int(days_total.get('health_survey', 0)):,}")
+            with col2:
+                st.metric(get_text('roadmap_views_metric', st.session_state.language), f"{int(days_total.get('view_roadmap', 0)):,}")
+            with col3:
+                st.metric(get_text('store_views_metric', st.session_state.language), f"{int(days_total.get('store_subscription', 0)):,}")
+        
+        # Popup Performance Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric(get_text('shown_metric', st.session_state.language), f"{int(days_total.get('show_popup', 0)):,}")
+            with col2:
+                st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(days_total.get('view_detail_popup', 0)):,}")
+            with col3:
+                st.metric(get_text('closed_metric', st.session_state.language), f"{int(days_total.get('close_popup', 0)):,}")
+            with col4:
+                popup_ctr = (days_total.get('view_detail_popup', 0) / days_total.get('show_popup', 1)) * 100 if days_total.get('show_popup', 0) > 0 else 0
+                st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
+        
+        # Monetization Group
+        with st.container(border=True):
+            st.markdown(f"##### {get_text('monetization_group', st.session_state.language)}")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(get_text('in_app_purchases_metric', st.session_state.language), f"{int(days_total.get('in_app_purchase', 0)):,}")
+            with col2:
+                conversion_rate = (days_total.get('in_app_purchase', 0) / days_total.get('store_subscription', 1)) * 100 if days_total.get('store_subscription', 0) > 0 else 0
+                st.metric(get_text('conversion_rate_metric', st.session_state.language), f"{conversion_rate:.1f}%")
+            with col3:
+                st.metric(get_text('total_revenue_events_metric', st.session_state.language), f"{int(days_total.get('in_app_purchase', 0) + days_total.get('store_subscription', 0)):,}")
+    
+    # Add divider after the combined KPI section
     st.divider()
     
     # Charts Section
@@ -601,9 +799,9 @@ def render_dashboard(webhook_data, country_name=""):
         st.plotly_chart(feature_funnel_chart, use_container_width=True, key=f"{chart_key_prefix}feature_funnel")
     
     with col2:
-        st.subheader(get_text('user_funnel_analysis_title', st.session_state.language))
-        funnel_chart = chart_gen.create_user_funnel_analysis(aggregated_data, st.session_state.language)
-        st.plotly_chart(funnel_chart, use_container_width=True, key=f"{chart_key_prefix}user_funnel")
+        st.subheader("⏱️ Average Engagement Time Trends")
+        engagement_chart = chart_gen.create_engagement_time_trends(filtered_periods, st.session_state.language)
+        st.plotly_chart(engagement_chart, use_container_width=True, key=f"{chart_key_prefix}engagement_trends")
     
     # Feature Analysis
     col1, col2 = st.columns(2)
@@ -690,16 +888,6 @@ def render_dashboard(webhook_data, country_name=""):
                     st.error(f"⚠️ {insight}")
                 else:  # neutral
                     st.info(f"💡 {insight}")
-        
-        # Recommendations section (unified)
-        st.subheader(get_text('recommendations_header', st.session_state.language))
-        # Combine and deduplicate recommendations from both overall and recent insights
-        all_recommendations = set()
-        all_recommendations.update(split_insights['overall'].get('recommendations', []))
-        all_recommendations.update(split_insights['this_week'].get('recommendations', []))
-        
-        for recommendation in sorted(all_recommendations):
-            st.info(f"💡 {recommendation}")
     
     else:
         # Single period or no time series - use basic insights
@@ -711,10 +899,6 @@ def render_dashboard(webhook_data, country_name=""):
                 st.error(f"⚠️ {insight}")
             else:  # neutral
                 st.info(f"💡 {insight}")
-        
-        st.subheader(get_text('recommendations_header', st.session_state.language))
-        for recommendation in insights.get('recommendations', []):
-            st.info(f"💡 {recommendation}")
     
     st.divider()
     
@@ -830,11 +1014,341 @@ if st.session_state.data:
         
         st.divider()
         
-        # Render dashboard for selected country
-        if selected_country in countries_data:
-            render_dashboard(countries_data[selected_country], selected_country)
-        else:
-            st.error(f"❌ Không có dữ liệu cho {selected_display}")
+        # Create tabs for Analytics and Comparison
+        tab1, tab2 = st.tabs(["📊 Analytics", "📈 Comparison"])
+        
+        with tab1:
+            # Render dashboard for selected country
+            if selected_country in countries_data:
+                render_dashboard(countries_data[selected_country], selected_country)
+            else:
+                st.error(f"❌ Không có dữ liệu cho {selected_display}")
+        
+        with tab2:
+            st.header(f"📈 {get_text('period_comparison', st.session_state.language)}")
+            st.markdown(f"*{get_text('compare_by', st.session_state.language)} Day/Week/Month*")
+            
+            if selected_country in countries_data:
+                webhook_data = countries_data[selected_country]
+                all_periods = webhook_data.get('data', [])
+                
+                if all_periods and len(all_periods) > 0:
+                    from utils.date_filter import DateRangeFilter
+                    
+                    # Granularity selector
+                    main_filter = DateRangeFilter(key_prefix="comparison_main_", data=all_periods)
+                    granularity = main_filter.get_granularity_selector()
+                    
+                    st.markdown("---")
+                    
+                    # Date range controls (UI adapts to granularity)
+                    date_filter = DateRangeFilter(key_prefix="comparison_", data=all_periods)
+                    current_range, compare_range = date_filter.render_comparison_controls(granularity)
+                    
+                    st.markdown("---")
+                    
+                    # Filter and aggregate data
+                    from utils.data_processor import DataProcessor
+                    from utils.charts import ChartGenerator
+                    
+                    processor = DataProcessor()
+                    chart_gen = ChartGenerator()
+                    
+                    # Filter data manually based on the returned date ranges
+                    current_start, current_end = current_range
+                    compare_start, compare_end = compare_range
+                    
+                    # Filter current period data
+                    current_filtered = []
+                    for item in all_periods:
+                        try:
+                            item_date = datetime.strptime(item.get('time', ''), '%d/%m/%Y').date()
+                            if current_start <= item_date <= current_end:
+                                current_filtered.append(item)
+                        except (ValueError, TypeError):
+                            continue
+                    
+                    # Filter comparison period data
+                    compare_filtered = []
+                    for item in all_periods:
+                        try:
+                            item_date = datetime.strptime(item.get('time', ''), '%d/%m/%Y').date()
+                            if compare_start <= item_date <= compare_end:
+                                compare_filtered.append(item)
+                        except (ValueError, TypeError):
+                            continue
+                    
+                    if current_filtered and compare_filtered:
+                        # Aggregate by granularity
+                        current_aggregated = processor.aggregate_by_granularity(current_filtered, granularity)
+                        compare_aggregated = processor.aggregate_by_granularity(compare_filtered, granularity)
+                        
+                        # Display Period Comparison chart (full width)
+                        st.subheader(f"📊 {get_text('period_comparison', st.session_state.language)}")
+                        comparison_chart = chart_gen.create_period_comparison_chart(
+                            current_aggregated,
+                            compare_aggregated,
+                            granularity,
+                            st.session_state.language
+                        )
+                        st.plotly_chart(comparison_chart, use_container_width=True)
+                        
+                        # Summary metrics
+                        st.subheader(f"📋 {get_text('comparison_summary', st.session_state.language)}")
+                        
+                        comparison_metrics = processor.calculate_period_comparison(current_aggregated, compare_aggregated)
+                        
+                        # Top 4 KPIs in columns
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            new_users = comparison_metrics.get('first_open', {})
+                            st.metric(
+                                "New Users",
+                                f"{new_users.get('current', 0):,.0f}",
+                                f"{new_users.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        with col2:
+                            sessions = comparison_metrics.get('session_start', {})
+                            st.metric(
+                                "Sessions",
+                                f"{sessions.get('current', 0):,.0f}",
+                                f"{sessions.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        with col3:
+                            practice = comparison_metrics.get('practice_with_video', {})
+                            st.metric(
+                                "Video Practice",
+                                f"{practice.get('current', 0):,.0f}",
+                                f"{practice.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        with col4:
+                            ai_practice = comparison_metrics.get('practice_with_ai', {})
+                            st.metric(
+                                "AI Practice",
+                                f"{ai_practice.get('current', 0):,.0f}",
+                                f"{ai_practice.get('change_pct', 0):+.1f}%"
+                            )
+                        
+                        st.markdown("---")
+                        
+                        # Detailed Metrics Comparison Table (grouped by categories)
+                        st.subheader(f"📊 {get_text('detailed_metrics_comparison', st.session_state.language)}")
+                        
+                        # User Activity Group
+                        with st.container(border=True):
+                            st.markdown("##### 👥 User Activity")
+                            col1, col2, col3, col4, col5 = st.columns(5)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('first_open', {})
+                                st.metric(
+                                    "New Users",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('session_start', {})
+                                st.metric(
+                                    "Sessions",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('app_open', {})
+                                st.metric(
+                                    "App Opens",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                metric_data = comparison_metrics.get('login', {})
+                                st.metric(
+                                    "Logins",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col5:
+                                metric_data = comparison_metrics.get('app_remove', {})
+                                st.metric(
+                                    "Uninstalls",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%",
+                                    delta_color="inverse"
+                                )
+                        
+                        # Practice & Engagement Group
+                        with st.container(border=True):
+                            st.markdown("##### 🏃‍♀️ Practice & Engagement")
+                            col1, col2, col3, col4, col5 = st.columns(5)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('view_exercise', {})
+                                st.metric(
+                                    "Exercise Views",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('practice_with_video', {})
+                                st.metric(
+                                    "Video Practice",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('practice_with_ai', {})
+                                st.metric(
+                                    "AI Practice",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                metric_data = comparison_metrics.get('chat_ai', {})
+                                st.metric(
+                                    "AI Chat",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col5:
+                                metric_data = comparison_metrics.get('avg_engage_time', {})
+                                current_time_formatted = processor.format_engagement_time(metric_data.get('current', 0))
+                                st.metric(
+                                    "Avg. Engagement",
+                                    current_time_formatted,
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                        
+                        # Features & Content Group
+                        with st.container(border=True):
+                            st.markdown("##### 🎯 Features & Content")
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('health_survey', {})
+                                st.metric(
+                                    "Health Surveys",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('view_roadmap', {})
+                                st.metric(
+                                    "Roadmap Views",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('store_subscription', {})
+                                st.metric(
+                                    "Store Views",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                        
+                        # Popup Performance Group
+                        with st.container(border=True):
+                            st.markdown("##### 💬 Popup Performance")
+                            col1, col2, col3, col4 = st.columns(4)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('show_popup', {})
+                                st.metric(
+                                    "Shown",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                metric_data = comparison_metrics.get('view_detail_popup', {})
+                                st.metric(
+                                    "Details Viewed",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('close_popup', {})
+                                st.metric(
+                                    "Closed",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col4:
+                                # Calculate CTR for current and compare periods
+                                show_current = comparison_metrics.get('show_popup', {}).get('current', 0)
+                                view_current = comparison_metrics.get('view_detail_popup', {}).get('current', 0)
+                                ctr_current = (view_current / show_current * 100) if show_current > 0 else 0
+                                
+                                show_compare = comparison_metrics.get('show_popup', {}).get('compare', 0)
+                                view_compare = comparison_metrics.get('view_detail_popup', {}).get('compare', 0)
+                                ctr_compare = (view_compare / show_compare * 100) if show_compare > 0 else 0
+                                
+                                ctr_change = ctr_current - ctr_compare
+                                st.metric(
+                                    "CTR",
+                                    f"{ctr_current:.1f}%",
+                                    f"{ctr_change:+.1f}pp"
+                                )
+                        
+                        # Monetization Group
+                        with st.container(border=True):
+                            st.markdown("##### 💰 Monetization")
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                metric_data = comparison_metrics.get('in_app_purchase', {})
+                                st.metric(
+                                    "In-App Purchases",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                            
+                            with col2:
+                                # Calculate Conversion Rate for current and compare periods
+                                purchases_current = comparison_metrics.get('in_app_purchase', {}).get('current', 0)
+                                users_current = comparison_metrics.get('first_open', {}).get('current', 0)
+                                conv_current = (purchases_current / users_current * 100) if users_current > 0 else 0
+                                
+                                purchases_compare = comparison_metrics.get('in_app_purchase', {}).get('compare', 0)
+                                users_compare = comparison_metrics.get('first_open', {}).get('compare', 0)
+                                conv_compare = (purchases_compare / users_compare * 100) if users_compare > 0 else 0
+                                
+                                conv_change = conv_current - conv_compare
+                                st.metric(
+                                    "Conversion Rate",
+                                    f"{conv_current:.2f}%",
+                                    f"{conv_change:+.2f}pp"
+                                )
+                            
+                            with col3:
+                                metric_data = comparison_metrics.get('total_revenue_events', {})
+                                st.metric(
+                                    "Revenue Events",
+                                    f"{metric_data.get('current', 0):,.0f}",
+                                    f"{metric_data.get('change_pct', 0):+.1f}%"
+                                )
+                        
+                    else:
+                        st.warning("⚠️ Please ensure both current and comparison periods have valid data.")
+                else:
+                    st.warning("⚠️ No data available for comparison. Please fetch data first.")
+            else:
+                st.error("❌ Selected country data not found.")
     
     else:
         # Legacy format - render single dashboard

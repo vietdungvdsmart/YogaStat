@@ -38,14 +38,17 @@ TRANSLATIONS = {
         'preview_weeks': '📊 Preview: {count} week(s) will be included',
         'no_weeks_match': '⚠️ No weeks match this date range',
         
-        # KPI section
-        'key_performance_header': '📊 Last Week Overview',
+        # KPI section (combined with Last Week Overview)
+        'key_performance_header': '📊 Key Performance Indicators & Weekly Metrics',
+        'kpi_overview_subheader': '🎯 Top 5 KPIs',
+        'all_metrics_subheader': '📋 All Metrics (Last 7 Days)',
         'latest_week': '📅 Latest Week: {current} (vs Previous Week: {previous})',
         'total_new_users': '👥 Total New Users',
         'user_retention_rate': '🔄 User Retention Rate',
         'churn_rate': '📉 Churn Rate',
         'active_sessions': '🎯 Active Sessions',
         'engagement_rate': '💪 Engagement Rate',
+        'avg_engagement_time': '⏱️ Avg. Engagement Time',
         
         # Country analytics
         'analytics': 'Analytics',
@@ -120,6 +123,39 @@ TRANSLATIONS = {
         'recommendations_header': '🚀 Recommendations',
         'key_insights_header': '🎯 Key Insights',
         
+        # All Metrics (Last 7 Days) section labels
+        'user_activity_group': '👥 User Activity',
+        'new_users_metric': 'New Users',
+        'sessions_metric': 'Sessions',
+        'app_opens_metric': 'App Opens',
+        'logins_metric': 'Logins',
+        'uninstalls_metric': 'Uninstalls',
+        
+        'practice_engagement_group': '🏃‍♀️ Practice & Engagement',
+        'exercise_views_metric': 'Exercise Views',
+        'video_practice_metric': 'Video Practice',
+        'ai_practice_metric': 'AI Practice',
+        'ai_chat_metric': 'AI Chat',
+        'avg_engagement_metric': 'Avg. Engagement',
+        
+        'features_content_group': '🎯 Features & Content',
+        'health_surveys_metric': 'Health Surveys',
+        'roadmap_views_metric': 'Roadmap Views',
+        'store_views_metric': 'Store Views',
+        
+        'popup_performance_group': '💬 Popup Performance',
+        'shown_metric': 'Shown',
+        'details_viewed_metric': 'Details Viewed',
+        'closed_metric': 'Closed',
+        'ctr_metric': 'CTR',
+        
+        'monetization_group': '💰 Monetization',
+        'in_app_purchases_metric': 'In-App Purchases',
+        'conversion_rate_metric': 'Conversion Rate',
+        'total_revenue_events_metric': 'Total Revenue Events',
+        
+        'showing_n_days_info': '📊 Showing data for {days} day(s). Need at least 7 days for full weekly overview.',
+        
         # Feature adoption (now changed to performance)
         'feature_adoption_header': '📊 Feature Performance Analysis',
         'most_used_features': '**🏆 Most Used Features:**',
@@ -171,6 +207,10 @@ TRANSLATIONS = {
         'popups_shown': 'Popups Shown',
         'popups_viewed': 'Popups Viewed',
         'interaction_rate': 'Interaction Rate',
+        'day': 'Day',
+        'date': 'Date',
+        'person': 'person',
+        'persons': 'persons',
         
         # Insights content
         'retention_excellent': 'Excellent user retention rate of {rate:.1%} - significantly higher than industry average',
@@ -223,7 +263,26 @@ TRANSLATIONS = {
         # Export buttons
         'export_kpis': '📈 Export KPIs (JSON)',
         'download_kpis': 'Download KPIs',
-        'export_insights_txt': '🧠 Export Insights (TXT)'
+        'export_insights_txt': '🧠 Export Insights (TXT)',
+        
+        # Comparison Tab
+        'comparison_tab_title': 'Period Comparison',
+        'compare_by': 'Compare by:',
+        'current_period': 'Current Period',
+        'compare_to': 'Compare To',
+        'generate_comparison': 'Generate Comparison Analysis',
+        'period_comparison': 'Period Comparison',
+        'trend_comparison': 'Trend Comparison',
+        'comparison_summary': 'Comparison Summary',
+        'detailed_metrics_comparison': 'Detailed Metrics Comparison',
+        'change_abs': 'Change (Absolute)',
+        'metrics': 'Metrics',
+        'period_index': 'Period Index',
+        'change_percent': 'Change %',
+        'current': 'Current',
+        'compare': 'Compare',
+        'select_week': 'Select week:',
+        'select_month': 'Select month:'
     },
     
     'vi': {
@@ -263,14 +322,17 @@ TRANSLATIONS = {
         'preview_weeks': '📊 Xem trước: {count} tuần sẽ được bao gồm',
         'no_weeks_match': '⚠️ Không có tuần nào khớp với khoảng thời gian này',
         
-        # KPI section
-        'key_performance_header': '📊 Tổng Quan Tuần Trước',
+        # KPI section (combined with Last Week Overview)
+        'key_performance_header': '📊 Chỉ Số Hiệu Suất Chính & Số Liệu Tuần',
+        'kpi_overview_subheader': '🎯 Top 5 KPI',
+        'all_metrics_subheader': '📋 Tất Cả Số Liệu (7 Ngày Qua)',
         'latest_week': '📅 Tuần Mới Nhất: {current} (so với Tuần Trước: {previous})',
         'total_new_users': '👥 Tổng Người Dùng Mới',
         'user_retention_rate': '🔄 Tỷ Lệ Giữ Chân Người Dùng',
         'churn_rate': '📉 Tỷ Lệ Rời Bỏ',
         'active_sessions': '🎯 Phiên Hoạt Động',
         'engagement_rate': '💪 Tỷ Lệ Tương Tác',
+        'avg_engagement_time': '⏱️ Thời Gian Tương Tác TB',
         
         # Country analytics
         'analytics': 'Phân Tích',
@@ -345,6 +407,39 @@ TRANSLATIONS = {
         'recommendations_header': '🚀 Khuyến Nghị',
         'key_insights_header': '🎯 Thông Tin Chính',
         
+        # All Metrics (Last 7 Days) section labels
+        'user_activity_group': '👥 Hoạt Động Người Dùng',
+        'new_users_metric': 'Người Dùng Mới',
+        'sessions_metric': 'Phiên',
+        'app_opens_metric': 'Mở Ứng Dụng',
+        'logins_metric': 'Đăng Nhập',
+        'uninstalls_metric': 'Gỡ Cài Đặt',
+        
+        'practice_engagement_group': '🏃‍♀️ Luyện Tập & Tương Tác',
+        'exercise_views_metric': 'Lượt Xem Bài Tập',
+        'video_practice_metric': 'Luyện Tập Video',
+        'ai_practice_metric': 'Luyện Tập AI',
+        'ai_chat_metric': 'Chat AI',
+        'avg_engagement_metric': 'Tương Tác TB',
+        
+        'features_content_group': '🎯 Tính Năng & Nội Dung',
+        'health_surveys_metric': 'Khảo Sát Sức Khỏe',
+        'roadmap_views_metric': 'Lượt Xem Lộ Trình',
+        'store_views_metric': 'Lượt Xem Cửa Hàng',
+        
+        'popup_performance_group': '💬 Hiệu Suất Popup',
+        'shown_metric': 'Hiển Thị',
+        'details_viewed_metric': 'Xem Chi Tiết',
+        'closed_metric': 'Đóng',
+        'ctr_metric': 'CTR',
+        
+        'monetization_group': '💰 Kiếm Tiền',
+        'in_app_purchases_metric': 'Mua Trong Ứng Dụng',
+        'conversion_rate_metric': 'Tỷ Lệ Chuyển Đổi',
+        'total_revenue_events_metric': 'Tổng Sự Kiện Doanh Thu',
+        
+        'showing_n_days_info': '📊 Hiển thị dữ liệu cho {days} ngày. Cần ít nhất 7 ngày để có tổng quan đầy đủ theo tuần.',
+        
         # Feature adoption (now changed to performance)
         'feature_adoption_header': '📊 Phân Tích Hiệu Suất Tính Năng',
         'most_used_features': '**🏆 Tính Năng Được Sử Dụng Nhiều Nhất:**',
@@ -396,6 +491,10 @@ TRANSLATIONS = {
         'popups_shown': 'Popup Hiển Thị',
         'popups_viewed': 'Popup Được Xem',
         'interaction_rate': 'Tỷ Lệ Tương Tác',
+        'day': 'Ngày',
+        'date': 'Ngày Tháng',
+        'person': 'người',
+        'persons': 'người',
         
         # Feature Performance (changed from adoption)
         'feature_performance_header': '📊 Phân Tích Hiệu Suất Tính Năng',
@@ -412,7 +511,26 @@ TRANSLATIONS = {
         # Export buttons
         'export_kpis': '📈 Xuất KPIs (JSON)',
         'download_kpis': 'Tải KPIs',
-        'export_insights_txt': '🧠 Xuất Thông Tin Chi Tiết (TXT)'
+        'export_insights_txt': '🧠 Xuất Thông Tin Chi Tiết (TXT)',
+        
+        # Comparison Tab
+        'comparison_tab_title': 'So Sánh Thời Kỳ',
+        'compare_by': 'So sánh theo:',
+        'current_period': 'Thời Kỳ Hiện Tại',
+        'compare_to': 'So Sánh Với',
+        'generate_comparison': 'Tạo Phân Tích So Sánh',
+        'period_comparison': 'So Sánh Thời Kỳ',
+        'trend_comparison': 'So Sánh Xu Hướng',
+        'comparison_summary': 'Tóm Tắt So Sánh',
+        'detailed_metrics_comparison': 'So Sánh Chi Tiết Các Chỉ Số',
+        'change_abs': 'Thay Đổi Tuyệt Đối',
+        'metrics': 'Chỉ Số',
+        'period_index': 'Chỉ Số Thời Kỳ',
+        'change_percent': 'Thay Đổi %',
+        'current': 'Hiện Tại',
+        'compare': 'So Sánh',
+        'select_week': 'Chọn tuần:',
+        'select_month': 'Chọn tháng:'
     }
 }
 
