@@ -7,7 +7,7 @@ import re
 class DataProcessor:
     """Handles data processing, validation, and KPI calculations for yoga app analytics.
     
-    Field Descriptions (all metrics use unit 'person' except avg_engage_time):
+    Field Descriptions (all metrics use unit 'users' except avg_engage_time):
     - first_open: New user opens app for the first time
     - app_remove: User uninstalls app
     - session_start: A session starts
@@ -25,6 +25,11 @@ class DataProcessor:
     - store_subscription: User views package in the store
     - in_app_purchase: User placing order (not real order yet)
     - avg_engage_time: Average engagement time per user (in seconds)
+    - notification_receive: Number of notifications delivered
+    - notification_open: Users who opened a notification
+    - notification_dismiss: Users who dismissed notification without opening
+    - click_banner: Users who clicked an in-app banner
+    - click_notification: Users who tapped the notification CTA
     """
     
     def __init__(self):
@@ -37,7 +42,14 @@ class DataProcessor:
         
         # Additional optional fields
         self.optional_fields = [
-            'store_subscription', 'in_app_purchase', 'avg_engage_time'
+            'store_subscription',
+            'in_app_purchase',
+            'avg_engage_time',
+            'notification_receive',
+            'notification_open',
+            'notification_dismiss',
+            'click_banner',
+            'click_notification'
         ]
         
         # Field normalization mapping
@@ -378,6 +390,28 @@ class DataProcessor:
             metrics['close_rate'] = metrics['total_closed'] / metrics['total_shown']
         else:
             metrics['close_rate'] = 0
+        
+        return metrics
+
+    def calculate_notification_metrics(self, data):
+        """Calculate notification and messaging performance metrics."""
+        metrics = {
+            'notification_receive': int(data.get('notification_receive', 0)),
+            'notification_open': int(data.get('notification_open', 0)),
+            'notification_dismiss': int(data.get('notification_dismiss', 0)),
+            'click_banner': int(data.get('click_banner', 0)),
+            'click_notification': int(data.get('click_notification', 0))
+        }
+        
+        received = metrics['notification_receive'] or 0
+        opens = metrics['notification_open'] or 0
+        dismiss = metrics['notification_dismiss'] or 0
+        clicks = metrics['click_notification'] or 0
+        
+        metrics['open_rate'] = opens / received if received > 0 else 0
+        metrics['dismiss_rate'] = dismiss / received if received > 0 else 0
+        metrics['click_through_rate'] = clicks / received if received > 0 else 0
+        metrics['banner_clicks'] = metrics['click_banner']
         
         return metrics
     

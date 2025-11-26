@@ -184,7 +184,7 @@ class DateRangeFilter:
             with col3:
                 if selected_preset == "Custom":
                     # Apply button for custom range
-                    if st.button("Apply", key=f"{self.key_prefix}apply_btn", type="primary", use_container_width=True):
+                    if st.button("Apply", key=f"{self.key_prefix}apply_btn", type="primary", width="stretch"):
                         start = st.session_state[f"{self.key_prefix}custom_start"]
                         end = st.session_state[f"{self.key_prefix}custom_end"]
                         st.session_state[f"{self.key_prefix}applied_range"] = (start, end)

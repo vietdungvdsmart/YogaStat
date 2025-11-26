@@ -282,6 +282,53 @@ class ChartGenerator:
         )
         
         return fig
+
+    def create_notification_performance_chart(self, data, language='en'):
+        """Create a bar chart summarizing notification & banner engagement."""
+        metrics = [
+            (get_text('notifications_received_metric', language), data.get('notification_receive', 0)),
+            (get_text('notifications_opened_metric', language), data.get('notification_open', 0)),
+            (get_text('notifications_dismissed_metric', language), data.get('notification_dismiss', 0)),
+            (get_text('notification_clicks_metric', language), data.get('click_notification', 0)),
+            (get_text('banner_clicks_metric', language), data.get('click_banner', 0))
+        ]
+        
+        received = data.get('notification_receive', 0)
+        open_rate = data.get('notification_open', 0) / received if received > 0 else 0
+        dismiss_rate = data.get('notification_dismiss', 0) / received if received > 0 else 0
+        click_rate = data.get('click_notification', 0) / received if received > 0 else 0
+        
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=[item[0] for item in metrics],
+            x=[item[1] for item in metrics],
+            orientation='h',
+            marker_color=self.color_scheme['primary'],
+            text=[f"{item[1]:,}" for item in metrics],
+            textposition='auto',
+            hovertemplate='<b>%{y}</b><br>' + get_text('count', language) + ': %{x:,}<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title=get_text('notification_chart_title', language),
+            xaxis_title=get_text('count', language),
+            yaxis_title='',
+            height=420,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
+        
+        fig.add_annotation(
+            xref='paper', yref='paper', x=1.02, y=1,
+            text=f"Open: {open_rate*100:.1f}%<br>Dismiss: {dismiss_rate*100:.1f}%<br>Click: {click_rate*100:.1f}%",
+            showarrow=False,
+            bordercolor='rgba(0,0,0,0.2)',
+            borderwidth=1,
+            bgcolor='rgba(255,255,255,0.8)',
+            font=dict(size=11)
+        )
+        
+        return fig
     
     def create_engagement_timeline_chart(self, data):
         """Create a timeline chart showing engagement patterns."""
@@ -410,25 +457,35 @@ class ChartGenerator:
             '#FC8181',  # Red variant
             '#4299E1',  # Blue
             '#A0AEC0',  # Gray
-            '#2D3748'   # Dark gray
+            '#2D3748',  # Dark gray
+            '#DD6B20',  # Deep orange
+            '#805AD5',  # Deep purple
+            '#319795',  # Dark teal
+            '#ECC94B',  # Yellow
+            '#38A169'   # Deep green
         ]
         
         # Add traces for all available metrics
         metrics = {
-            'New Users': ([item.get('first_open', 0) for item in time_series_data], metric_colors[0]),
-            'App Removals': ([item.get('app_remove', 0) for item in time_series_data], metric_colors[1]),
-            'Session Starts': ([item.get('session_start', 0) for item in time_series_data], metric_colors[2]),
-            'App Opens': ([item.get('app_open', 0) for item in time_series_data], metric_colors[3]),
-            'Logins': ([item.get('login', 0) for item in time_series_data], metric_colors[4]),
-            'Exercise Views': ([item.get('view_exercise', 0) for item in time_series_data], metric_colors[5]),
-            'Health Surveys': ([item.get('health_survey', 0) for item in time_series_data], metric_colors[6]),
-            'Roadmap Views': ([item.get('view_roadmap', 0) for item in time_series_data], metric_colors[7]),
-            'Video Practice': ([item.get('practice_with_video', 0) for item in time_series_data], metric_colors[8]),
-            'AI Practice': ([item.get('practice_with_ai', 0) for item in time_series_data], metric_colors[9]),
-            'AI Chat': ([item.get('chat_ai', 0) for item in time_series_data], metric_colors[10]),
-            'Popups Shown': ([item.get('show_popup', 0) for item in time_series_data], metric_colors[11]),
-            'Popup Details': ([item.get('view_detail_popup', 0) for item in time_series_data], metric_colors[12]),
-            'Popups Closed': ([item.get('close_popup', 0) for item in time_series_data], metric_colors[13])
+            get_text('new_users', language): ([item.get('first_open', 0) for item in time_series_data], metric_colors[0]),
+            get_text('app_removals', language): ([item.get('app_remove', 0) for item in time_series_data], metric_colors[1]),
+            get_text('sessions_metric', language): ([item.get('session_start', 0) for item in time_series_data], metric_colors[2]),
+            get_text('app_opens_metric', language): ([item.get('app_open', 0) for item in time_series_data], metric_colors[3]),
+            get_text('logins_metric', language): ([item.get('login', 0) for item in time_series_data], metric_colors[4]),
+            get_text('exercise_views_metric', language): ([item.get('view_exercise', 0) for item in time_series_data], metric_colors[5]),
+            get_text('health_surveys_metric', language): ([item.get('health_survey', 0) for item in time_series_data], metric_colors[6]),
+            get_text('roadmap_views_metric', language): ([item.get('view_roadmap', 0) for item in time_series_data], metric_colors[7]),
+            get_text('video_practice_metric', language): ([item.get('practice_with_video', 0) for item in time_series_data], metric_colors[8]),
+            get_text('ai_practice_metric', language): ([item.get('practice_with_ai', 0) for item in time_series_data], metric_colors[9]),
+            get_text('ai_chat_metric', language): ([item.get('chat_ai', 0) for item in time_series_data], metric_colors[10]),
+            get_text('popups_shown', language): ([item.get('show_popup', 0) for item in time_series_data], metric_colors[11]),
+            get_text('popups_viewed', language): ([item.get('view_detail_popup', 0) for item in time_series_data], metric_colors[12]),
+            get_text('closed_metric', language): ([item.get('close_popup', 0) for item in time_series_data], metric_colors[13]),
+            get_text('notifications_received_metric', language): ([item.get('notification_receive', 0) for item in time_series_data], metric_colors[14]),
+            get_text('notifications_opened_metric', language): ([item.get('notification_open', 0) for item in time_series_data], metric_colors[15]),
+            get_text('notifications_dismissed_metric', language): ([item.get('notification_dismiss', 0) for item in time_series_data], metric_colors[16]),
+            get_text('notification_clicks_metric', language): ([item.get('click_notification', 0) for item in time_series_data], metric_colors[17]),
+            get_text('banner_clicks_metric', language): ([item.get('click_banner', 0) for item in time_series_data], metric_colors[18])
         }
         
         y_axis_label = self.get_y_axis_label('count', language)
@@ -874,28 +931,45 @@ class ChartGenerator:
         return fig
     
     def create_churn_risk_indicator(self, data, language='en'):
-        """Create a gauge chart showing churn risk based on retention and churn metrics."""
-        # Calculate metrics
-        first_open = max(data.get('first_open', 1), 1)  # Avoid division by zero
+        """Create a gauge chart showing churn risk based on the new formula."""
+        # Get required metrics
         app_remove = data.get('app_remove', 0)
+        notification_dismiss = data.get('notification_dismiss', 0)
         app_open = data.get('app_open', 0)
+        practice_with_video = data.get('practice_with_video', 0)
+        practice_with_ai = data.get('practice_with_ai', 0)
+        chat_ai = data.get('chat_ai', 0)
+        in_app_purchase = data.get('in_app_purchase', 0)
+        avg_engage_time = data.get('avg_engage_time', 0)
         
-        # Calculate churn rate (app removals / first opens)
-        churn_rate = (app_remove / first_open) * 100 if first_open > 0 else 0
+        # Calculate CoreActions
+        core_actions = practice_with_video + practice_with_ai + chat_ai
         
-        # Calculate retention rate (app opens - app removals) / first opens
-        retention_rate = ((app_open - app_remove) / first_open) * 100 if first_open > 0 else 0
-        retention_rate = max(0, min(100, retention_rate))  # Clamp to 0-100
+        # Convert avg_engage_time from seconds to minutes if needed (assuming it's in seconds)
+        # If avg_engage_time is already in minutes, this will make it very small, but typically it's in seconds
+        avg_engage_time_minutes = avg_engage_time / 60.0 if avg_engage_time > 0 else 1.0
         
-        # Calculate risk score using the formula: (churn_rate * 2 + (100 - retention_rate)) / 3
-        risk_score = (churn_rate * 2 + (100 - retention_rate)) / 3
-        risk_score = max(0, min(100, risk_score))  # Clamp to 0-100
+        # Calculate numerator: (app_remove × 10) + (notification_dismiss × 1)
+        numerator = (app_remove * 10) + (notification_dismiss * 1)
         
-        # Determine risk level
-        if risk_score <= 33:
+        # Calculate denominator: (app_open × 1) + (CoreActions × 3) + (in_app_purchase × 10)
+        denominator = (app_open * 1) + (core_actions * 3) + (in_app_purchase * 10)
+        
+        # Calculate risk score: numerator / denominator × (1 / avg_engage_time)
+        # Handle edge cases: avoid division by zero
+        if denominator == 0 or avg_engage_time_minutes == 0:
+            risk_score = 0.0  # Default to 0 if no engagement data
+        else:
+            risk_score = (numerator / denominator) * (1.0 / avg_engage_time_minutes)
+        
+        # Clamp risk score to reasonable range (0 to 3.0 for display)
+        risk_score = max(0.0, min(3.0, risk_score))
+        
+        # Determine risk level based on new thresholds
+        if risk_score < 0.1:
             risk_level = get_text('risk_level_low', language)
             risk_color = self.color_scheme['success']
-        elif risk_score <= 66:
+        elif risk_score <= 0.5:
             risk_level = get_text('risk_level_medium', language)
             risk_color = self.color_scheme['warning']
         else:
@@ -907,17 +981,17 @@ class ChartGenerator:
             value = risk_score,
             domain = {'x': [0, 1], 'y': [0, 1]},
             title = {'text': get_text('churn_risk_indicator_title', language)},
-            delta = {'reference': 50, 'decreasing': {'color': 'green'}, 'increasing': {'color': 'red'}},
+            delta = {'reference': 0.3, 'decreasing': {'color': 'green'}, 'increasing': {'color': 'red'}},
             gauge = {
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkgray"},
+                'axis': {'range': [0, 2.0], 'tickwidth': 1, 'tickcolor': "darkgray"},
                 'bar': {'color': risk_color, 'thickness': 0.75},
                 'bgcolor': "white",
                 'borderwidth': 2,
                 'bordercolor': "gray",
                 'steps': [
-                    {'range': [0, 33], 'color': 'rgba(72, 187, 120, 0.2)'},  # Light green
-                    {'range': [33, 66], 'color': 'rgba(237, 137, 54, 0.2)'},  # Light yellow/orange
-                    {'range': [66, 100], 'color': 'rgba(245, 101, 101, 0.2)'}  # Light red
+                    {'range': [0, 0.1], 'color': 'rgba(72, 187, 120, 0.2)'},  # Light green - Low Risk
+                    {'range': [0.1, 0.5], 'color': 'rgba(237, 137, 54, 0.2)'},  # Light yellow/orange - Medium Risk
+                    {'range': [0.5, 2.0], 'color': 'rgba(245, 101, 101, 0.2)'}  # Light red - High Risk
                 ],
                 'threshold': {
                     'line': {'color': "black", 'width': 4},
@@ -929,7 +1003,7 @@ class ChartGenerator:
         
         # Add annotations for additional context
         fig.add_annotation(
-            text=f"<b>{risk_level}</b><br>Churn: {churn_rate:.1f}% | Retention: {retention_rate:.1f}%",
+            text=f"<b>{risk_level}</b><br>App Removals: {app_remove} | Core Actions: {core_actions} | Avg Time: {avg_engage_time_minutes:.1f} min",
             xref="paper",
             yref="paper",
             x=0.5,

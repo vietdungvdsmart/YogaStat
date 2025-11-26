@@ -186,15 +186,15 @@ if st.sidebar.checkbox("📊 Test Mode - Show Only Three New Charts", value=Fals
             # Display the three new charts
             st.subheader(f"1. {get_text('user_activity_comparison_title', st.session_state.language)}")
             user_activity_chart = chart_gen.create_user_activity_comparison(all_periods, st.session_state.language)
-            st.plotly_chart(user_activity_chart, use_container_width=True)
+            st.plotly_chart(user_activity_chart, width="stretch")
             
             st.subheader(f"2. {get_text('user_funnel_analysis_title', st.session_state.language)}")
             funnel_chart = chart_gen.create_user_funnel_analysis(aggregated_data, st.session_state.language)
-            st.plotly_chart(funnel_chart, use_container_width=True)
+            st.plotly_chart(funnel_chart, width="stretch")
             
             st.subheader(f"3. {get_text('churn_risk_indicator_title', st.session_state.language)}")
             churn_risk_chart = chart_gen.create_churn_risk_indicator(aggregated_data, st.session_state.language)
-            st.plotly_chart(churn_risk_chart, use_container_width=True)
+            st.plotly_chart(churn_risk_chart, width="stretch")
             
             st.success("✅ All three charts are loaded and displaying data!")
         else:
@@ -212,7 +212,7 @@ if st.session_state.country_accumulator['collecting']:
         st.error("❌ **Timeout Error:** Data collection failed after 60 seconds")
         st.warning("Not all countries were received. Please check your n8n workflow is sending data for all 3 countries.")
         reset_accumulator()  # Automatically reset
-        if st.button("🔄 Try Again", key="reset_after_timeout", use_container_width=True):
+        if st.button("🔄 Try Again", key="reset_after_timeout", width="stretch"):
             st.rerun()
         st.stop()  # Stop further processing
     else:
@@ -421,6 +421,13 @@ with col2:
         else:
             st.error(get_text('enter_webhook_url', st.session_state.language))
 
+# Dialog functions
+@st.dialog("ℹ️ Churn Risk Indicator Explanation")
+def show_churn_risk_explanation(language='en'):
+    """Display the churn risk indicator explanation in a dialog."""
+    from utils.translations import get_text
+    st.markdown(get_text('churn_risk_explanation', language))
+
 # Render dashboard function
 def render_dashboard(webhook_data, country_name=""):
     """Render complete dashboard for given data and country."""
@@ -488,73 +495,6 @@ def render_dashboard(webhook_data, country_name=""):
     # Calculate KPIs from aggregated data (for all other sections)
     kpis = processor.calculate_kpis(aggregated_data)
     
-    # Calculate week-over-week KPIs ONLY for the Key Performance section
-    if is_time_series and len(filtered_periods) >= 2:
-        wow_kpis = processor.calculate_week_over_week_kpis(filtered_periods)
-        key_performance_kpis = wow_kpis['current']
-        key_performance_deltas = wow_kpis['deltas']
-        
-        # Get the current and previous week time periods for display
-        current_week_time = filtered_periods[-1].get('time', 'Current Week')
-        previous_week_time = filtered_periods[-2].get('time', 'Previous Week')
-        
-        # Combined KPI & Weekly Metrics Section
-        st.header(get_text('key_performance_header', st.session_state.language))
-        st.info(get_text('latest_week', st.session_state.language, current=current_week_time, previous=previous_week_time))
-    else:
-        # Fallback for Key Performance section if not enough periods
-        key_performance_kpis = kpis
-        key_performance_deltas = {}
-        
-        # Combined KPI & Weekly Metrics Section
-        st.header(get_text('key_performance_header', st.session_state.language))
-    
-    # Subheader for Top 5 KPIs
-    st.subheader(get_text('kpi_overview_subheader', st.session_state.language))
-    
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    with col1:
-        delta_val = f"{key_performance_deltas.get('total_new_users', 0):+.1%}" if key_performance_deltas.get('total_new_users') else None
-        st.metric(
-            label=get_text('total_new_users', st.session_state.language),
-            value=f"{key_performance_kpis['total_new_users']:,}",
-            delta=delta_val
-        )
-    
-    with col2:
-        delta_val = f"{key_performance_deltas.get('retention_rate', 0):+.1%}" if key_performance_deltas.get('retention_rate') else None
-        st.metric(
-            label=get_text('user_retention_rate', st.session_state.language),
-            value=f"{key_performance_kpis['retention_rate']:.1%}",
-            delta=delta_val
-        )
-    
-    with col3:
-        delta_val = f"{key_performance_deltas.get('churn_rate', 0):+.1%}" if key_performance_deltas.get('churn_rate') else None
-        st.metric(
-            label=get_text('churn_rate', st.session_state.language),
-            value=f"{key_performance_kpis['churn_rate']:.1%}",
-            delta=delta_val,
-            delta_color="inverse"
-        )
-    
-    with col4:
-        delta_val = f"{key_performance_deltas.get('active_sessions', 0):+.1%}" if key_performance_deltas.get('active_sessions') else None
-        st.metric(
-            label=get_text('active_sessions', st.session_state.language),
-            value=f"{key_performance_kpis['active_sessions']:,}",
-            delta=delta_val
-        )
-    
-    with col5:
-        delta_val = f"{key_performance_deltas.get('engagement_rate', 0):+.1%}" if key_performance_deltas.get('engagement_rate') else None
-        st.metric(
-            label=get_text('engagement_rate', st.session_state.language),
-            value=f"{key_performance_kpis['engagement_rate']:.1%}",
-            delta=delta_val
-        )
-    
     # Show All Metrics section - Show total metrics for last 7 days
     # Always use daily data (not aggregated weekly) for this section
     if is_time_series and len(filtered_periods_daily) >= 7:
@@ -621,19 +561,52 @@ def render_dashboard(webhook_data, country_name=""):
             with col3:
                 st.metric(get_text('store_views_metric', st.session_state.language), f"{int(last_week_total.get('store_subscription', 0)):,}")
         
-        # Popup Performance Group
+        # Popup Performance Group - HIDDEN
+        # with st.container(border=True):
+        #     st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
+        #     col1, col2, col3, col4 = st.columns(4)
+        #     with col1:
+        #         st.metric(get_text('shown_metric', st.session_state.language), f"{int(last_week_total.get('show_popup', 0)):,}")
+        #     with col2:
+        #         st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(last_week_total.get('view_detail_popup', 0)):,}")
+        #     with col3:
+        #         st.metric(get_text('closed_metric', st.session_state.language), f"{int(last_week_total.get('close_popup', 0)):,}")
+        #     with col4:
+        #         popup_ctr = (last_week_total.get('view_detail_popup', 0) / last_week_total.get('show_popup', 1)) * 100 if last_week_total.get('show_popup', 0) > 0 else 0
+        #         st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
+
+        # Notification & Messaging Group
+        notif_receive = last_week_total.get('notification_receive', 0)
+        notif_open = last_week_total.get('notification_open', 0)
+        notif_dismiss = last_week_total.get('notification_dismiss', 0)
+        notif_click = last_week_total.get('click_notification', 0)
+        banner_click = last_week_total.get('click_banner', 0)
+        
+        open_rate = (notif_open / notif_receive * 100) if notif_receive > 0 else 0
+        dismiss_rate = (notif_dismiss / notif_receive * 100) if notif_receive > 0 else 0
+        click_rate = (notif_click / notif_receive * 100) if notif_receive > 0 else 0
+        
         with st.container(border=True):
-            st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
+            st.markdown(f"##### {get_text('notification_group', st.session_state.language)}")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(get_text('shown_metric', st.session_state.language), f"{int(last_week_total.get('show_popup', 0)):,}")
+                st.metric(get_text('notifications_received_metric', st.session_state.language), f"{int(notif_receive):,}")
             with col2:
-                st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(last_week_total.get('view_detail_popup', 0)):,}")
+                st.metric(get_text('notifications_opened_metric', st.session_state.language), f"{int(notif_open):,}")
             with col3:
-                st.metric(get_text('closed_metric', st.session_state.language), f"{int(last_week_total.get('close_popup', 0)):,}")
+                st.metric(get_text('notifications_dismissed_metric', st.session_state.language), f"{int(notif_dismiss):,}")
             with col4:
-                popup_ctr = (last_week_total.get('view_detail_popup', 0) / last_week_total.get('show_popup', 1)) * 100 if last_week_total.get('show_popup', 0) > 0 else 0
-                st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
+                st.metric(get_text('notification_clicks_metric', st.session_state.language), f"{int(notif_click):,}")
+            
+            row2_col1, row2_col2, row2_col3, row2_col4 = st.columns(4)
+            with row2_col1:
+                st.metric(get_text('banner_clicks_metric', st.session_state.language), f"{int(banner_click):,}")
+            with row2_col2:
+                st.metric(get_text('notification_open_rate_metric', st.session_state.language), f"{open_rate:.1f}%")
+            with row2_col3:
+                st.metric(get_text('notification_dismiss_rate_metric', st.session_state.language), f"{dismiss_rate:.1f}%")
+            with row2_col4:
+                st.metric(get_text('notification_click_rate_metric', st.session_state.language), f"{click_rate:.1f}%")
         
         # Monetization Group
         with st.container(border=True):
@@ -707,19 +680,52 @@ def render_dashboard(webhook_data, country_name=""):
             with col3:
                 st.metric(get_text('store_views_metric', st.session_state.language), f"{int(days_total.get('store_subscription', 0)):,}")
         
-        # Popup Performance Group
+        # Popup Performance Group - HIDDEN
+        # with st.container(border=True):
+        #     st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
+        #     col1, col2, col3, col4 = st.columns(4)
+        #     with col1:
+        #         st.metric(get_text('shown_metric', st.session_state.language), f"{int(days_total.get('show_popup', 0)):,}")
+        #     with col2:
+        #         st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(days_total.get('view_detail_popup', 0)):,}")
+        #     with col3:
+        #         st.metric(get_text('closed_metric', st.session_state.language), f"{int(days_total.get('close_popup', 0)):,}")
+        #     with col4:
+        #         popup_ctr = (days_total.get('view_detail_popup', 0) / days_total.get('show_popup', 1)) * 100 if days_total.get('show_popup', 0) > 0 else 0
+        #         st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
+
+        # Notification & Messaging Group
+        notif_receive = days_total.get('notification_receive', 0)
+        notif_open = days_total.get('notification_open', 0)
+        notif_dismiss = days_total.get('notification_dismiss', 0)
+        notif_click = days_total.get('click_notification', 0)
+        banner_click = days_total.get('click_banner', 0)
+        
+        open_rate = (notif_open / notif_receive * 100) if notif_receive > 0 else 0
+        dismiss_rate = (notif_dismiss / notif_receive * 100) if notif_receive > 0 else 0
+        click_rate = (notif_click / notif_receive * 100) if notif_receive > 0 else 0
+        
         with st.container(border=True):
-            st.markdown(f"##### {get_text('popup_performance_group', st.session_state.language)}")
+            st.markdown(f"##### {get_text('notification_group', st.session_state.language)}")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(get_text('shown_metric', st.session_state.language), f"{int(days_total.get('show_popup', 0)):,}")
+                st.metric(get_text('notifications_received_metric', st.session_state.language), f"{int(notif_receive):,}")
             with col2:
-                st.metric(get_text('details_viewed_metric', st.session_state.language), f"{int(days_total.get('view_detail_popup', 0)):,}")
+                st.metric(get_text('notifications_opened_metric', st.session_state.language), f"{int(notif_open):,}")
             with col3:
-                st.metric(get_text('closed_metric', st.session_state.language), f"{int(days_total.get('close_popup', 0)):,}")
+                st.metric(get_text('notifications_dismissed_metric', st.session_state.language), f"{int(notif_dismiss):,}")
             with col4:
-                popup_ctr = (days_total.get('view_detail_popup', 0) / days_total.get('show_popup', 1)) * 100 if days_total.get('show_popup', 0) > 0 else 0
-                st.metric(get_text('ctr_metric', st.session_state.language), f"{popup_ctr:.1f}%")
+                st.metric(get_text('notification_clicks_metric', st.session_state.language), f"{int(notif_click):,}")
+            
+            row2_col1, row2_col2, row2_col3, row2_col4 = st.columns(4)
+            with row2_col1:
+                st.metric(get_text('banner_clicks_metric', st.session_state.language), f"{int(banner_click):,}")
+            with row2_col2:
+                st.metric(get_text('notification_open_rate_metric', st.session_state.language), f"{open_rate:.1f}%")
+            with row2_col3:
+                st.metric(get_text('notification_dismiss_rate_metric', st.session_state.language), f"{dismiss_rate:.1f}%")
+            with row2_col4:
+                st.metric(get_text('notification_click_rate_metric', st.session_state.language), f"{click_rate:.1f}%")
         
         # Monetization Group
         with st.container(border=True):
@@ -748,7 +754,7 @@ def render_dashboard(webhook_data, country_name=""):
         
         # Create time series chart using filtered data
         time_series_chart = chart_gen.create_time_series_chart(filtered_periods, st.session_state.language)
-        st.plotly_chart(time_series_chart, use_container_width=True, key=f"{chart_key_prefix}time_series")
+        st.plotly_chart(time_series_chart, width="stretch", key=f"{chart_key_prefix}time_series")
         
         # User Acquisition vs Churn over time
         col1, col2 = st.columns(2)
@@ -756,12 +762,12 @@ def render_dashboard(webhook_data, country_name=""):
         with col1:
             st.subheader(get_text('user_flow_trends', st.session_state.language))
             flow_chart = chart_gen.create_user_flow_trends_chart(filtered_periods, st.session_state.language)
-            st.plotly_chart(flow_chart, use_container_width=True, key=f"{chart_key_prefix}flow_trends")
+            st.plotly_chart(flow_chart, width="stretch", key=f"{chart_key_prefix}flow_trends")
         
         with col2:
             st.subheader(get_text('user_activity_comparison_title', st.session_state.language))
             user_activity_chart = chart_gen.create_user_activity_comparison(filtered_periods, st.session_state.language)
-            st.plotly_chart(user_activity_chart, use_container_width=True, key=f"{chart_key_prefix}user_activity")
+            st.plotly_chart(user_activity_chart, width="stretch", key=f"{chart_key_prefix}user_activity")
         
         st.divider()
         
@@ -796,12 +802,12 @@ def render_dashboard(webhook_data, country_name=""):
         chart_title = get_text('feature_adoption_analysis', st.session_state.language) if not is_time_series else get_text('overall_user_metrics', st.session_state.language)
         st.subheader(chart_title)
         feature_funnel_chart = chart_gen.create_feature_adoption_funnel(aggregated_data, st.session_state.language)
-        st.plotly_chart(feature_funnel_chart, use_container_width=True, key=f"{chart_key_prefix}feature_funnel")
+        st.plotly_chart(feature_funnel_chart, width="stretch", key=f"{chart_key_prefix}feature_funnel")
     
     with col2:
         st.subheader("⏱️ Average Engagement Time Trends")
         engagement_chart = chart_gen.create_engagement_time_trends(filtered_periods, st.session_state.language)
-        st.plotly_chart(engagement_chart, use_container_width=True, key=f"{chart_key_prefix}engagement_trends")
+        st.plotly_chart(engagement_chart, width="stretch", key=f"{chart_key_prefix}engagement_trends")
     
     # Feature Analysis
     col1, col2 = st.columns(2)
@@ -809,39 +815,72 @@ def render_dashboard(webhook_data, country_name=""):
     with col1:
         st.subheader(get_text('feature_usage_analysis', st.session_state.language))
         feature_chart = chart_gen.create_feature_usage_chart(aggregated_data, st.session_state.language)
-        st.plotly_chart(feature_chart, use_container_width=True, key=f"{chart_key_prefix}feature")
+        st.plotly_chart(feature_chart, width="stretch", key=f"{chart_key_prefix}feature")
     
     with col2:
-        st.subheader(get_text('churn_risk_indicator_title', st.session_state.language))
+        col_title, col_button = st.columns([4, 1])
+        with col_title:
+            st.subheader(get_text('churn_risk_indicator_title', st.session_state.language))
+        with col_button:
+            st.markdown("<br>", unsafe_allow_html=True)  # Align button with title
+            explain_key = f"{chart_key_prefix}explain_churn_risk"
+            if st.button(get_text('churn_risk_explain_button', st.session_state.language), key=explain_key):
+                show_churn_risk_explanation(st.session_state.language)
         churn_risk_chart = chart_gen.create_churn_risk_indicator(aggregated_data, st.session_state.language)
-        st.plotly_chart(churn_risk_chart, use_container_width=True, key=f"{chart_key_prefix}churn_risk")
+        st.plotly_chart(churn_risk_chart, width="stretch", key=f"{chart_key_prefix}churn_risk")
     
-    # Popup Performance
-    st.subheader(get_text('popup_performance_header', st.session_state.language))
-    col1, col2, col3 = st.columns(3)
-    
-    popup_metrics = processor.calculate_popup_metrics(aggregated_data)
-    
-    with col1:
-        st.metric(
-            label=get_text('total_popups_shown', st.session_state.language),
-            value=f"{popup_metrics['total_shown']:,}"
-        )
-    
-    with col2:
-        st.metric(
-            label=get_text('detail_views', st.session_state.language),
-            value=f"{popup_metrics['detail_views']:,}"
-        )
-    
-    with col3:
-        st.metric(
-            label=get_text('conversion_rate', st.session_state.language),
-            value=f"{popup_metrics['conversion_rate']:.1%}"
-        )
-    
-    popup_chart = chart_gen.create_popup_performance_chart(aggregated_data, st.session_state.language)
-    st.plotly_chart(popup_chart, use_container_width=True, key=f"{chart_key_prefix}popup")
+    # Popup Performance - HIDDEN
+    # st.subheader(get_text('popup_performance_header', st.session_state.language))
+    # col1, col2, col3 = st.columns(3)
+    # 
+    # popup_metrics = processor.calculate_popup_metrics(aggregated_data)
+    # 
+    # with col1:
+    #     st.metric(
+    #         label=get_text('total_popups_shown', st.session_state.language),
+    #         value=f"{popup_metrics['total_shown']:,}"
+    #     )
+    # 
+    # with col2:
+    #     st.metric(
+    #         label=get_text('detail_views', st.session_state.language),
+    #         value=f"{popup_metrics['detail_views']:,}"
+    #     )
+    # 
+    # with col3:
+    #     st.metric(
+    #         label=get_text('conversion_rate', st.session_state.language),
+    #         value=f"{popup_metrics['conversion_rate']:.1%}"
+    #     )
+    # 
+    # popup_chart = chart_gen.create_popup_performance_chart(aggregated_data, st.session_state.language)
+    # st.plotly_chart(popup_chart, width="stretch", key=f"{chart_key_prefix}popup")
+
+    # Notification metrics & chart
+    st.subheader(get_text('notification_performance_header', st.session_state.language))
+    notif_metrics = processor.calculate_notification_metrics(aggregated_data)
+    n_col1, n_col2, n_col3, n_col4, n_col5 = st.columns(5)
+    with n_col1:
+        st.metric(get_text('notifications_received_metric', st.session_state.language), f"{notif_metrics['notification_receive']:,}")
+    with n_col2:
+        st.metric(get_text('notifications_opened_metric', st.session_state.language), f"{notif_metrics['notification_open']:,}")
+    with n_col3:
+        st.metric(get_text('notifications_dismissed_metric', st.session_state.language), f"{notif_metrics['notification_dismiss']:,}")
+    with n_col4:
+        st.metric(get_text('notification_clicks_metric', st.session_state.language), f"{notif_metrics['click_notification']:,}")
+    with n_col5:
+        st.metric(get_text('banner_clicks_metric', st.session_state.language), f"{notif_metrics['banner_clicks']:,}")
+
+    rate_col1, rate_col2, rate_col3 = st.columns(3)
+    with rate_col1:
+        st.metric(get_text('notification_open_rate_metric', st.session_state.language), f"{notif_metrics['open_rate']*100:.1f}%")
+    with rate_col2:
+        st.metric(get_text('notification_dismiss_rate_metric', st.session_state.language), f"{notif_metrics['dismiss_rate']*100:.1f}%")
+    with rate_col3:
+        st.metric(get_text('notification_click_rate_metric', st.session_state.language), f"{notif_metrics['click_through_rate']*100:.1f}%")
+
+    notification_chart = chart_gen.create_notification_performance_chart(aggregated_data, st.session_state.language)
+    st.plotly_chart(notification_chart, width="stretch", key=f"{chart_key_prefix}notification")
     
     st.divider()
     
@@ -1091,7 +1130,7 @@ if st.session_state.data:
                             granularity,
                             st.session_state.language
                         )
-                        st.plotly_chart(comparison_chart, use_container_width=True)
+                        st.plotly_chart(comparison_chart, width="stretch")
                         
                         # Summary metrics
                         st.subheader(f"📋 {get_text('comparison_summary', st.session_state.language)}")
@@ -1259,51 +1298,51 @@ if st.session_state.data:
                                     f"{metric_data.get('change_pct', 0):+.1f}%"
                                 )
                         
-                        # Popup Performance Group
-                        with st.container(border=True):
-                            st.markdown("##### 💬 Popup Performance")
-                            col1, col2, col3, col4 = st.columns(4)
-                            
-                            with col1:
-                                metric_data = comparison_metrics.get('show_popup', {})
-                                st.metric(
-                                    "Shown",
-                                    f"{metric_data.get('current', 0):,.0f}",
-                                    f"{metric_data.get('change_pct', 0):+.1f}%"
-                                )
-                            
-                            with col2:
-                                metric_data = comparison_metrics.get('view_detail_popup', {})
-                                st.metric(
-                                    "Details Viewed",
-                                    f"{metric_data.get('current', 0):,.0f}",
-                                    f"{metric_data.get('change_pct', 0):+.1f}%"
-                                )
-                            
-                            with col3:
-                                metric_data = comparison_metrics.get('close_popup', {})
-                                st.metric(
-                                    "Closed",
-                                    f"{metric_data.get('current', 0):,.0f}",
-                                    f"{metric_data.get('change_pct', 0):+.1f}%"
-                                )
-                            
-                            with col4:
-                                # Calculate CTR for current and compare periods
-                                show_current = comparison_metrics.get('show_popup', {}).get('current', 0)
-                                view_current = comparison_metrics.get('view_detail_popup', {}).get('current', 0)
-                                ctr_current = (view_current / show_current * 100) if show_current > 0 else 0
-                                
-                                show_compare = comparison_metrics.get('show_popup', {}).get('compare', 0)
-                                view_compare = comparison_metrics.get('view_detail_popup', {}).get('compare', 0)
-                                ctr_compare = (view_compare / show_compare * 100) if show_compare > 0 else 0
-                                
-                                ctr_change = ctr_current - ctr_compare
-                                st.metric(
-                                    "CTR",
-                                    f"{ctr_current:.1f}%",
-                                    f"{ctr_change:+.1f}pp"
-                                )
+                        # Popup Performance Group - HIDDEN
+                        # with st.container(border=True):
+                        #     st.markdown("##### 💬 Popup Performance")
+                        #     col1, col2, col3, col4 = st.columns(4)
+                        #     
+                        #     with col1:
+                        #         metric_data = comparison_metrics.get('show_popup', {})
+                        #         st.metric(
+                        #             "Shown",
+                        #             f"{metric_data.get('current', 0):,.0f}",
+                        #             f"{metric_data.get('change_pct', 0):+.1f}%"
+                        #         )
+                        #     
+                        #     with col2:
+                        #         metric_data = comparison_metrics.get('view_detail_popup', {})
+                        #         st.metric(
+                        #             "Details Viewed",
+                        #             f"{metric_data.get('current', 0):,.0f}",
+                        #             f"{metric_data.get('change_pct', 0):+.1f}%"
+                        #         )
+                        #     
+                        #     with col3:
+                        #         metric_data = comparison_metrics.get('close_popup', {})
+                        #         st.metric(
+                        #             "Closed",
+                        #             f"{metric_data.get('current', 0):,.0f}",
+                        #             f"{metric_data.get('change_pct', 0):+.1f}%"
+                        #         )
+                        #     
+                        #     with col4:
+                        #         # Calculate CTR for current and compare periods
+                        #         show_current = comparison_metrics.get('show_popup', {}).get('current', 0)
+                        #         view_current = comparison_metrics.get('view_detail_popup', {}).get('current', 0)
+                        #         ctr_current = (view_current / show_current * 100) if show_current > 0 else 0
+                        #         
+                        #         show_compare = comparison_metrics.get('show_popup', {}).get('compare', 0)
+                        #         view_compare = comparison_metrics.get('view_detail_popup', {}).get('compare', 0)
+                        #         ctr_compare = (view_compare / show_compare * 100) if show_compare > 0 else 0
+                        #         
+                        #         ctr_change = ctr_current - ctr_compare
+                        #         st.metric(
+                        #             "CTR",
+                        #             f"{ctr_current:.1f}%",
+                        #             f"{ctr_change:+.1f}pp"
+                        #         )
                         
                         # Monetization Group
                         with st.container(border=True):
@@ -1410,153 +1449,6 @@ else:
         **Example n8n Cloud URL format:**
         `https://yourinstance.app.n8n.cloud/webhook/your-webhook-id`
         """)
-    
-    # Add test data button for demonstration
-    st.divider()
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("🧪 Load Sample Data (for testing)"):
-            # Create sample data in new country-based format (3 countries as webhook will send)
-            sample_country_data = [
-                {
-                    "country": "US", 
-                    "data": [
-                        {"time": "07/10/2024", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52},
-                        {"time": "14/10/2024", "first_open": 52, "app_remove": 8, "session_start": 95, "app_open": 58, "login": 68, "view_exercise": 78, "health_survey": 62, "view_roadmap": 15, "practice_with_video": 48, "practice_with_ai": 32, "chat_ai": 25, "show_popup": 72, "view_detail_popup": 45, "close_popup": 58},
-                        {"time": "21/10/2024", "first_open": 38, "app_remove": 18, "session_start": 72, "app_open": 65, "login": 78, "view_exercise": 85, "health_survey": 65, "view_roadmap": 28, "practice_with_video": 52, "practice_with_ai": 42, "chat_ai": 35, "show_popup": 68, "view_detail_popup": 42, "close_popup": 62},
-                        {"time": "28/10/2024", "first_open": 48, "app_remove": 10, "session_start": 88, "app_open": 70, "login": 82, "view_exercise": 88, "health_survey": 72, "view_roadmap": 30, "practice_with_video": 55, "practice_with_ai": 45, "chat_ai": 38, "show_popup": 75, "view_detail_popup": 48, "close_popup": 65},
-                        {"time": "04/11/2024", "first_open": 55, "app_remove": 7, "session_start": 92, "app_open": 75, "login": 85, "view_exercise": 90, "health_survey": 75, "view_roadmap": 32, "practice_with_video": 58, "practice_with_ai": 48, "chat_ai": 40, "show_popup": 78, "view_detail_popup": 50, "close_popup": 68},
-                        {"time": "11/11/2024", "first_open": 60, "app_remove": 5, "session_start": 98, "app_open": 80, "login": 88, "view_exercise": 92, "health_survey": 78, "view_roadmap": 35, "practice_with_video": 62, "practice_with_ai": 52, "chat_ai": 42, "show_popup": 82, "view_detail_popup": 52, "close_popup": 70},
-                        {"time": "18/11/2024", "first_open": 42, "app_remove": 15, "session_start": 75, "app_open": 68, "login": 72, "view_exercise": 80, "health_survey": 70, "view_roadmap": 25, "practice_with_video": 48, "practice_with_ai": 38, "chat_ai": 32, "show_popup": 70, "view_detail_popup": 45, "close_popup": 60}
-                    ]
-                },
-                {
-                    "country": "India", 
-                    "data": [
-                        {"time": "07/10/2024", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35},
-                        {"time": "14/10/2024", "first_open": 38, "app_remove": 4, "session_start": 65, "app_open": 38, "login": 42, "view_exercise": 48, "health_survey": 38, "view_roadmap": 8, "practice_with_video": 32, "practice_with_ai": 18, "chat_ai": 15, "show_popup": 48, "view_detail_popup": 28, "close_popup": 38},
-                        {"time": "21/10/2024", "first_open": 28, "app_remove": 10, "session_start": 45, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 42, "view_roadmap": 18, "practice_with_video": 35, "practice_with_ai": 25, "chat_ai": 22, "show_popup": 45, "view_detail_popup": 28, "close_popup": 38},
-                        {"time": "28/10/2024", "first_open": 35, "app_remove": 5, "session_start": 60, "app_open": 45, "login": 52, "view_exercise": 55, "health_survey": 48, "view_roadmap": 20, "practice_with_video": 38, "practice_with_ai": 28, "chat_ai": 25, "show_popup": 50, "view_detail_popup": 32, "close_popup": 42},
-                        {"time": "04/11/2024", "first_open": 40, "app_remove": 4, "session_start": 68, "app_open": 50, "login": 55, "view_exercise": 58, "health_survey": 50, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 32, "chat_ai": 28, "show_popup": 55, "view_detail_popup": 35, "close_popup": 45},
-                        {"time": "11/11/2024", "first_open": 45, "app_remove": 3, "session_start": 72, "app_open": 55, "login": 60, "view_exercise": 62, "health_survey": 52, "view_roadmap": 25, "practice_with_video": 45, "practice_with_ai": 35, "chat_ai": 30, "show_popup": 58, "view_detail_popup": 38, "close_popup": 48},
-                        {"time": "18/11/2024", "first_open": 30, "app_remove": 8, "session_start": 50, "app_open": 40, "login": 45, "view_exercise": 50, "health_survey": 43, "view_roadmap": 17, "practice_with_video": 30, "practice_with_ai": 24, "chat_ai": 20, "show_popup": 44, "view_detail_popup": 27, "close_popup": 36}
-                    ]
-                },
-                {
-                    "country": "VN", 
-                    "data": [
-                        {"time": "07/10/2024", "first_open": 18, "app_remove": 3, "session_start": 32, "app_open": 22, "login": 28, "view_exercise": 28, "health_survey": 25, "view_roadmap": 8, "practice_with_video": 15, "practice_with_ai": 12, "chat_ai": 10, "show_popup": 22, "view_detail_popup": 12, "close_popup": 18},
-                        {"time": "14/10/2024", "first_open": 22, "app_remove": 2, "session_start": 38, "app_open": 18, "login": 25, "view_exercise": 25, "health_survey": 22, "view_roadmap": 5, "practice_with_video": 18, "practice_with_ai": 10, "chat_ai": 8, "show_popup": 28, "view_detail_popup": 15, "close_popup": 22},
-                        {"time": "21/10/2024", "first_open": 15, "app_remove": 5, "session_start": 28, "app_open": 22, "login": 25, "view_exercise": 28, "health_survey": 22, "view_roadmap": 12, "practice_with_video": 20, "practice_with_ai": 15, "chat_ai": 12, "show_popup": 25, "view_detail_popup": 15, "close_popup": 20},
-                        {"time": "28/10/2024", "first_open": 20, "app_remove": 2, "session_start": 35, "app_open": 25, "login": 30, "view_exercise": 32, "health_survey": 28, "view_roadmap": 10, "practice_with_video": 22, "practice_with_ai": 17, "chat_ai": 14, "show_popup": 30, "view_detail_popup": 18, "close_popup": 25},
-                        {"time": "04/11/2024", "first_open": 25, "app_remove": 2, "session_start": 42, "app_open": 30, "login": 35, "view_exercise": 38, "health_survey": 32, "view_roadmap": 12, "practice_with_video": 25, "practice_with_ai": 20, "chat_ai": 16, "show_popup": 35, "view_detail_popup": 20, "close_popup": 28},
-                        {"time": "11/11/2024", "first_open": 28, "app_remove": 1, "session_start": 48, "app_open": 35, "login": 38, "view_exercise": 42, "health_survey": 35, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 38, "view_detail_popup": 22, "close_popup": 30},
-                        {"time": "18/11/2024", "first_open": 16, "app_remove": 4, "session_start": 30, "app_open": 20, "login": 26, "view_exercise": 30, "health_survey": 24, "view_roadmap": 9, "practice_with_video": 16, "practice_with_ai": 13, "chat_ai": 11, "show_popup": 24, "view_detail_popup": 14, "close_popup": 19}
-                    ]
-                }
-            ]
-            
-            # Process the sample data using the new country-based format
-            processor = DataProcessor()
-            processed_sample = processor.process_webhook_data(sample_country_data)
-            
-            st.session_state.data = processed_sample
-            st.success("✅ Sample data với 3 countries (US, India, VN) đã được load! Bạn có thể test dropdown selector.")
-            st.rerun()
-    
-    with col2:
-        st.info("💡 **Tip:** Use sample data to explore dashboard features while setting up your webhook.")
-        
-        # Test accumulator system
-        st.markdown("**🧪 Test Multi-Country Accumulator:**")
-        st.caption("Simulate n8n single-country webhook calls")
-        
-        test_col1, test_col2, test_col3 = st.columns(3)
-        
-        with test_col1:
-            if st.button("📨 Send US Request", key="test_us_request"):
-                # Simulate n8n single-country format
-                us_request = [
-                    {
-                        "country": "US",
-                        "data": [
-                            {"time": "11/08/2025 - 17/08/2025", "first_open": 45, "app_remove": 12, "session_start": 85, "app_open": 62, "login": 75, "view_exercise": 82, "health_survey": 68, "view_roadmap": 22, "practice_with_video": 42, "practice_with_ai": 35, "chat_ai": 28, "show_popup": 65, "view_detail_popup": 38, "close_popup": 52, "store_subscription": 5, "in_app_purchase": 2, "renew": 2, "revenue": 15000, "active_time": 800}
-                        ]
-                    }
-                ]
-                
-                # Simulate webhook processing logic
-                processor = DataProcessor()
-                data = us_request
-                first_item = data[0]
-                
-                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
-                    country = first_item['country']
-                    country_data = first_item['data']
-                    all_received = add_country_data(country, country_data)
-                    st.info(f"✅ Added {country} data to accumulator")
-                
-                st.rerun()
-        
-        with test_col2:
-            if st.button("📨 Send India Request", key="test_india_request"):
-                # Simulate n8n single-country format
-                india_request = [
-                    {
-                        "country": "India",
-                        "data": [
-                            {"time": "11/08/2025 - 17/08/2025", "first_open": 32, "app_remove": 6, "session_start": 58, "app_open": 42, "login": 48, "view_exercise": 52, "health_survey": 45, "view_roadmap": 15, "practice_with_video": 28, "practice_with_ai": 22, "chat_ai": 18, "show_popup": 42, "view_detail_popup": 25, "close_popup": 35, "store_subscription": 3, "in_app_purchase": 1, "renew": 1, "revenue": 8000, "active_time": 600}
-                        ]
-                    }
-                ]
-                
-                # Simulate webhook processing logic
-                processor = DataProcessor()
-                data = india_request
-                first_item = data[0]
-                
-                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
-                    country = first_item['country']
-                    country_data = first_item['data']
-                    all_received = add_country_data(country, country_data)
-                    st.info(f"✅ Added {country} data to accumulator")
-                
-                st.rerun()
-        
-        with test_col3:
-            if st.button("📨 Send VN Request", key="test_vn_request"):
-                # Simulate n8n single-country format (same as user's data)
-                vn_request = [
-                    {
-                        "country": "VN",
-                        "data": [
-                            {"time": "17/08/2025", "first_open": 35, "app_remove": 3, "session_start": 56, "app_open": 12, "login": 6, "view_exercise": 20, "health_survey": 12, "view_roadmap": 4, "practice_with_video": 10, "practice_with_ai": 4, "chat_ai": 10, "show_popup": 0, "view_detail_popup": 0, "close_popup": 0, "store_subscription": 3, "in_app_purchase": 1, "renew": 1, "revenue": 9000, "active_time": 505}
-                        ]
-                    }
-                ]
-                
-                # Simulate webhook processing logic
-                processor = DataProcessor()
-                data = vn_request
-                first_item = data[0]
-                
-                if len(data) == 1 and isinstance(first_item, dict) and 'country' in first_item:
-                    country = first_item['country']
-                    country_data = first_item['data']
-                    all_received = add_country_data(country, country_data)
-                    st.info(f"✅ Added {country} data to accumulator")
-                    
-                    if all_received:
-                        # Auto-process when all received
-                        processed_data = process_accumulated_data()
-                        if processed_data:
-                            st.session_state.data = processed_data
-                            reset_accumulator()
-                            st.success("🎉 All 3 countries collected and processed!")
-                
-                st.rerun()
-
 # Sidebar with additional controls
 @st.dialog("📊 Input Data (JSON)")
 def show_input_dialog():
@@ -1573,10 +1465,10 @@ with st.sidebar:
         st.success("✅ Data Loaded")
         
         # Show Input button - opens dialog
-        if st.button("📊 Show Input", key="show_input_btn", use_container_width=True):
+        if st.button("📊 Show Input", key="show_input_btn", width="stretch"):
             show_input_dialog()
         
-        if st.button("🗑️ Clear Data", key="clear_data_btn", use_container_width=True):
+        if st.button("🗑️ Clear Data", key="clear_data_btn", width="stretch"):
             st.session_state.data = None
             st.session_state.webhook_url = ""
             st.rerun()

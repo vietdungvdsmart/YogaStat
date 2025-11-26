@@ -1,52 +1,30 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Change to this script's directory
-cd "$(dirname "$0")"
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$PROJECT_ROOT"
 
-# Choose Python interpreter (prefer python3, fallback to python)
-PYTHON_CMD=""
 if command -v python3 >/dev/null 2>&1; then
-    PYTHON_CMD="python3"
+  PYTHON_CMD="python3"
 elif command -v python >/dev/null 2>&1; then
-    PYTHON_CMD="python"
+  PYTHON_CMD="python"
 else
-    echo "[ERROR] Python 3 is not installed or not on PATH."
-    echo "        Install from https://www.python.org/downloads/ and try again."
-    exit 1
+  echo "[ERROR] Python 3 is not installed or not on PATH." >&2
+  exit 1
 fi
 
-# Create venv if missing
 if [ ! -d ".venv" ]; then
-    echo "[INFO] Creating virtual environment..."
-    $PYTHON_CMD -m venv .venv
-    if [ $? -ne 0 ]; then
-        echo "[ERROR] Failed to create virtual environment."
-        exit 1
-    fi
+  echo "[INFO] Creating virtual environment (.venv)..."
+  "$PYTHON_CMD" -m venv .venv
 fi
 
-# Activate venv
 source .venv/bin/activate
-if [ $? -ne 0 ]; then
-    echo "[ERROR] Failed to activate virtual environment."
-    exit 1
-fi
 
-# Upgrade pip and install dependencies
-python -m pip install --upgrade pip >/dev/null
-echo "[INFO] Installing dependencies..."
-python -m pip install --upgrade streamlit plotly pandas numpy requests >/dev/null
-if [ $? -ne 0 ]; then
-    echo "[ERROR] Failed to install Python packages."
-    exit 1
-fi
+echo "[INFO] Installing/updating dependencies from requirements.txt..."
+pip install --upgrade pip >/dev/null
+pip install -r requirements.txt >/dev/null
 
-# Allow optional port argument, default 5000
-PORT=${1:-5000}
+PORT="${1:-8501}"
 
-# Start Streamlit
-echo "[INFO] Starting Streamlit..."
-echo "[INFO] Access the app at: http://localhost:$PORT"
-echo "[INFO] Press Ctrl+C to stop the server"
-streamlit run app.py --server.address 0.0.0.0 --server.port $PORT
+echo "[INFO] Starting Streamlit on http://localhost:${PORT}"
+streamlit run app.py --server.port "$PORT" --server.address "127.0.0.1"

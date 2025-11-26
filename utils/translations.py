@@ -101,6 +101,20 @@ TRANSLATIONS = {
         'user_activity_comparison_title': 'User Activity Comparison',
         'user_funnel_analysis_title': 'User Funnel Analysis',
         'churn_risk_indicator_title': 'Churn Risk Indicator',
+        'churn_risk_explain_button': 'ℹ️ Explain',
+        'churn_risk_explanation': '''**What this gauge measures:** The Churn Risk Indicator shows how likely users are to leave your app. It combines negative signals (app removals, notification dismissals) with positive signals (app opens, core actions, purchases) and engagement time into a single risk score.
+
+**How it's calculated:** 
+$$Risk = \\frac{(app\\_remove \\times 10) + (notification\\_dismiss \\times 1)}{(app\\_open \\times 1) + (CoreActions \\times 3) + (in\\_app\\_purchase \\times 10)} \\times \\frac{1}{avg\\_engage\\_time}$$
+
+Where CoreActions = practice_with_video + practice_with_ai + chat_ai, and avg_engage_time is in minutes.
+
+**Risk Zones:**
+- **Low Risk (< 0.1):** 🟢 Healthy user engagement - users are active and engaged
+- **Medium Risk (0.1 to 0.5):** 🟠 Needs attention - some negative signals, action recommended
+- **High Risk (> 0.5):** 🔴 Urgent action needed - high risk of churn, immediate intervention required
+
+**How to interpret:** Lower scores are better. A score below 0.1 indicates healthy engagement, while scores above 0.5 suggest you need to focus on reducing app removals, improving notification engagement, and increasing core user actions.''',
         'new_users': 'New Users',
         'active_sessions': 'Active Sessions',
         'total_practice': 'Total Practice',
@@ -113,6 +127,8 @@ TRANSLATIONS = {
         'total_popups_shown': '👁️ Total Popups Shown',
         'detail_views': '🔍 Detail Views',
         'conversion_rate': '💯 Conversion Rate',
+        'notification_performance_header': '📣 Notification Engagement',
+        'notification_chart_title': 'Notification & Banner Interactions',
         
         # Insights section
         'insights_header': '🧠 Insights & Recommendations',
@@ -148,6 +164,15 @@ TRANSLATIONS = {
         'details_viewed_metric': 'Details Viewed',
         'closed_metric': 'Closed',
         'ctr_metric': 'CTR',
+        'notification_group': '📣 Notifications & Messaging',
+        'notifications_received_metric': 'Notifications Received',
+        'notifications_opened_metric': 'Notifications Opened',
+        'notifications_dismissed_metric': 'Notifications Dismissed',
+        'notification_clicks_metric': 'Notification Clicks',
+        'banner_clicks_metric': 'Banner Clicks',
+        'notification_open_rate_metric': 'Open Rate',
+        'notification_dismiss_rate_metric': 'Dismiss Rate',
+        'notification_click_rate_metric': 'Click-Through Rate',
         
         'monetization_group': '💰 Monetization',
         'in_app_purchases_metric': 'In-App Purchases',
@@ -385,6 +410,20 @@ TRANSLATIONS = {
         'user_activity_comparison_title': 'So Sánh Hoạt Động Người Dùng',
         'user_funnel_analysis_title': 'Phân Tích Phễu Người Dùng',
         'churn_risk_indicator_title': 'Chỉ Số Rủi Ro Rời Bỏ',
+        'churn_risk_explain_button': 'ℹ️ Giải Thích',
+        'churn_risk_explanation': '''**Chỉ số này đo lường:** Chỉ Số Rủi Ro Rời Bỏ cho thấy khả năng người dùng rời bỏ ứng dụng của bạn. Nó kết hợp các tín hiệu tiêu cực (gỡ cài đặt, từ chối thông báo) với các tín hiệu tích cực (mở ứng dụng, hành động cốt lõi, mua hàng) và thời gian tương tác thành một điểm rủi ro duy nhất.
+
+**Cách tính toán:**
+$$Risk = \\frac{(app\\_remove \\times 10) + (notification\\_dismiss \\times 1)}{(app\\_open \\times 1) + (CoreActions \\times 3) + (in\\_app\\_purchase \\times 10)} \\times \\frac{1}{avg\\_engage\\_time}$$
+
+Trong đó CoreActions = practice_with_video + practice_with_ai + chat_ai, và avg_engage_time tính bằng phút.
+
+**Các Vùng Rủi Ro:**
+- **Rủi Ro Thấp (< 0.1):** 🟢 Tương tác người dùng tốt - người dùng đang hoạt động và gắn bó
+- **Rủi Ro Trung Bình (0.1 đến 0.5):** 🟠 Cần chú ý - có một số tín hiệu tiêu cực, nên có hành động
+- **Rủi Ro Cao (> 0.5):** 🔴 Cần hành động khẩn cấp - rủi ro rời bỏ cao, cần can thiệp ngay lập tức
+
+**Cách hiểu:** Điểm số thấp hơn là tốt hơn. Điểm dưới 0.1 cho thấy tương tác tốt, trong khi điểm trên 0.5 cho thấy bạn cần tập trung vào việc giảm gỡ cài đặt, cải thiện tương tác thông báo và tăng các hành động cốt lõi của người dùng.''',
         'new_users': 'Người Dùng Mới',
         'active_sessions': 'Phiên Hoạt Động',
         'total_practice': 'Tổng Luyện Tập',
@@ -397,6 +436,8 @@ TRANSLATIONS = {
         'total_popups_shown': '👁️ Tổng Popup Hiển Thị',
         'detail_views': '🔍 Lượt Xem Chi Tiết',
         'conversion_rate': '💯 Tỷ Lệ Chuyển Đổi',
+        'notification_performance_header': '📣 Hiệu Suất Thông Báo',
+        'notification_chart_title': 'Tương Tác Thông Báo & Banner',
         
         # Insights section
         'insights_header': '🧠 Thông Tin Chi Tiết & Khuyến Nghị',
@@ -432,6 +473,15 @@ TRANSLATIONS = {
         'details_viewed_metric': 'Xem Chi Tiết',
         'closed_metric': 'Đóng',
         'ctr_metric': 'CTR',
+        'notification_group': '📣 Thông Báo & Tin Nhắn',
+        'notifications_received_metric': 'Thông Báo Đã Gửi',
+        'notifications_opened_metric': 'Thông Báo Được Mở',
+        'notifications_dismissed_metric': 'Thông Báo Bị Gỡ',
+        'notification_clicks_metric': 'Nhấp Thông Báo',
+        'banner_clicks_metric': 'Nhấp Banner',
+        'notification_open_rate_metric': 'Tỷ Lệ Mở',
+        'notification_dismiss_rate_metric': 'Tỷ Lệ Gỡ',
+        'notification_click_rate_metric': 'Tỷ Lệ Nhấp',
         
         'monetization_group': '💰 Kiếm Tiền',
         'in_app_purchases_metric': 'Mua Trong Ứng Dụng',
